@@ -3,7 +3,11 @@ require 'grape'
 
 
 module BoletoApi
-
+  get '/health' do
+    status 200
+    'OK'
+  end
+  
   def self.get_boleto(bank, values)
    clazz = Object.const_get("Brcobranca::Boleto::#{bank.camelize}")
    date_fields = %w[data_documento data_vencimento data_processamento]
