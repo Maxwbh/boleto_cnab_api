@@ -1,5 +1,8 @@
 FROM alpine:latest
-LABEL org.opencontainers.image.authors="raphael.valyi@akretion.com"
+LABEL org.opencontainers.image.authors="maxwbh@gmail.com"
+LABEL org.opencontainers.image.maintainer="Maxwell da Silva Oliveira <maxwbh@gmail.com>"
+LABEL org.opencontainers.image.source="https://github.com/maxwbh/boleto_cnab_api"
+LABEL org.opencontainers.image.description="Micro-serviço REST para geração de Boletos, Remessas e Retornos Bancários usando BRCobranca"
 
 WORKDIR /usr/src/app
 COPY . .

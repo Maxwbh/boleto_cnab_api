@@ -1,0 +1,44 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+CAMPOS_BOLETOS_POR_BANCO.md
+LICENSE
+
+# Test files
+test_run.py
+*.pyc
+__pycache__
+
+# Editor files
+*~
+*.swp
+*.swo
+.vscode
+.idea
+
+# Logs
+*.log
+log/
+
+# Temporary files
+tmp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# CI/CD
+.github/workflows/
+
+# Render config
+render.yaml
