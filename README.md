@@ -1,6 +1,8 @@
 # Sobre o projeto boleto_cnab_api
 
-O projeto de gestão de Boletos, Remessas e Retornos Bancários https://github.com/kivanio/brcobranca é muito bem feito, bem testado e mantido.
+> **Mantido por:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) - M&S do Brasil Ltda
+
+O projeto de gestão de Boletos, Remessas e Retornos Bancários é muito bem feito, bem testado e mantido. Este fork utiliza a versão mantida em https://github.com/maxwbh/brcobranca para garantir as últimas atualizações e melhorias.
 
 É interessante poder usar o projeto BRCobranca (escrito em Ruby) a partir de outras linguagens na forma de um micro-serviço REST.
 Mais especificamente, a [Akretion](http://www.akretion.com) que é a empresa que lidera a localização do Odoo no Brasil desde 2009 https://github.com/OCA/l10n-brazil e co-criou a fundação [OCA](https://odoo-community.org/) usa esse projeto para gerenciar Boletos, Remessas e Retornos a partir do ERP Odoo (feito em Python, módulo específico https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca).
@@ -13,49 +15,199 @@ Imprime **Boletos**, gera arquivos de **Remessa** e lê os arquivos de **Retorno
 
 # API
 
+## Endpoints de Boleto
+
+### Validar os dados de um Boleto
 ```ruby
-# Validar os dados de um Boleto:
-GET /boleto/validate
-        requires :bank, type: String, desc: 'Bank'
-        requires :data, type: String, desc: 'Boleto data as a stringified json'
+GET /api/boleto/validate
+  requires :bank, type: String, desc: 'Bank name'
+  requires :data, type: String, desc: 'Boleto data as a stringified json'
+```
+Valida se todos os campos obrigatórios estão presentes e corretos.
 
-# Obter o nosso_numero de um Boleto:
-GET /boleto/nosso_numero
-        requires :bank, type: String, desc: 'Bank'
-        requires :data, type: String, desc: 'Boleto data as a stringified json'
+### Obter todos os dados do Boleto (SEM gerar PDF/imagem) - **NOVO**
+```ruby
+GET /api/boleto/data
+  requires :bank, type: String, desc: 'Bank name'
+  requires :data, type: String, desc: 'Boleto data as a stringified json'
+```
+Retorna todos os dados importantes do boleto incluindo:
+- `codigo_barras` - Código de barras completo
+- `linha_digitavel` - Linha digitável para pagamento
+- `nosso_numero` - Nosso número completo com DV
+- `agencia_conta_boleto` - Agência e conta formatadas
+- Todos os dados do boleto (valor, datas, cedente, sacado, etc)
 
-# Imprimir um Boleto apenas:
-GET /boleto/get
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
-        requires :data, type: String, desc: 'Boleto data as a stringified json'
+**Este endpoint é mais leve e rápido** pois não gera o PDF/imagem, apenas retorna os dados essenciais.
 
-# Imprimir uma lista de Boletos:
-POST /boleto/multi
-        requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
-        requires :data, type: File, desc: 'json of the list of boletos, including the "bank" key'
+### Obter o nosso_numero de um Boleto
+```ruby
+GET /api/boleto/nosso_numero
+  requires :bank, type: String, desc: 'Bank name'
+  requires :data, type: String, desc: 'Boleto data as a stringified json'
+```
+Retorna o nosso_numero com DV, código de barras, linha digitável e agência/conta.
 
-# Gerir um arquivo de Remessa CNAB 240 ou CNAB 400:
-POST /remessa
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: cnab400|cnab240'
-        requires :data, type: File, desc: 'json of the list of pagamentos'
-
-# Transformar um arquivo de Retorno CNAB 240 ou CNAB 400 em JSON:
-POST /retorno
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: cnab400|cnab240'
-        requires :data, type: File, desc: 'txt of the retorno file'
+### Imprimir um Boleto apenas
+```ruby
+GET /api/boleto
+  requires :bank, type: String, desc: 'Bank name'
+  requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
+  requires :data, type: String, desc: 'Boleto data as a stringified json'
 ```
 
-Nota: os campos datas devem estar no formato YYYY/MM/DD
+### Imprimir uma lista de Boletos
+```ruby
+POST /api/boleto/multi
+  requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
+  requires :data, type: File, desc: 'json of the list of boletos, including the "bank" key'
+```
 
-O API está documentado com mais detalhes no código aqui: https://github.com/akretion/boleto_cnab_api/blob/master/lib/boleto_api.rb
+## Endpoints de Remessa
+
+### Gerar arquivo de Remessa CNAB 240 ou CNAB 400
+```ruby
+POST /api/remessa
+  requires :bank, type: String, desc: 'Bank name'
+  requires :type, type: String, desc: 'Type: cnab400|cnab240'
+  requires :data, type: File, desc: 'json of the list of pagamentos'
+```
+
+## Endpoints de Retorno
+
+### Transformar arquivo de Retorno CNAB em JSON
+```ruby
+POST /api/retorno
+  requires :bank, type: String, desc: 'Bank name'
+  requires :type, type: String, desc: 'Type: cnab400|cnab240'
+  requires :data, type: File, desc: 'txt of the retorno file'
+```
+
+## Health Check
+```ruby
+GET /api/health
+```
+Retorna `{status: 'OK'}` se o serviço está funcionando.
+
+---
+
+## Bancos Suportados
+
+**16 principais bancos brasileiros:**
+- Banco do Brasil (001)
+- Banco do Nordeste (004)
+- Banestes (021)
+- Santander (033)
+- Banrisul (041)
+- Banco de Brasília - BRB (070)
+- AILOS (085)
+- CREDISIS (097)
+- Caixa Econômica Federal (104)
+- Unicred (136)
+- Bradesco (237)
+- Itaú (341)
+- HSBC (399)
+- Citibank (745)
+- Sicredi (748)
+- Sicoob (756)
+
+## Documentação de Campos
+
+**📖 Para informações detalhadas sobre os campos necessários para cada banco, consulte:**
+
+[**CAMPOS_BOLETOS_POR_BANCO.md**](./CAMPOS_BOLETOS_POR_BANCO.md)
+
+Este documento contém:
+- Campos obrigatórios por banco
+- Campos opcionais
+- Validações específicas (tamanho de agência, conta, convênio, etc)
+- Exemplos de valores válidos
+- Campos calculados automaticamente
+
+---
+
+**Nota importante:** Os campos de datas devem estar no formato `YYYY/MM/DD`
+
+O API está documentado com mais detalhes no código aqui: [lib/boleto_api.rb](./lib/boleto_api.rb)
 
 # Como rodar o micro-serviço
 
+## Localmente com Docker
+
 ```bash
 docker run -p 9292:9292 ghcr.io/akretion/boleto_cnab_api
+```
+
+## Deploy no Render (Free Tier)
+
+Este projeto está otimizado para rodar no [Render](https://render.com) free tier. Para fazer o deploy:
+
+### Via Dockerfile (Recomendado)
+1. Crie um novo **Web Service** no Render
+2. Conecte seu repositório GitHub
+3. Configure:
+   - **Environment**: Docker
+   - **Region**: Escolha a mais próxima (Oregon ou Frankfurt)
+   - **Branch**: `main` ou sua branch preferida
+   - **Instance Type**: Free
+
+O Render automaticamente detectará o Dockerfile e fará o build.
+
+### Configurações Importantes para Free Tier
+
+#### 1. Health Check Endpoint
+O Render usa o endpoint `/api/health` para verificar se o serviço está funcionando:
+```bash
+curl https://seu-app.onrender.com/api/health
+# Retorna: {"status":"OK"}
+```
+
+#### 2. Inatividade (Spin Down)
+No plano free, o Render coloca o serviço em modo sleep após 15 minutos de inatividade.
+- **Primeira requisição após sleep**: ~30-60 segundos para "acordar"
+- **Requisições subsequentes**: milissegundos
+
+#### 3. Otimizações Implementadas
+- ✅ Imagem Alpine Linux (menor tamanho = deploy mais rápido)
+- ✅ Health check endpoint para monitoring
+- ✅ Puma como servidor web (leve e eficiente)
+- ✅ Build otimizado com cache de dependências
+
+#### 4. Limites do Free Tier
+- 750 horas/mês de runtime (suficiente para 1 serviço 24/7)
+- 15 minutos de inatividade antes de entrar em sleep
+- Banda: 100 GB/mês
+- Build: 500 horas/mês
+
+### Variáveis de Ambiente (Opcionais)
+
+Você pode configurar as seguintes variáveis no Render:
+
+```bash
+PORT=9292                    # Porta padrão (não mudar)
+RACK_ENV=production         # Ambiente de execução
+PUMA_WORKERS=1              # Número de workers (free tier: 1)
+PUMA_MIN_THREADS=0          # Threads mínimas
+PUMA_MAX_THREADS=5          # Threads máximas (ajuste conforme uso)
+```
+
+### Exemplo de render.yaml
+
+Se preferir usar Infrastructure as Code, crie um arquivo `render.yaml` na raiz do projeto:
+
+```yaml
+services:
+  - type: web
+    name: boleto-cnab-api
+    env: docker
+    region: oregon
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 9292
+      - key: RACK_ENV
+        value: production
 ```
 
 # Exemplos de como consumir o serviço usando sua linguagem preferida:
