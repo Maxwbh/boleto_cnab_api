@@ -2,10 +2,34 @@
 
 > **Mantido por:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) - M&S do Brasil Ltda
 
-O projeto de gestão de Boletos, Remessas e Retornos Bancários é muito bem feito, bem testado e mantido. Este fork utiliza a versão mantida em https://github.com/maxwbh/brcobranca para garantir as últimas atualizações e melhorias.
+## 🔄 Este é um FORK do projeto original
 
-É interessante poder usar o projeto BRCobranca (escrito em Ruby) a partir de outras linguagens na forma de um micro-serviço REST.
-Mais especificamente, a [Akretion](http://www.akretion.com) que é a empresa que lidera a localização do Odoo no Brasil desde 2009 https://github.com/OCA/l10n-brazil e co-criou a fundação [OCA](https://odoo-community.org/) usa esse projeto para gerenciar Boletos, Remessas e Retornos a partir do ERP Odoo (feito em Python, módulo específico https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca).
+Este repositório é um **fork** do excelente projeto [akretion/boleto_cnab_api](https://github.com/akretion/boleto_cnab_api), criado e mantido pela [Akretion](http://www.akretion.com).
+
+### 🎯 Objetivo deste Fork
+
+As melhorias e modificações implementadas neste fork visam **atender necessidades específicas** enfrentadas em projetos particulares da **M&S do Brasil Ltda**, incluindo:
+
+- ✅ Utilização do fork atualizado [maxwbh/brcobranca](https://github.com/maxwbh/brcobranca)
+- ✅ Documentação detalhada de campos por banco
+- ✅ Novos endpoints para retornar dados do boleto sem gerar PDF/imagem
+- ✅ Otimizações para deploy em plataformas free tier (Render, Railway, etc)
+- ✅ Exemplos práticos de integração em Python
+- ✅ Melhorias na documentação e usabilidade
+
+### 📜 Licença e Disponibilidade
+
+**O código continua completamente LIVRE e disponível** sob os mesmos termos do projeto original. Todas as melhorias são open-source e podem ser utilizadas, modificadas e distribuídas livremente.
+
+Encorajamos contribuições da comunidade e estamos abertos a pull requests que melhorem o projeto!
+
+---
+
+### 🏛️ Projeto Original
+
+O projeto original de gestão de Boletos, Remessas e Retornos Bancários [BRCobranca](https://github.com/kivanio/brcobranca) é muito bem feito, bem testado e mantido pela comunidade Ruby brasileira.
+
+É interessante poder usar o projeto BRCobranca (escrito em Ruby) a partir de outras linguagens na forma de um micro-serviço REST. A [Akretion](http://www.akretion.com), empresa que lidera a localização do Odoo no Brasil desde 2009 ([OCA/l10n-brazil](https://github.com/OCA/l10n-brazil)) e co-criou a fundação [OCA](https://odoo-community.org/), usa esse projeto para gerenciar Boletos, Remessas e Retornos a partir do ERP Odoo (módulo específico: [l10n_br_account_payment_brcobranca](https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca)).
 
 A imagem usada no projeto é do OS [Alpine](https://hub.docker.com/_/alpine), o motivo é que por ser um Micro-Serviço quanto menor a imagem melhor e apesar de existir dentro das imagens [Ruby](https://hub.docker.com/_/ruby) tanto a opção Debian quanto Alpine a imagem criada a partir da versão "pura" acaba sendo menor( Ruby-Debian 746MB | Ruby-Alpine 565MB | Alpine 523MB ), existem diferenças entre o [Debian](https://pt.wikipedia.org/wiki/Debian) e o [Alpine](https://pt.wikipedia.org/wiki/Alpine_Linux) basicamente "na superfície" são alguns nomes de pacote e o instalador de pacotes, no Debian apt-get e no Alpine apk, outros comandos Linux são iguais, em caso de algum erro complexo o Debian pode acabar sendo usado.
 
@@ -227,10 +251,343 @@ Você pode então conferir os Boletos gerados no arquivo ```/tmp/boletos.pdf```
 
 ## Python
 
+### Exemplo 1: Gerar Boleto Sicoob em PDF
+
+```python
+import requests
+import json
+
+# URL da API (ajuste conforme seu ambiente)
+API_URL = "http://localhost:9292/api"
+# Para produção no Render: API_URL = "https://seu-app.onrender.com/api"
+
+# Dados do boleto Sicoob
+boleto_data = {
+    "valor": 150.50,
+    "cedente": "M&S do Brasil Ltda",
+    "documento_cedente": "12345678000190",
+    "sacado": "João da Silva",
+    "sacado_documento": "12345678901",
+    "agencia": "4327",
+    "conta_corrente": "417270",
+    "carteira": "1",
+    "variacao": "01",  # Modalidade da carteira
+    "convenio": "229385",
+    "nosso_numero": "1234567",
+    "numero_documento": "1234567",
+    "data_documento": "2025/11/24",
+    "data_vencimento": "2025/12/24",
+    "data_processamento": "2025/11/24",
+    "instrucao1": "Não receber após o vencimento",
+    "instrucao2": "Juros de mora de 2% ao mês",
+    "sacado_endereco": "Rua Exemplo, 123 - Centro",
+}
+
+# Converter para JSON string
+data_json = json.dumps(boleto_data)
+
+# Fazer requisição GET para gerar PDF
+response = requests.get(
+    f"{API_URL}/boleto",
+    params={
+        "bank": "sicoob",
+        "type": "pdf",
+        "data": data_json
+    }
+)
+
+if response.status_code == 200:
+    # Salvar o PDF
+    with open("boleto_sicoob.pdf", "wb") as f:
+        f.write(response.content)
+    print("✅ Boleto gerado com sucesso: boleto_sicoob.pdf")
+else:
+    print(f"❌ Erro ao gerar boleto: {response.status_code}")
+    print(response.json())
 ```
-TODO
+
+### Exemplo 2: Obter Dados do Boleto Sicoob (sem gerar PDF)
+
+```python
+import requests
+import json
+
+API_URL = "http://localhost:9292/api"
+
+boleto_data = {
+    "valor": 150.50,
+    "cedente": "M&S do Brasil Ltda",
+    "documento_cedente": "12345678000190",
+    "sacado": "João da Silva",
+    "sacado_documento": "12345678901",
+    "agencia": "4327",
+    "conta_corrente": "417270",
+    "carteira": "1",
+    "variacao": "01",
+    "convenio": "229385",
+    "nosso_numero": "1234567",
+    "data_vencimento": "2025/12/24",
+}
+
+data_json = json.dumps(boleto_data)
+
+# Usar o novo endpoint /boleto/data (mais rápido, não gera PDF)
+response = requests.get(
+    f"{API_URL}/boleto/data",
+    params={
+        "bank": "sicoob",
+        "data": data_json
+    }
+)
+
+if response.status_code == 200:
+    dados = response.json()
+    print("✅ Dados do boleto obtidos com sucesso!\n")
+    print(f"🏦 Banco: {dados['bank']}")
+    print(f"📄 Nosso Número: {dados['nosso_numero']}")
+    print(f"🔢 Código de Barras: {dados['codigo_barras']}")
+    print(f"💳 Linha Digitável: {dados['linha_digitavel']}")
+    print(f"🏢 Agência/Conta: {dados['agencia_conta_boleto']}")
+    print(f"💰 Valor: R$ {dados['valor']}")
+    print(f"📅 Vencimento: {dados['data_vencimento']}")
+else:
+    print(f"❌ Erro: {response.status_code}")
+    print(response.json())
 ```
-(Ver os exemplos nos módulos Odoo: https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca)
+
+### Exemplo 3: Validar Dados do Boleto Sicoob
+
+```python
+import requests
+import json
+
+API_URL = "http://localhost:9292/api"
+
+# Dados com erro proposital (faltando campo obrigatório)
+boleto_data = {
+    "valor": 150.50,
+    "cedente": "M&S do Brasil Ltda",
+    # "documento_cedente": "12345678000190",  # Campo obrigatório comentado
+    "sacado": "João da Silva",
+    "sacado_documento": "12345678901",
+    "agencia": "4327",
+    "conta_corrente": "417270",
+}
+
+data_json = json.dumps(boleto_data)
+
+# Validar antes de gerar
+response = requests.get(
+    f"{API_URL}/boleto/validate",
+    params={
+        "bank": "sicoob",
+        "data": data_json
+    }
+)
+
+if response.status_code == 200:
+    print("✅ Dados válidos!")
+else:
+    print(f"❌ Dados inválidos:")
+    erros = response.json()
+    for campo, mensagens in erros.items():
+        print(f"  • {campo}: {', '.join(mensagens)}")
+```
+
+### Exemplo 4: Gerar Múltiplos Boletos Sicoob
+
+```python
+import requests
+import json
+
+API_URL = "http://localhost:9292/api"
+
+# Lista de boletos
+boletos = [
+    {
+        "bank": "sicoob",  # Importante: incluir o banco em cada boleto
+        "valor": 100.00,
+        "cedente": "M&S do Brasil Ltda",
+        "documento_cedente": "12345678000190",
+        "sacado": "Cliente 1",
+        "sacado_documento": "11111111111",
+        "agencia": "4327",
+        "conta_corrente": "417270",
+        "carteira": "1",
+        "variacao": "01",
+        "convenio": "229385",
+        "nosso_numero": "1000001",
+        "data_vencimento": "2025/12/24",
+    },
+    {
+        "bank": "sicoob",
+        "valor": 200.00,
+        "cedente": "M&S do Brasil Ltda",
+        "documento_cedente": "12345678000190",
+        "sacado": "Cliente 2",
+        "sacado_documento": "22222222222",
+        "agencia": "4327",
+        "conta_corrente": "417270",
+        "carteira": "1",
+        "variacao": "01",
+        "convenio": "229385",
+        "nosso_numero": "1000002",
+        "data_vencimento": "2025/12/24",
+    },
+]
+
+# Criar arquivo JSON temporário
+with open("/tmp/boletos_sicoob.json", "w") as f:
+    json.dump(boletos, f)
+
+# Fazer POST com arquivo
+with open("/tmp/boletos_sicoob.json", "rb") as f:
+    response = requests.post(
+        f"{API_URL}/boleto/multi",
+        data={"type": "pdf"},
+        files={"data": f}
+    )
+
+if response.status_code == 200:
+    with open("boletos_sicoob_multiplos.pdf", "wb") as f:
+        f.write(response.content)
+    print("✅ Boletos gerados com sucesso: boletos_sicoob_multiplos.pdf")
+else:
+    print(f"❌ Erro: {response.status_code}")
+    print(response.json())
+```
+
+### Exemplo 5: Classe Helper para Boletos Sicoob
+
+```python
+import requests
+import json
+from typing import Dict, Optional, List
+from datetime import datetime, timedelta
+
+class BoletoSicoobAPI:
+    """Helper para geração de boletos Sicoob via API"""
+
+    def __init__(self, api_url: str = "http://localhost:9292/api"):
+        self.api_url = api_url
+        self.bank = "sicoob"
+
+    def gerar_boleto_pdf(self, dados: Dict) -> bytes:
+        """Gera boleto em PDF e retorna o conteúdo"""
+        data_json = json.dumps(dados)
+        response = requests.get(
+            f"{self.api_url}/boleto",
+            params={"bank": self.bank, "type": "pdf", "data": data_json}
+        )
+        response.raise_for_status()
+        return response.content
+
+    def obter_dados_boleto(self, dados: Dict) -> Dict:
+        """Obtém dados do boleto sem gerar PDF"""
+        data_json = json.dumps(dados)
+        response = requests.get(
+            f"{self.api_url}/boleto/data",
+            params={"bank": self.bank, "data": data_json}
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def validar_boleto(self, dados: Dict) -> bool:
+        """Valida dados do boleto"""
+        data_json = json.dumps(dados)
+        response = requests.get(
+            f"{self.api_url}/boleto/validate",
+            params={"bank": self.bank, "data": data_json}
+        )
+        return response.status_code == 200
+
+    def criar_dados_boleto(
+        self,
+        valor: float,
+        sacado_nome: str,
+        sacado_cpf: str,
+        nosso_numero: str,
+        agencia: str = "4327",
+        conta_corrente: str = "417270",
+        convenio: str = "229385",
+        cedente: str = "M&S do Brasil Ltda",
+        documento_cedente: str = "12345678000190",
+        dias_vencimento: int = 30,
+        **kwargs
+    ) -> Dict:
+        """Cria estrutura de dados para boleto Sicoob"""
+        hoje = datetime.now()
+        vencimento = hoje + timedelta(days=dias_vencimento)
+
+        dados = {
+            "valor": valor,
+            "cedente": cedente,
+            "documento_cedente": documento_cedente,
+            "sacado": sacado_nome,
+            "sacado_documento": sacado_cpf,
+            "agencia": agencia,
+            "conta_corrente": conta_corrente,
+            "carteira": "1",
+            "variacao": "01",
+            "convenio": convenio,
+            "nosso_numero": nosso_numero,
+            "numero_documento": nosso_numero,
+            "data_documento": hoje.strftime("%Y/%m/%d"),
+            "data_vencimento": vencimento.strftime("%Y/%m/%d"),
+            "data_processamento": hoje.strftime("%Y/%m/%d"),
+        }
+
+        # Adicionar campos extras
+        dados.update(kwargs)
+        return dados
+
+# Exemplo de uso da classe
+if __name__ == "__main__":
+    api = BoletoSicoobAPI()
+
+    # Criar dados do boleto
+    boleto = api.criar_dados_boleto(
+        valor=150.50,
+        sacado_nome="João da Silva",
+        sacado_cpf="12345678901",
+        nosso_numero="1234567",
+        instrucao1="Não receber após o vencimento",
+        instrucao2="Juros de 2% ao mês"
+    )
+
+    # Validar
+    if api.validar_boleto(boleto):
+        print("✅ Boleto válido!")
+
+        # Obter dados (sem PDF)
+        dados = api.obter_dados_boleto(boleto)
+        print(f"📄 Linha Digitável: {dados['linha_digitavel']}")
+
+        # Gerar PDF
+        pdf_content = api.gerar_boleto_pdf(boleto)
+        with open("boleto.pdf", "wb") as f:
+            f.write(pdf_content)
+        print("✅ PDF gerado: boleto.pdf")
+    else:
+        print("❌ Boleto inválido!")
+```
+
+### 📚 Campos Específicos do Sicoob
+
+Para detalhes completos sobre campos obrigatórios, opcionais e validações do Sicoob, consulte:
+[CAMPOS_BOLETOS_POR_BANCO.md - Seção Sicoob](./CAMPOS_BOLETOS_POR_BANCO.md#7-sicoob-756)
+
+**Campos importantes do Sicoob:**
+- `agencia`: máximo 4 dígitos
+- `conta_corrente`: máximo 8 dígitos
+- `nosso_numero`: máximo 7 dígitos
+- `convenio`: máximo 7 dígitos
+- `variacao`: modalidade da carteira (padrão: '01')
+- `carteira`: padrão '1'
+
+---
+
+Para outros exemplos de integração com Odoo, veja: [l10n_br_account_payment_brcobranca](https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca)
 
 ## Java
 
