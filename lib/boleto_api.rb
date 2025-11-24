@@ -50,8 +50,46 @@ module BoletoApi
         end
       end
 
+      desc 'Return complete boleto data (without generating image/pdf)'
+      # Returns all useful boleto data including codigo_barras, linha_digitavel, nosso_numero, etc
+      # example: http://localhost:9292/api/boleto/data?bank=itau&data=%7B%22valor%22:100.0,%22cedente%22:%22Kivanio%20Barbosa%22,%22documento_cedente%22:%2212345678912%22,%22sacado%22:%22Claudio%20Pozzebom%22,%22sacado_documento%22:%2212345678900%22,%22agencia%22:%220810%22,%22conta_corrente%22:%2253678%22,%22convenio%22:12387,%22numero_documento%22:%2212345678%22%7D
+      params do
+        requires :bank, type: String, desc: 'Bank'
+        requires :data, type: String, desc: 'Boleto data as a stringified json'
+      end
+      get :data do
+        values = JSON.parse(params[:data])
+        boleto = BoletoApi.get_boleto(params[:bank], values)
+        if boleto.valid?
+          {
+            bank: params[:bank],
+            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero_dv: boleto.nosso_numero_dv,
+            codigo_barras: boleto.codigo_barras,
+            codigo_barras_segunda_parte: boleto.codigo_barras_segunda_parte,
+            linha_digitavel: boleto.linha_digitavel,
+            agencia_conta_boleto: boleto.agencia_conta_boleto,
+            carteira: boleto.carteira,
+            numero_documento: boleto.numero_documento,
+            valor: boleto.valor,
+            valor_documento: boleto.valor_documento,
+            data_vencimento: boleto.data_vencimento,
+            data_documento: boleto.data_documento,
+            data_processamento: boleto.data_processamento,
+            cedente: boleto.cedente,
+            documento_cedente: boleto.documento_cedente,
+            sacado: boleto.sacado,
+            sacado_documento: boleto.sacado_documento,
+            agencia: boleto.agencia,
+            conta_corrente: boleto.conta_corrente,
+            convenio: boleto.convenio
+          }
+        else
+          error!(boleto.errors.messages, 400)
+        end
+      end
+
       desc 'Generates boleto nosso_numero'
-      # TODO do we also need an API endpoint for nosso_numero_dv?
       # example with Itau boleto with data from https://github.com/kivanio/brcobranca/blob/master/spec/brcobranca/boleto/itau_spec.rb:
       # http://localhost:9292/api/boleto/nosso_numero?bank=itau&data=%7B%22valor%22:0.0,%22cedente%22:%22Kivanio%20Barbosa%22,%22documento_cedente%22:%2212345678912%22,%22sacado%22:%22Claudio%20Pozzebom%22,%22sacado_documento%22:%2212345678900%22,%22agencia%22:%220810%22,%22conta_corrente%22:%2253678%22,%22convenio%22:12387,%22numero_documento%22:%2212345678%22%7D
       # boleto fields are listed here: https://github.com/kivanio/brcobranca/blob/master/lib/brcobranca/boleto/base.rb
@@ -63,7 +101,13 @@ module BoletoApi
         values = JSON.parse(params[:data])
         boleto = BoletoApi.get_boleto(params[:bank], values)
         if boleto.valid?
-          boleto.nosso_numero_boleto
+          {
+            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero_dv: boleto.nosso_numero_dv,
+            codigo_barras: boleto.codigo_barras,
+            linha_digitavel: boleto.linha_digitavel,
+            agencia_conta_boleto: boleto.agencia_conta_boleto
+          }
         else
           error!(boleto.errors.messages, 400)
         end
