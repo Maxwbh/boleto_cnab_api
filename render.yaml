@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: boleto-cnab-api
+    env: docker
+    region: oregon  # Ou frankfurt para Europa
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 9292
+      - key: RACK_ENV
+        value: production
+      - key: PUMA_WORKERS
+        value: 1
+      - key: PUMA_MIN_THREADS
+        value: 0
+      - key: PUMA_MAX_THREADS
+        value: 5
