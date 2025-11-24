@@ -22,12 +22,10 @@ RUN set -eux; \
 
 RUN set -eux; \
    gem install bundler:2.5.11 --no-document \
+   && bundle config set --local frozen 'false' \
    && bundle install \
    && rm -rf /usr/local/bundle/cache/*.gem \
    ;
-
-# throw errors if Gemfile has been modified since Gemfile.lock
-RUN bundle config --global frozen 1 && bundle install
 
 EXPOSE 9292
 USER app
