@@ -6,5 +6,5 @@ gem 'puma'
 gem 'base64'
 gem 'mutex_m'
 gem 'bigdecimal'
-# Erro na versão 0.9.9 https://github.com/shairontoledo/rghost/issues/75
-gem 'rghost', git: 'https://github.com/shairontoledo/rghost.git'
+# Usar versão específica 0.9.8 do RubyGems (compatível com brcobranca)
+gem 'rghost', '0.9.8'
