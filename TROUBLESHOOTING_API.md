@@ -140,12 +140,35 @@ response = requests.get(
 
 ---
 
-### 4. Campo `numero_documento` vs `nosso_numero`
+### 4. Campo `numero_documento` vs `nosso_numero` vs `documento_numero`
 
 **IMPORTANTE:** Estes são campos diferentes!
 
 - **`nosso_numero`**: Obrigatório, faz parte do código de barras
-- **`numero_documento`**: Opcional, apenas para controle interno (NF, pedido)
+- **`numero_documento`**: Nome usado na API (entrada/saída) para controle interno
+- **`documento_numero`**: Nome interno da gem BRCobranca (NÃO usar na API)
+
+**⚠️ Nomenclatura na Gem vs API:**
+
+A gem BRCobranca usa internamente o campo `documento_numero`, mas esta API aceita e retorna como `numero_documento` para melhor legibilidade.
+
+**Você deve usar:** `numero_documento` ao chamar a API
+**Você NÃO deve usar:** `documento_numero` (nome interno da gem)
+
+```python
+# ✅ CORRETO - usar numero_documento na API:
+boleto_data = {
+    "numero_documento": "NF-12345",  # Nome na API
+    "nosso_numero": "1234567",       # Obrigatório
+    # ... outros campos
+}
+
+# ❌ ERRADO - não usar documento_numero:
+boleto_data = {
+    "documento_numero": "NF-12345",  # NÃO FUNCIONA!
+    # ...
+}
+```
 
 Se a linha digitável está vazia, provavelmente falta o `nosso_numero`, NÃO o `numero_documento`.
 

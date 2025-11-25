@@ -102,7 +102,7 @@ module BoletoApi
               linha_digitavel: boleto.linha_digitavel,
               agencia_conta_boleto: boleto.agencia_conta_boleto,
               carteira: boleto.carteira,
-              numero_documento: boleto.numero_documento,
+              numero_documento: boleto.documento_numero,  # Corrigido: usar documento_numero (nome correto na gem)
               valor: boleto.valor,
               valor_documento: boleto.valor_documento,
               data_vencimento: boleto.data_vencimento,
