@@ -1,9 +1,15 @@
 require 'brcobranca'
 require 'grape'
+require 'logger'
 
 
 module BoletoApi
- 
+
+  # Logger para debug
+  def self.logger
+    @logger ||= Logger.new(STDOUT)
+  end
+
   def self.get_boleto(bank, values)
    clazz = Object.const_get("Brcobranca::Boleto::#{bank.camelize}")
    date_fields = %w[data_documento data_vencimento data_processamento]
@@ -41,12 +47,30 @@ module BoletoApi
         requires :data, type: String, desc: 'Boleto data as a stringified json'
       end
       get :validate do
-        values = JSON.parse(params[:data])
-        boleto = BoletoApi.get_boleto(params[:bank], values)
-        if boleto.valid?
-          true
-        else
-          error!(boleto.errors.messages, 400)
+        begin
+          BoletoApi.logger.info "📥 GET /api/boleto/validate - Validando banco: #{params[:bank]}"
+
+          values = JSON.parse(params[:data])
+          BoletoApi.logger.info "✅ JSON parseado. Campos: #{values.keys.join(', ')}"
+
+          boleto = BoletoApi.get_boleto(params[:bank], values)
+          if boleto.valid?
+            BoletoApi.logger.info "✅ Validação OK para banco #{params[:bank]}"
+            { valid: true, message: 'Dados do boleto são válidos' }
+          else
+            BoletoApi.logger.warn "⚠️  Validação FALHOU para banco #{params[:bank]}. Erros: #{boleto.errors.messages.inspect}"
+            error!({
+              valid: false,
+              validation_errors: boleto.errors.messages,
+              hint: 'Corrija os erros de validação antes de gerar o boleto'
+            }, 400)
+          end
+        rescue JSON::ParserError => e
+          BoletoApi.logger.error "❌ JSON inválido: #{e.message}"
+          error!({ error: 'JSON inválido', details: e.message }, 400)
+        rescue => e
+          BoletoApi.logger.error "❌ Erro ao validar: #{e.class} - #{e.message}"
+          error!({ error: 'Erro na validação', details: e.message }, 500)
         end
       end
 
@@ -58,34 +82,53 @@ module BoletoApi
         requires :data, type: String, desc: 'Boleto data as a stringified json'
       end
       get :data do
-        values = JSON.parse(params[:data])
-        boleto = BoletoApi.get_boleto(params[:bank], values)
-        if boleto.valid?
-          {
-            bank: params[:bank],
-            nosso_numero: boleto.nosso_numero_boleto,
-            nosso_numero_dv: boleto.nosso_numero_dv,
-            codigo_barras: boleto.codigo_barras,
-            codigo_barras_segunda_parte: boleto.codigo_barras_segunda_parte,
-            linha_digitavel: boleto.linha_digitavel,
-            agencia_conta_boleto: boleto.agencia_conta_boleto,
-            carteira: boleto.carteira,
-            numero_documento: boleto.numero_documento,
-            valor: boleto.valor,
-            valor_documento: boleto.valor_documento,
-            data_vencimento: boleto.data_vencimento,
-            data_documento: boleto.data_documento,
-            data_processamento: boleto.data_processamento,
-            cedente: boleto.cedente,
-            documento_cedente: boleto.documento_cedente,
-            sacado: boleto.sacado,
-            sacado_documento: boleto.sacado_documento,
-            agencia: boleto.agencia,
-            conta_corrente: boleto.conta_corrente,
-            convenio: boleto.convenio
-          }
-        else
-          error!(boleto.errors.messages, 400)
+        begin
+          BoletoApi.logger.info "📥 GET /api/boleto/data - Obtendo dados do boleto para banco: #{params[:bank]}"
+
+          values = JSON.parse(params[:data])
+          boleto = BoletoApi.get_boleto(params[:bank], values)
+
+          if boleto.valid?
+            BoletoApi.logger.info "✅ Dados do boleto gerados com sucesso"
+            BoletoApi.logger.info "   Nosso Número: #{boleto.nosso_numero_boleto}"
+            BoletoApi.logger.info "   Código de Barras: #{boleto.codigo_barras}"
+
+            {
+              bank: params[:bank],
+              nosso_numero: boleto.nosso_numero_boleto,
+              nosso_numero_dv: boleto.nosso_numero_dv,
+              codigo_barras: boleto.codigo_barras,
+              codigo_barras_segunda_parte: boleto.codigo_barras_segunda_parte,
+              linha_digitavel: boleto.linha_digitavel,
+              agencia_conta_boleto: boleto.agencia_conta_boleto,
+              carteira: boleto.carteira,
+              numero_documento: boleto.numero_documento,
+              valor: boleto.valor,
+              valor_documento: boleto.valor_documento,
+              data_vencimento: boleto.data_vencimento,
+              data_documento: boleto.data_documento,
+              data_processamento: boleto.data_processamento,
+              cedente: boleto.cedente,
+              documento_cedente: boleto.documento_cedente,
+              sacado: boleto.sacado,
+              sacado_documento: boleto.sacado_documento,
+              agencia: boleto.agencia,
+              conta_corrente: boleto.conta_corrente,
+              convenio: boleto.convenio
+            }
+          else
+            BoletoApi.logger.error "❌ Boleto inválido. Erros: #{boleto.errors.messages.inspect}"
+            error!({
+              error: 'Dados do boleto inválidos',
+              validation_errors: boleto.errors.messages
+            }, 400)
+          end
+        rescue JSON::ParserError => e
+          BoletoApi.logger.error "❌ JSON inválido: #{e.message}"
+          error!({ error: 'JSON inválido', details: e.message }, 400)
+        rescue => e
+          BoletoApi.logger.error "❌ Erro ao gerar dados: #{e.class} - #{e.message}"
+          error!({ error: 'Erro ao gerar dados do boleto', details: e.message }, 500)
         end
       end
 
@@ -98,18 +141,34 @@ module BoletoApi
         requires :data, type: String, desc: 'Boleto data as a stringified json'
       end
       get :nosso_numero do
-        values = JSON.parse(params[:data])
-        boleto = BoletoApi.get_boleto(params[:bank], values)
-        if boleto.valid?
-          {
-            nosso_numero: boleto.nosso_numero_boleto,
-            nosso_numero_dv: boleto.nosso_numero_dv,
-            codigo_barras: boleto.codigo_barras,
-            linha_digitavel: boleto.linha_digitavel,
-            agencia_conta_boleto: boleto.agencia_conta_boleto
-          }
-        else
-          error!(boleto.errors.messages, 400)
+        begin
+          BoletoApi.logger.info "📥 GET /api/boleto/nosso_numero - Gerando nosso_numero para banco: #{params[:bank]}"
+
+          values = JSON.parse(params[:data])
+          boleto = BoletoApi.get_boleto(params[:bank], values)
+
+          if boleto.valid?
+            BoletoApi.logger.info "✅ Nosso número gerado: #{boleto.nosso_numero_boleto}"
+            {
+              nosso_numero: boleto.nosso_numero_boleto,
+              nosso_numero_dv: boleto.nosso_numero_dv,
+              codigo_barras: boleto.codigo_barras,
+              linha_digitavel: boleto.linha_digitavel,
+              agencia_conta_boleto: boleto.agencia_conta_boleto
+            }
+          else
+            BoletoApi.logger.error "❌ Erro ao gerar nosso_numero. Erros: #{boleto.errors.messages.inspect}"
+            error!({
+              error: 'Não foi possível gerar nosso_numero',
+              validation_errors: boleto.errors.messages
+            }, 400)
+          end
+        rescue JSON::ParserError => e
+          BoletoApi.logger.error "❌ JSON inválido: #{e.message}"
+          error!({ error: 'JSON inválido', details: e.message }, 400)
+        rescue => e
+          BoletoApi.logger.error "❌ Erro ao gerar nosso_numero: #{e.class} - #{e.message}"
+          error!({ error: 'Erro ao gerar nosso_numero', details: e.message }, 500)
         end
       end
 
@@ -118,20 +177,46 @@ module BoletoApi
       # http://localhost:9292/api/boleto?type=pdf&bank=itau&data=%7B%22valor%22:0.0,%22cedente%22:%22Kivanio%20Barbosa%22,%22documento_cedente%22:%2212345678912%22,%22sacado%22:%22Claudio%20Pozzebom%22,%22sacado_documento%22:%2212345678900%22,%22agencia%22:%220810%22,%22conta_corrente%22:%2253678%22,%22convenio%22:12387,%22numero_documento%22:%2212345678%22%7D
       # boleto fields are listed here: https://github.com/kivanio/brcobranca/blob/master/lib/brcobranca/boleto/base.rb
       params do
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
+        requires :bank, type: String, desc: 'Bank name (e.g., itau, sicoob, banco_brasil)'
+        requires :type, type: String, desc: 'Output type (pdf, jpg, png, or tif)', values: ['pdf', 'jpg', 'png', 'tif']
         requires :data, type: String, desc: 'Boleto data as a stringified json'
       end
       get do
-        values = JSON.parse(params[:data])
-        boleto = BoletoApi.get_boleto(params[:bank], values)
-        if boleto.valid?
-          content_type "application/#{params[:type]}"
-          header['Content-Disposition'] = "attachment; filename=boleto-#{params[:bank]}.#{params[:type]}"
-          env['api.format'] = :binary
-          boleto.send("to_#{params[:type]}".to_sym)
-        else
-          error!(boleto.errors.messages, 400)
+        begin
+          # Log da requisição
+          BoletoApi.logger.info "📥 GET /api/boleto - Params recebidos: bank=#{params[:bank]}, type=#{params[:type]}"
+
+          # Parse do JSON com tratamento de erro
+          begin
+            values = JSON.parse(params[:data])
+            BoletoApi.logger.info "✅ JSON parseado com sucesso. Campos: #{values.keys.join(', ')}"
+          rescue JSON::ParserError => e
+            BoletoApi.logger.error "❌ Erro ao fazer parse do JSON: #{e.message}"
+            error!({ error: 'JSON inválido', details: e.message }, 400)
+          end
+
+          # Criação do boleto
+          boleto = BoletoApi.get_boleto(params[:bank], values)
+
+          # Validação
+          if boleto.valid?
+            BoletoApi.logger.info "✅ Boleto válido. Gerando #{params[:type].upcase}..."
+            content_type "application/#{params[:type]}"
+            header['Content-Disposition'] = "attachment; filename=boleto-#{params[:bank]}.#{params[:type]}"
+            env['api.format'] = :binary
+            boleto.send("to_#{params[:type]}".to_sym)
+          else
+            BoletoApi.logger.error "❌ Boleto inválido. Erros: #{boleto.errors.messages.inspect}"
+            error!({
+              error: 'Dados do boleto inválidos',
+              validation_errors: boleto.errors.messages,
+              hint: 'Verifique se todos os campos obrigatórios estão preenchidos corretamente'
+            }, 400)
+          end
+        rescue => e
+          BoletoApi.logger.error "❌ Erro inesperado: #{e.class} - #{e.message}"
+          BoletoApi.logger.error e.backtrace.join("\n")
+          error!({ error: 'Erro interno', details: e.message, type: e.class.to_s }, 500)
         end
       end
 
@@ -142,29 +227,62 @@ module BoletoApi
       # curl -X POST -F type=pdf -F 'data=@/tmp/boletos_data.json' localhost:9292/api/boleto/multi > /tmp/boletos.pdf
       # boleto fields are listed here: https://github.com/kivanio/brcobranca/blob/master/lib/brcobranca/boleto/base.rb
       params do
-        requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
+        requires :type, type: String, desc: 'Output type (pdf, jpg, png, or tif)', values: ['pdf', 'jpg', 'png', 'tif']
         requires :data, type: File, desc: 'json of the list of boletos, including the "bank" key'
       end
       post :multi do
-        values = JSON.parse(params[:data][:tempfile].read())
-      	boletos = []
-        errors = []
-        values.each do |boleto_values|
-          bank = boleto_values.delete('bank').camelize
-          boleto = BoletoApi.get_boleto(bank, boleto_values)
-          if boleto.valid?
-            boletos << boleto
-          else
-            errors << boleto.errors.messages
+        begin
+          BoletoApi.logger.info "📥 POST /api/boleto/multi - Gerando múltiplos boletos em #{params[:type].upcase}"
+
+          values = JSON.parse(params[:data][:tempfile].read())
+          BoletoApi.logger.info "✅ JSON parseado. Total de boletos: #{values.size}"
+
+        	boletos = []
+          errors = []
+
+          values.each_with_index do |boleto_values, index|
+            bank = boleto_values.delete('bank')
+
+            if bank.nil?
+              BoletoApi.logger.error "❌ Boleto #{index + 1}: campo 'bank' não informado"
+              errors << { index: index + 1, error: "Campo 'bank' é obrigatório" }
+              next
+            end
+
+            BoletoApi.logger.info "   Processando boleto #{index + 1}/#{values.size} - Banco: #{bank}"
+
+            boleto = BoletoApi.get_boleto(bank.camelize, boleto_values)
+            if boleto.valid?
+              boletos << boleto
+              BoletoApi.logger.info "   ✅ Boleto #{index + 1} válido"
+            else
+              BoletoApi.logger.error "   ❌ Boleto #{index + 1} inválido: #{boleto.errors.messages.inspect}"
+              errors << { index: index + 1, bank: bank, errors: boleto.errors.messages }
+            end
           end
-        end
-        if errors.empty?
-          content_type "application/#{params[:type]}"
-          header['Content-Disposition'] = "attachment; filename=boletos-#{params[:bank]}.#{params[:type]}"
-          env['api.format'] = :binary
-          Brcobranca::Boleto::Base.lote(boletos, formato: params[:type].to_sym)
-        else
-          error!(errors, 400)
+
+          if errors.empty?
+            BoletoApi.logger.info "✅ Todos os #{boletos.size} boletos são válidos. Gerando arquivo #{params[:type].upcase}..."
+            content_type "application/#{params[:type]}"
+            header['Content-Disposition'] = "attachment; filename=boletos-multi.#{params[:type]}"
+            env['api.format'] = :binary
+            Brcobranca::Boleto::Base.lote(boletos, formato: params[:type].to_sym)
+          else
+            BoletoApi.logger.error "❌ Erros em #{errors.size} boleto(s). Abortando geração."
+            error!({
+              error: "#{errors.size} boleto(s) com erros de validação",
+              validation_errors: errors,
+              valid_count: boletos.size,
+              invalid_count: errors.size
+            }, 400)
+          end
+        rescue JSON::ParserError => e
+          BoletoApi.logger.error "❌ JSON inválido: #{e.message}"
+          error!({ error: 'JSON inválido', details: e.message }, 400)
+        rescue => e
+          BoletoApi.logger.error "❌ Erro ao gerar múltiplos boletos: #{e.class} - #{e.message}"
+          BoletoApi.logger.error e.backtrace.join("\n")
+          error!({ error: 'Erro ao gerar múltiplos boletos', details: e.message, type: e.class.to_s }, 500)
         end
       end
     end

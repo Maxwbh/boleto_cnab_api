@@ -148,6 +148,20 @@ Este documento contém:
 - Exemplos de valores válidos
 - Campos calculados automaticamente
 
+## 🔧 Troubleshooting
+
+**Encontrou problemas ao usar a API? Consulte o guia de troubleshooting:**
+
+[**TROUBLESHOOTING_API.md**](./TROUBLESHOOTING_API.md)
+
+Este guia contém:
+- Como resolver o erro "type is missing"
+- Explicação dos logs melhorados da API
+- Como debugar boletos com campos vazios
+- Diferença entre `nosso_numero` e `numero_documento`
+- Checklist completo para debug
+- Exemplos de código correto
+
 ---
 
 **Nota importante:** Os campos de datas devem estar no formato `YYYY/MM/DD`
