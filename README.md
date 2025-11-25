@@ -585,6 +585,66 @@ Para detalhes completos sobre campos obrigatórios, opcionais e validações do 
 - `variacao`: modalidade da carteira (padrão: '01')
 - `carteira`: padrão '1'
 
+### 🔧 Troubleshooting - Campos Vazios no Boleto PDF
+
+Se o PDF do boleto for gerado mas apresentar **linha digitável**, **código de barras** ou **nosso número vazios**, verifique:
+
+#### Para TODOS os bancos:
+1. ✅ O campo `nosso_numero` está sendo informado corretamente
+2. ✅ O campo `data_vencimento` está no formato correto (`YYYY/MM/DD`)
+3. ✅ O campo `valor` foi informado (mesmo que seja 0.0)
+4. ✅ Todos os campos obrigatórios do banco estão preenchidos
+5. ✅ Use o endpoint `/api/boleto/validate` para verificar se há erros de validação
+
+#### Para Banco do Brasil:
+- Verifique se o `convenio` tem o número correto de dígitos (4, 6, 7 ou 8)
+- Verifique se o `nosso_numero` tem o tamanho compatível com o convênio
+- O campo `numero_documento` é **opcional** e NÃO afeta código de barras
+
+#### Para Sicoob:
+- Verifique se os campos `convenio` e `variacao` estão corretos
+- O `nosso_numero` deve ter no máximo 7 dígitos
+- O campo `numero_documento` é **opcional** e NÃO afeta código de barras
+
+#### Diferença importante:
+- **`nosso_numero`**: Obrigatório, faz parte do código de barras
+- **`numero_documento`**: Opcional, apenas para controle interno (NF, pedido, etc)
+
+**Exemplo de validação antes de gerar o PDF:**
+
+```python
+import requests
+import json
+
+API_URL = "http://localhost:9292/api"
+
+boleto_data = {
+    "valor": 100.00,
+    "cedente": "Empresa LTDA",
+    "documento_cedente": "12345678000190",
+    "sacado": "Cliente",
+    "sacado_documento": "12345678901",
+    "agencia": "4327",
+    "conta_corrente": "417270",
+    "convenio": "229385",
+    "nosso_numero": "1234567",  # OBRIGATÓRIO
+    "numero_documento": "NF-12345",  # OPCIONAL
+    "data_vencimento": "2025/12/31",
+}
+
+# Validar ANTES de gerar PDF
+response = requests.get(
+    f"{API_URL}/boleto/validate",
+    params={"bank": "sicoob", "data": json.dumps(boleto_data)}
+)
+
+if response.status_code == 200:
+    print("✅ Dados válidos! Pode gerar o PDF.")
+else:
+    print("❌ Dados inválidos:")
+    print(response.json())
+```
+
 ---
 
 Para outros exemplos de integração com Odoo, veja: [l10n_br_account_payment_brcobranca](https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca)
