@@ -20,6 +20,7 @@ Todos os bancos herdam da classe `Base` e possuem os seguintes campos:
 ### Campos Opcionais Comuns
 - `cedente` - Nome do beneficiário
 - `documento_cedente` - CPF/CNPJ do beneficiário
+- `numero_documento` - **IMPORTANTE**: Número do pedido, nota fiscal ou documento que originou o boleto. Este campo é diferente de `nosso_numero` e serve para controle interno.
 - `valor` - Valor do boleto (padrão: 0.0)
 - `data_vencimento` - Data de vencimento (padrão: data atual)
 - `data_processamento` - Data de processamento (padrão: data atual)
@@ -33,6 +34,11 @@ Todos os bancos herdam da classe `Base` e possuem os seguintes campos:
 
 ### Validações Numéricas
 Os campos `convenio`, `agencia`, `conta_corrente` e `nosso_numero` devem ser numéricos (podem ser strings numéricas).
+
+### Diferença entre `nosso_numero` e `numero_documento`
+É importante entender a diferença entre estes dois campos:
+- **`nosso_numero`**: Número sequencial utilizado pelo banco para identificar o boleto. É obrigatório e faz parte do código de barras e linha digitável.
+- **`numero_documento`**: Número do pedido, nota fiscal ou documento que originou o boleto. É opcional e serve apenas para controle interno do emissor. Aparece impresso no boleto mas NÃO faz parte do código de barras.
 
 ---
 
@@ -53,9 +59,11 @@ Os campos `convenio`, `agencia`, `conta_corrente` e `nosso_numero` devem ser num
   - Convênio 6 dígitos sem `codigo_servico` → máximo 5 dígitos
   - Convênio 6 dígitos com `codigo_servico` → máximo 17 dígitos
   - Convênio 4 dígitos → máximo 7 dígitos
+- `numero_documento`: **ACEITO PELO BB** - Sem limite de tamanho específico documentado. Usado para identificação interna (nota fiscal, pedido, etc)
 
 ### Campos Específicos
 - `codigo_servico` - Booleano (padrão: false) - Indica se usa código de serviço
+- `numero_documento` - Opcional - Número do documento que originou o boleto (NF, pedido, etc)
 
 ### Valores Padrão
 - `carteira`: '18'
@@ -72,11 +80,20 @@ convenio: '1238798'   # 7 dígitos
 convenio: '123879'    # 6 dígitos
 convenio: 1238        # 4 dígitos
 nosso_numero: '777700168'
+numero_documento: '12345678'  # Opcional - número da NF, pedido, etc
 documento_cedente: '12345678912'
 sacado_documento: '12345678900'
 especie: 'R$'
 moeda: '9'
 ```
+
+### ⚠️ Importante - Campos Vazios no Boleto
+Se o boleto gerado apresentar **linha digitável**, **código de barras** ou **nosso número vazios**, verifique:
+1. ✅ O campo `nosso_numero` está sendo informado
+2. ✅ O campo `data_vencimento` está no formato correto (Date ou 'YYYY/MM/DD')
+3. ✅ O campo `valor` foi informado (mesmo que 0.0)
+4. ✅ Todos os campos obrigatórios estão preenchidos
+5. ✅ O boleto passou na validação (`boleto.valid?` retorna true)
 
 ---
 
@@ -291,10 +308,12 @@ sacado_documento: '12345678900'
 - `convenio`: máximo 7 dígitos (preenchido com zeros à esquerda)
 - `variacao`: máximo 2 dígitos
 - `quantidade`: máximo 3 dígitos (preenchido com zeros à esquerda)
+- `numero_documento`: **ACEITO PELO SICOOB** - Sem limite de tamanho específico. No sistema Sicoob vem pré-preenchido como "Avulso" mas pode ser alterado para qualquer informação interna (número de contrato, NF, etc)
 
 ### Campos Específicos
 - `variacao` - Modalidade da carteira (padrão: '01')
 - `quantidade` - Quantidade (padrão: '001')
+- `numero_documento` - Opcional - Campo "N° Documento" do boleto. Usado para vincular o título ao pagador (número de contrato, NF, pedido, etc)
 
 ### Valores Padrão
 - `carteira`: '1'
@@ -314,10 +333,20 @@ carteira: '1'
 variacao: '01'  # ou '05'
 convenio: '229385'  # será formatado para '0229385'
 nosso_numero: '1'  # será formatado para '0000001'
+numero_documento: '1234567'  # Opcional - número da NF, contrato, pedido, etc
 documento_cedente: '12345678912'
 sacado_documento: '12345678900'
 moeda: '9'
 ```
+
+### ⚠️ Importante - Campos Vazios no Boleto
+Se o boleto gerado apresentar **linha digitável**, **código de barras** ou **nosso número vazios**, verifique:
+1. ✅ O campo `nosso_numero` está sendo informado
+2. ✅ O campo `data_vencimento` está no formato correto (Date ou 'YYYY/MM/DD')
+3. ✅ O campo `valor` foi informado (mesmo que 0.0)
+4. ✅ Os campos `convenio` e `variacao` estão corretos
+5. ✅ Todos os campos obrigatórios estão preenchidos
+6. ✅ O boleto passou na validação (`boleto.valid?` retorna true)
 
 ---
 
@@ -807,4 +836,4 @@ end
 ---
 
 **Documentação gerada a partir do código fonte do BRCobranca**
-**Última atualização: 2025-11-24**
+**Última atualização: 2025-11-25**
