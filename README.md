@@ -148,6 +148,27 @@ Este documento contém:
 - Exemplos de valores válidos
 - Campos calculados automaticamente
 
+**📊 Para tabela COMPLETA de todos os campos aceitos por banco:**
+
+[**TABELA_COMPLETA_CAMPOS_POR_BANCO.md**](./TABELA_COMPLETA_CAMPOS_POR_BANCO.md)
+
+Este documento contém:
+- ✅ Todos os campos da gem BRCobranca
+- 🔒 Indicação de campos obrigatórios vs opcionais
+- ⚠️ Alertas sobre campos específicos por banco
+- ❌ Campos que NÃO devem ser removidos
+- 📝 Valores padrão corretos por banco
+
+**💡 Para exemplos práticos enviando MÁXIMO de informações:**
+
+[**EXEMPLOS_MAXIMO_CAMPOS.md**](./EXEMPLOS_MAXIMO_CAMPOS.md)
+
+Este documento contém:
+- Exemplos completos para Sicoob e Banco do Brasil
+- Classe Helper Python para gerar boletos completos
+- Checklist de validação de campos
+- Benefícios de enviar máximo de informações
+
 ## 🔧 Troubleshooting
 
 **Encontrou problemas ao usar a API? Consulte o guia de troubleshooting:**
