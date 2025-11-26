@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  boleto_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9292:9292"
+    environment:
+      - RACK_ENV=production
+      - PORT=9292
+    volumes:
+      # Facilita desenvolvimento - remova em produção
+      - ./lib:/usr/src/app/lib
+      - ./docs:/usr/src/app/docs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9292/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Serviço para rodar testes
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bundle exec rspec --format documentation
+    volumes:
+      - ./spec:/usr/src/app/spec
+      - ./lib:/usr/src/app/lib
+    environment:
+      - RACK_ENV=test
+    profiles:
+      - test

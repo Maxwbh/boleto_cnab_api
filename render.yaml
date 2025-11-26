@@ -2,17 +2,37 @@ services:
   - type: web
     name: boleto-cnab-api
     env: docker
-    region: oregon  # Ou frankfurt para Europa
+    region: oregon  # Ou frankfurt (Europa), singapore (Ásia), ohio (US)
     plan: free
+
+    # Deploy automático quando push para main
+    autoDeploy: true
+
+    # Health check
     healthCheckPath: /api/health
+
+    # Variáveis de ambiente otimizadas para FREE TIER
     envVars:
       - key: PORT
         value: 9292
+
       - key: RACK_ENV
         value: production
+
+      # Puma otimizado para 512MB RAM (free tier)
       - key: PUMA_WORKERS
-        value: 1
+        value: 1  # Apenas 1 worker para economizar memória
+
       - key: PUMA_MIN_THREADS
-        value: 0
+        value: 0  # Começar com 0 threads
+
       - key: PUMA_MAX_THREADS
-        value: 5
+        value: 5  # Máximo 5 threads (econômico)
+
+      # Ruby otimizações
+      - key: MALLOC_ARENA_MAX
+        value: 2  # Reduz uso de memória
+
+      # Logs
+      - key: RACK_LOGGER_LEVEL
+        value: info
