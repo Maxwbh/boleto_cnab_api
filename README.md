@@ -1,5 +1,5 @@
 # Boleto CNAB API
-
+Este projeto é um FORK  atualizado de https://github.com/akretion/boleto_cnab_api
 > API REST para geração de Boletos, Remessas e processamento de Retornos bancários usando [BRCobranca](https://github.com/Maxwbh/brcobranca)
 
 **Mantido por:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) - M&S do Brasil Ltda
