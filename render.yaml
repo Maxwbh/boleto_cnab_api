@@ -5,6 +5,9 @@ services:
     region: oregon  # Ou frankfurt (Europa), singapore (Ásia), ohio (US)
     plan: free
 
+    # Dockerfile correto
+    dockerfilePath: ./Dockerfile
+
     # Deploy automático quando push para main
     autoDeploy: true
 
