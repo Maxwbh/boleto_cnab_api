@@ -12,6 +12,17 @@ module BoletoApi
 
   def self.get_boleto(bank, values)
    clazz = Object.const_get("Brcobranca::Boleto::#{bank.camelize}")
+
+   # Mapear numero_documento para documento_numero (nome correto na gem)
+   if values.key?('numero_documento') && !values.key?('documento_numero')
+     BoletoApi.logger.info "🔄 Convertendo 'numero_documento' para 'documento_numero' (nome correto na gem)"
+     values['documento_numero'] = values.delete('numero_documento')
+   elsif values.key?('numero_documento') && values.key?('documento_numero')
+     # Se ambos existem, remove numero_documento e mantém documento_numero
+     BoletoApi.logger.info "⚠️  Ambos 'numero_documento' e 'documento_numero' enviados. Usando 'documento_numero'"
+     values.delete('numero_documento')
+   end
+
    date_fields = %w[data_documento data_vencimento data_processamento]
    date_fields.each do |date_field|
       values[date_field] = Date.parse(values[date_field]) if values[date_field]
