@@ -3,15 +3,19 @@
 .gitignore
 .github
 
-# Documentation
-README.md
-CAMPOS_BOLETOS_POR_BANCO.md
-LICENSE
+# Documentation (manter apenas essencial)
+DEPLOY.md
+docs/
 
 # Test files
+spec/
+.rspec
 test_run.py
 *.pyc
 __pycache__
+
+# Examples
+examples/
 
 # Editor files
 *~
@@ -37,8 +41,15 @@ Dockerfile
 .dockerignore
 docker-compose.yml
 
+# Scripts
+start.sh
+
 # CI/CD
 .github/workflows/
 
 # Render config
 render.yaml
+
+# Ruby
+.bundle/
+vendor/bundle/

@@ -162,16 +162,46 @@ boleto_cnab_api/
 
 ## 🐳 Deploy
 
-### Render.com (Free Tier)
+### Desenvolvimento Local
 
-1. Conecte sua conta no [Render.com](https://render.com)
-2. Crie novo Web Service apontando para este repositório
-3. Configure: `Docker` como environment
-4. Deploy automático! 🎉
+```bash
+# Opção 1: Docker Compose (Mais Fácil)
+docker-compose up
+
+# Opção 2: Script Helper
+./start.sh
+
+# Opção 3: Docker Direto
+docker build -t boleto_cnab_api .
+docker run -p 9292:9292 boleto_cnab_api
+
+# Opção 4: Local (sem Docker)
+bundle install
+bundle exec rackup -p 9292
+```
+
+### Render.com (Free Tier) - RECOMENDADO
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+**Ou siga o guia completo:** 📖 **[DEPLOY.md](./DEPLOY.md)**
+
+**Resumo:**
+1. Fork este repositório
+2. Conecte no [Render.com](https://render.com)
+3. New → Web Service → Seu repositório
+4. Ambiente: Docker
+5. Deploy! 🚀
+
+**Recursos do Free Tier:**
+- ✅ 512 MB RAM
+- ✅ 100 GB bandwidth/mês
+- ✅ Auto-deploy do `main`
+- ⚠️ Sleep após 15min inatividade
 
 ### Railway / Fly.io
 
-O projeto inclui configuração para deploy direto. Consulte [`render.yaml`](./render.yaml).
+O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plataformas.
 
 ## 🎯 Características
 
