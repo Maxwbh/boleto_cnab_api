@@ -241,9 +241,9 @@ boleto_sicoob = {
 
 - [Exemplos Práticos](./examples.md) - Exemplos de código Python/Ruby
 - [Troubleshooting](../api/troubleshooting.md) - Solução de problemas
-- [Fork BRCobranca](../development/brcobranca-fork.md) - Detalhes técnicos
+- [Detalhes Técnicos](../development/brcobranca-fork.md) - Informações sobre BRCobranca
 
 ---
 
 **Última atualização:** 2025-11-26
-**Versão da gem:** maxwbh/brcobranca (fork)
+**Gem:** [maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)

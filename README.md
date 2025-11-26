@@ -1,6 +1,6 @@
 # Boleto CNAB API
 
-> API REST para geração de Boletos, Remessas e processamento de Retornos bancários usando [BRCobranca](https://github.com/kivanio/brcobranca)
+> API REST para geração de Boletos, Remessas e processamento de Retornos bancários usando [BRCobranca](https://github.com/Maxwbh/brcobranca)
 
 **Mantido por:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) - M&S do Brasil Ltda
 
@@ -48,7 +48,7 @@ curl http://localhost:9292/api/health
 
 🔧 **[Troubleshooting](./docs/api/troubleshooting.md)** - Solução de problemas comuns
 
-⚙️ **[Fork BRCobranca](./docs/development/brcobranca-fork.md)** - Detalhes técnicos do fork utilizado
+⚙️ **[Detalhes Técnicos](./docs/development/brcobranca-fork.md)** - Informações sobre a gem BRCobranca
 
 ## 💡 Exemplo Rápido
 
@@ -164,36 +164,40 @@ boleto_cnab_api/
 
 ### Render.com (Free Tier)
 
-1. Faça fork deste repositório
-2. Conecte sua conta no [Render.com](https://render.com)
-3. Crie novo Web Service apontando para o fork
-4. Configure: `Docker` como environment
-5. Deploy automático! 🎉
+1. Conecte sua conta no [Render.com](https://render.com)
+2. Crie novo Web Service apontando para este repositório
+3. Configure: `Docker` como environment
+4. Deploy automático! 🎉
 
 ### Railway / Fly.io
 
 O projeto inclui configuração para deploy direto. Consulte [`render.yaml`](./render.yaml).
 
-## 🔄 Este é um Fork
+## 🎯 Características
 
-Este projeto é um **fork** do excelente [akretion/boleto_cnab_api](https://github.com/akretion/boleto_cnab_api) pela [Akretion](http://www.akretion.com).
+### ✅ Recursos Implementados
 
-### Melhorias Implementadas
+- 🔄 Mapeamento automático `numero_documento` ↔ `documento_numero`
+- 📊 Endpoint `/api/boleto/data` para obter dados sem gerar PDF
+- 📝 Documentação completa de campos por banco
+- ⏱️ Logs estruturados com timestamps e tempo de processamento
+- 🧪 Testes automatizados com RSpec
+- 💡 Exemplos práticos Python/Ruby
+- 🗂️ Estrutura de projeto moderna e organizada
+- 🔍 Tratamento robusto de erros com hints
 
-- ✅ Fork atualizado [maxwbh/brcobranca](https://github.com/maxwbh/brcobranca)
-- ✅ Endpoint `/api/boleto/data` para obter dados sem gerar PDF
-- ✅ Documentação completa de campos por banco
-- ✅ Mapeamento automático `numero_documento` ↔ `documento_numero`
-- ✅ Logs estruturados com timestamps e tempo de processamento
-- ✅ Testes automatizados com RSpec
-- ✅ Exemplos práticos Python/Ruby
-- ✅ Estrutura de projeto moderna e organizada
+## 🔧 Tecnologias
+
+- **Ruby** - Linguagem principal
+- **Grape** - Framework para API REST
+- **BRCobranca** - Geração de boletos ([maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca))
+- **RSpec** - Framework de testes
+- **Docker** - Containerização
+- **Alpine Linux** - Imagem base otimizada
 
 ## 📄 Licença
 
 MIT License - Ver [LICENSE](./LICENSE)
-
-O código continua **completamente LIVRE** e disponível sob os mesmos termos do projeto original.
 
 ## 🤝 Contribuições
 
@@ -205,6 +209,12 @@ Contribuições são bem-vindas! Sinta-se livre para abrir issues ou pull reques
 - 🐛 [Reportar Bug](https://github.com/Maxwbh/boleto_cnab_api/issues)
 - 💡 [Sugerir Melhoria](https://github.com/Maxwbh/boleto_cnab_api/issues)
 
+## 🔗 Links Úteis
+
+- [BRCobranca - Gem para geração de boletos](https://github.com/Maxwbh/brcobranca)
+- [Documentação de Campos por Banco](./docs/fields/README.md)
+- [Exemplos de Uso](./examples/python/)
+
 ---
 
-**Desenvolvido com ❤️ pela comunidade Ruby brasileira**
+**Desenvolvido por Maxwell da Silva Oliveira - M&S do Brasil Ltda**
