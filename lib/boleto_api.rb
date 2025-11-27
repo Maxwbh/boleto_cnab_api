@@ -133,18 +133,20 @@ module BoletoApi
             BoletoApi.logger.info "   🔢 Nosso Número: #{boleto.nosso_numero_boleto}"
             BoletoApi.logger.info "   📊 Código de Barras: #{boleto.codigo_barras}"
 
+            # Alguns métodos podem não estar disponíveis em todos os bancos
+            # Usar respond_to? para verificar antes de acessar
             result = {
               bank: params[:bank],
               nosso_numero: boleto.nosso_numero_boleto,
-              nosso_numero_dv: boleto.nosso_numero_dv,
+              nosso_numero_dv: (boleto.nosso_numero_dv rescue nil),
               codigo_barras: boleto.codigo_barras,
-              codigo_barras_segunda_parte: boleto.codigo_barras_segunda_parte,
-              linha_digitavel: boleto.linha_digitavel,
-              agencia_conta_boleto: boleto.agencia_conta_boleto,
+              codigo_barras_segunda_parte: (boleto.codigo_barras_segunda_parte rescue nil),
+              linha_digitavel: (boleto.respond_to?(:linha_digitavel) ? boleto.linha_digitavel : nil),
+              agencia_conta_boleto: (boleto.agencia_conta_boleto rescue nil),
               carteira: boleto.carteira,
               numero_documento: boleto.documento_numero,  # Corrigido: usar documento_numero (nome correto na gem)
               valor: boleto.valor,
-              valor_documento: boleto.valor_documento,
+              valor_documento: (boleto.valor_documento rescue boleto.valor),
               data_vencimento: boleto.data_vencimento,
               data_documento: boleto.data_documento,
               data_processamento: boleto.data_processamento,
@@ -196,10 +198,10 @@ module BoletoApi
             BoletoApi.logger.info "   ✅ Nosso número gerado: #{boleto.nosso_numero_boleto}"
             result = {
               nosso_numero: boleto.nosso_numero_boleto,
-              nosso_numero_dv: boleto.nosso_numero_dv,
+              nosso_numero_dv: (boleto.nosso_numero_dv rescue nil),
               codigo_barras: boleto.codigo_barras,
-              linha_digitavel: boleto.linha_digitavel,
-              agencia_conta_boleto: boleto.agencia_conta_boleto
+              linha_digitavel: (boleto.respond_to?(:linha_digitavel) ? boleto.linha_digitavel : nil),
+              agencia_conta_boleto: (boleto.agencia_conta_boleto rescue nil)
             }
             BoletoApi.log_request_end("GET /api/boleto/nosso_numero", start_time, "✅ SUCESSO")
             result
