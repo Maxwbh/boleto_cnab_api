@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Documentação
+    url: https://github.com/Maxwbh/boleto_cnab_api/tree/main/docs
+    about: Consulte a documentação completa antes de abrir uma issue
+  - name: 🔒 Reportar Vulnerabilidade de Segurança
+    url: https://github.com/Maxwbh/boleto_cnab_api/security/policy
+    about: Por favor, reporte vulnerabilidades de segurança de forma privada
+  - name: 💬 Discussões
+    url: https://github.com/Maxwbh/boleto_cnab_api/discussions
+    about: Faça perguntas e discuta ideias com a comunidade
