@@ -3,6 +3,22 @@
 > **Nota**: Este documento também deve ser copiado para `brcobranca/docs/TODO_INTEGRACAO.md`
 > para manter ambos os repositórios sincronizados.
 
+---
+
+## Mantenedor
+
+| | |
+|---|---|
+| **Nome** | Maxwell Oliveira (@maxwbh) |
+| **Email** | maxwbh@gmail.com |
+| **LinkedIn** | [/maxwbh](https://linkedin.com/in/maxwbh) |
+| **Empresa** | M&S do Brasil LTDA |
+| **Website** | [www.msbrasil.inf.br](https://www.msbrasil.inf.br) |
+
+Todos os commits são atribuídos a **@maxwbh**.
+
+---
+
 Este documento define a estratégia para simplificar e organizar as responsabilidades entre os dois projetos:
 
 - **brcobranca**: Gem Ruby para geração de boletos e arquivos CNAB
