@@ -147,58 +147,38 @@ lib/
 
 ## TODO - Tarefas de Simplificação
 
-### Fase 1: Refatoração da API (boleto_cnab_api)
+### Fase 1: Refatoração da API (boleto_cnab_api) - CONCLUÍDA
 
-- [ ] **1.1 Extrair constantes para arquivo separado**
-  - Mover `RETORNO_FIELDS` para `config/constants.rb`
-  - Criar lista de bancos suportados
-  - Criar mapeamento de tipos de saída (pdf, jpg, png, tif)
+- [x] **1.1 Extrair constantes para arquivo separado**
+  - `lib/boleto_api/config/constants.rb`
+  - Lista de bancos suportados (`SUPPORTED_BANKS`)
+  - Tipos de saída (`OUTPUT_TYPES`)
+  - Campos de retorno (`RETORNO_FIELDS`)
 
-- [ ] **1.2 Criar classe FieldMapper**
-  ```ruby
-  # lib/services/field_mapper.rb
-  class FieldMapper
-    FIELD_MAPPINGS = {
-      'numero_documento' => 'documento_numero'
-    }.freeze
+- [x] **1.2 Criar classe FieldMapper**
+  - `lib/boleto_api/services/field_mapper.rb`
+  - Mapeamento `numero_documento` → `documento_numero`
+  - Conversão automática de datas
 
-    DATE_FIELDS = %w[data_documento data_vencimento data_processamento].freeze
+- [x] **1.3 Criar módulo de serviços**
+  - `lib/boleto_api/services/boleto_service.rb`
+  - `lib/boleto_api/services/remessa_service.rb`
+  - `lib/boleto_api/services/retorno_service.rb`
 
-    def self.map(values)
-      # Mapear campos e converter datas
-    end
-  end
-  ```
+- [x] **1.4 Extrair endpoints para classes separadas**
+  - `lib/boleto_api/endpoints/health_endpoint.rb`
+  - `lib/boleto_api/endpoints/boleto_endpoint.rb`
+  - `lib/boleto_api/endpoints/remessa_endpoint.rb`
+  - `lib/boleto_api/endpoints/retorno_endpoint.rb`
 
-- [ ] **1.3 Criar módulo de serviços**
-  - `BoletoService.create(bank, values)` → Boleto
-  - `RemessaService.generate(bank, type, values)` → Binary
-  - `RetornoService.parse(bank, type, file)` → Array
+- [x] **1.5 Implementar middleware de erro**
+  - `lib/boleto_api/middleware/error_handler.rb`
+  - Tratamento centralizado de exceções
 
-- [ ] **1.4 Extrair endpoints para classes separadas**
-  - Cada endpoint com sua própria classe Grape
-  - Montar API com `mount` no Server principal
-
-- [ ] **1.5 Implementar middleware de erro**
-  ```ruby
-  # Substituir blocos rescue repetidos
-  class ErrorHandler < Grape::Middleware::Base
-    def call(env)
-      @app.call(env)
-    rescue JSON::ParserError => e
-      error_response(400, 'JSON inválido', e.message)
-    rescue Brcobranca::BoletoInvalido => e
-      error_response(400, 'Boleto inválido', e.message)
-    rescue => e
-      error_response(500, 'Erro interno', e.message)
-    end
-  end
-  ```
-
-- [ ] **1.6 Simplificar logging**
-  - Remover emojis dos logs (dificulta parsing)
-  - Usar Grape middleware para log automático
-  - Manter logs estruturados (JSON)
+- [x] **1.6 Simplificar logging**
+  - `lib/boleto_api/middleware/request_logger.rb`
+  - Logs estruturados em JSON
+  - Removidos emojis dos logs
 
 ### Fase 2: Melhorias na Gem (brcobranca)
 
