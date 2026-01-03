@@ -1,32 +1,75 @@
-FROM alpine:latest
-LABEL org.opencontainers.image.authors="maxwbh@gmail.com"
-LABEL org.opencontainers.image.maintainer="Maxwell da Silva Oliveira <maxwbh@gmail.com>"
-LABEL org.opencontainers.image.source="https://github.com/maxwbh/boleto_cnab_api"
-LABEL org.opencontainers.image.description="Micro-serviço REST para geração de Boletos, Remessas e Retornos Bancários usando BRCobranca"
+# Build stage
+FROM alpine:3.19 AS builder
 
 WORKDIR /usr/src/app
-COPY . .
-RUN addgroup -S app && adduser -S -G app app && \
-    mkdir -p tmp log && chown app:app tmp log
 
-RUN set -eux; \
-        apk update && \
-        apk upgrade && \
-        apk add --no-cache \
-           build-base \
-           ghostscript \
-           git \
-           ruby-dev \
-        && rm -rf /var/cache/apk/* \
-        ;
+# Instalar dependências de build
+RUN apk add --no-cache \
+    build-base \
+    ruby-dev \
+    git
 
-RUN set -eux; \
-   gem install bundler:2.5.11 --no-document \
-   && bundle config set --local frozen 'false' \
-   && bundle install \
-   && rm -rf /usr/local/bundle/cache/*.gem \
-   ;
+# Copiar apenas arquivos necessários para bundle
+COPY Gemfile Gemfile.lock* ./
 
+# Instalar gems
+RUN gem install bundler:2.5.11 --no-document && \
+    bundle config set --local deployment 'true' && \
+    bundle config set --local without 'development test' && \
+    bundle install --jobs 4 && \
+    rm -rf /usr/local/bundle/cache/*.gem && \
+    find /usr/local/bundle/gems/ -name "*.c" -delete && \
+    find /usr/local/bundle/gems/ -name "*.o" -delete
+
+# Runtime stage
+FROM alpine:3.19
+
+# Labels do mantenedor
+LABEL org.opencontainers.image.title="Boleto CNAB API"
+LABEL org.opencontainers.image.description="API REST para geração de Boletos, Remessas e Retornos Bancários"
+LABEL org.opencontainers.image.version="1.1.0"
+LABEL org.opencontainers.image.authors="Maxwell Oliveira <maxwbh@gmail.com>"
+LABEL org.opencontainers.image.url="https://github.com/Maxwbh/boleto_cnab_api"
+LABEL org.opencontainers.image.source="https://github.com/Maxwbh/boleto_cnab_api"
+LABEL org.opencontainers.image.vendor="M&S do Brasil LTDA"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Instalar runtime dependencies apenas
+RUN apk add --no-cache \
+    ruby \
+    ghostscript \
+    ghostscript-fonts \
+    && rm -rf /var/cache/apk/*
+
+# Criar usuário não-root
+RUN addgroup -S app && adduser -S -G app app
+
+WORKDIR /usr/src/app
+
+# Copiar gems do builder
+COPY --from=builder /usr/local/bundle /usr/local/bundle
+
+# Copiar aplicação
+COPY --chown=app:app . .
+
+# Criar diretórios necessários
+RUN mkdir -p tmp log && chown -R app:app tmp log
+
+# Configurar ambiente
+ENV RACK_ENV=production \
+    PORT=9292 \
+    MALLOC_ARENA_MAX=2 \
+    RUBY_GC_HEAP_GROWTH_FACTOR=1.1
+
+# Expor porta
 EXPOSE 9292
+
+# Usar usuário não-root
 USER app
-CMD ["bundle", "exec", "puma", "config.ru"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:9292/api/health || exit 1
+
+# Comando de inicialização
+CMD ["bundle", "exec", "puma", "-C", "config/puma.rb", "config.ru"]

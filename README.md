@@ -6,7 +6,7 @@ Este projeto é um FORK  atualizado de https://github.com/akretion/boleto_cnab_a
 
 [![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 [![Python Package](https://img.shields.io/badge/python-3.7%2B-blue)](python-client/)
-[![Version](https://img.shields.io/badge/version-1.0.0-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-1.1.0-green)](VERSION)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ## 🚀 Quick Start
@@ -186,46 +186,54 @@ bundle exec rspec --format documentation
 ```
 boleto_cnab_api/
 ├── lib/
-│   └── boleto_api.rb                    # Código principal da API
+│   ├── boleto_api.rb                     # Entry point principal
+│   └── boleto_api/                       # Módulos da API (v1.1.0)
+│       ├── version.rb                    # Versão da API
+│       ├── config/
+│       │   └── constants.rb              # Constantes centralizadas
+│       ├── services/
+│       │   ├── field_mapper.rb           # Mapeamento de campos
+│       │   ├── boleto_service.rb         # Lógica de boletos
+│       │   ├── remessa_service.rb        # Lógica de remessas
+│       │   └── retorno_service.rb        # Lógica de retornos
+│       ├── endpoints/
+│       │   ├── health_endpoint.rb        # GET /api/health
+│       │   ├── boleto_endpoint.rb        # /api/boleto/*
+│       │   ├── remessa_endpoint.rb       # POST /api/remessa
+│       │   └── retorno_endpoint.rb       # POST /api/retorno
+│       └── middleware/
+│           ├── error_handler.rb          # Tratamento de erros
+│           └── request_logger.rb         # Logs estruturados
+├── config/
+│   └── puma.rb                           # Configuração Puma
 ├── spec/                                 # Testes automatizados
 │   ├── boleto_spec.rb
 │   ├── all_banks_spec.rb
 │   ├── spec_helper.rb
-│   └── fixtures/
-│       └── sample_data.json
+│   ├── fixtures/
+│   │   └── sample_data.json
+│   └── unit/                             # Testes unitários
+│       ├── config/
+│       └── services/
 ├── docs/                                 # Documentação
+│   ├── ARCHITECTURE.md                   # Arquitetura da API
+│   ├── DEPLOY.md                         # Guia de deploy
+│   ├── TODO_INTEGRACAO.md                # Roadmap de integração
 │   ├── api/
 │   │   └── troubleshooting.md
 │   ├── fields/
-│   │   ├── README.md                    # Guia de campos por banco
-│   │   ├── all-banks.md                 # Compatibilidade de todos os bancos
+│   │   ├── README.md
+│   │   ├── all-banks.md
 │   │   └── examples.md
 │   └── development/
 │       └── brcobranca-fork.md
 ├── examples/                             # Exemplos de uso
 │   └── python/
-│       ├── README.md                    # Guia dos exemplos
-│       ├── exemplo_basico.py            # Exemplo iniciante
-│       ├── exemplo_sicoob.py            # Particularidades do Sicoob
-│       ├── exemplo_multiplos_bancos.py  # Gerar para vários bancos
-│       └── exemplo_tratamento_erros.py  # Error handling robusto
 ├── python-client/                        # Cliente Python oficial
-│   ├── README.md                        # Documentação do cliente
-│   ├── setup.py                         # Configuração pip
-│   ├── requirements.txt
-│   └── boleto_cnab_client/
-│       ├── __init__.py
-│       ├── client.py                    # BoletoClient
-│       ├── exceptions.py                # Exceções customizadas
-│       └── models.py                    # Modelos de dados
 ├── scripts/                              # Scripts de automação
-│   ├── README.md                        # Guia dos scripts
-│   └── bump-version.sh                  # Versionamento semântico
-├── VERSION                               # Versão atual (1.0.0)
+├── VERSION                               # Versão atual (1.1.0)
 ├── CHANGELOG.md                          # Histórico de versões
-├── DEPLOY.md                             # Guia de deploy completo
-├── README.md                             # Este arquivo
-├── Dockerfile                            # Configuração Docker
+├── Dockerfile                            # Multi-stage build otimizado
 ├── docker-compose.yml                    # Orquestração Docker
 ├── render.yaml                           # Config Render Free Tier
 ├── Gemfile                               # Dependências Ruby
@@ -315,7 +323,7 @@ O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plata
 
 Este projeto segue [Versionamento Semântico](https://semver.org/) (MAJOR.MINOR.PATCH).
 
-**Versão atual:** `1.0.0` (veja [VERSION](VERSION))
+**Versão atual:** `1.1.0` (veja [VERSION](VERSION))
 
 **Histórico:** Veja [CHANGELOG.md](CHANGELOG.md) para todas as mudanças.
 
