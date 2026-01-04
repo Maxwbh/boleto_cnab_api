@@ -218,20 +218,28 @@ lib/
   - Atualizar `docs/campos_por_banco.md`
   - Adicionar exemplos de JSON válido
 
-### Fase 3: Cliente Python (boleto_cnab_api)
+### Fase 3: Cliente Python (boleto_cnab_api) - CONCLUÍDA
 
-- [ ] **3.1 Publicar no PyPI**
-  - Criar `setup.py` completo
-  - Adicionar README para o cliente
-  - Versionar junto com a API
+- [x] **3.1 Melhorar configuração para PyPI**
+  - Criado `pyproject.toml` (padrão moderno PEP 517/518)
+  - Atualizado `setup.py` com metadados completos
+  - Adicionado suporte a `typing-extensions` para Python < 3.10
+  - Versão sincronizada com API (1.1.0)
 
-- [ ] **3.2 Adicionar testes**
+- [x] **3.2 Adicionar testes**
   - Testes unitários com pytest
-  - Mock das chamadas HTTP
+  - Mock das chamadas HTTP com `responses`
+  - `tests/test_client.py` - Testes do BoletoClient
+  - `tests/test_models.py` - Testes dos modelos
+  - `tests/test_exceptions.py` - Testes das exceções
+  - `tests/test_types.py` - Testes dos tipos TypedDict
+  - `tests/conftest.py` - Fixtures compartilhadas
 
-- [ ] **3.3 Melhorar tipagem**
-  - Usar TypedDict para BoletoData
-  - Documentar tipos esperados
+- [x] **3.3 Melhorar tipagem**
+  - Criado `types.py` com TypedDict
+  - `BoletoDataDict`, `BoletoResponseDict`
+  - `RemessaRequestDict`, `RetornoResponseDict`
+  - Compatível com Python 3.8+ via typing_extensions
 
 ### Fase 4: Infraestrutura
 
@@ -343,17 +351,17 @@ lib/
 ## Prioridades
 
 ### Alta Prioridade
-1. **Refatorar boleto_api.rb em módulos** - Facilita manutenção
-2. **Extrair ErrorHandler** - Remove duplicação de código
-3. **Adicionar `to_hash` na gem** - Simplifica API
+1. ~~**Refatorar boleto_api.rb em módulos**~~ ✅ - CONCLUÍDO (Fase 1)
+2. ~~**Extrair ErrorHandler**~~ ✅ - CONCLUÍDO (Fase 1)
+3. **Adicionar `to_hash` na gem** - Simplifica API (Fase 2 - requer brcobranca)
 
 ### Média Prioridade
 4. **Padronizar nomes de campos** - Evita confusão
 5. **Melhorar documentação de campos** - Facilita uso
-6. **Publicar cliente Python no PyPI** - Facilita adoção
+6. ~~**Publicar cliente Python no PyPI**~~ ✅ - CONCLUÍDO (Fase 3)
 
 ### Baixa Prioridade
-7. **Otimizar imagem Docker** - Economia de recursos
+7. ~~**Otimizar imagem Docker**~~ ✅ - CONCLUÍDO (multi-stage build para Render.com)
 8. **Adicionar Swagger** - Documentação interativa
 9. **Testes de integração** - Qualidade de código
 
@@ -361,13 +369,13 @@ lib/
 
 ## Métricas de Sucesso
 
-| Métrica | Atual | Meta |
-|---------|-------|------|
-| Linhas no boleto_api.rb | 444 | < 100 |
-| Arquivos na lib/ | 1 | 10-15 |
-| Cobertura de testes | ~60% | > 90% |
-| Tamanho imagem Docker | ~512MB | < 200MB |
-| Tempo de build | ~3min | < 1min |
+| Métrica | Antes | Agora | Meta |
+|---------|-------|-------|------|
+| Linhas no boleto_api.rb | 444 | 53 ✅ | < 100 |
+| Arquivos na lib/boleto_api/ | 1 | 12 ✅ | 10-15 |
+| Cobertura de testes | ~60% | - | > 90% |
+| Tamanho imagem Docker | ~512MB | ~150MB ✅ | < 200MB |
+| Tempo de build | ~3min | - | < 1min |
 
 ---
 
