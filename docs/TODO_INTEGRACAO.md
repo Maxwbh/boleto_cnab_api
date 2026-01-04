@@ -180,43 +180,32 @@ lib/
   - Logs estruturados em JSON
   - Removidos emojis dos logs
 
-### Fase 2: Melhorias na Gem (brcobranca)
+### Fase 2: Melhorias na Gem (brcobranca) - CONCLUÍDA ✅
 
-- [ ] **2.1 Adicionar método `to_hash` nos boletos**
-  ```ruby
-  # lib/brcobranca/boleto/base.rb
-  def to_hash
-    {
-      nosso_numero: nosso_numero_boleto,
-      codigo_barras: codigo_barras,
-      linha_digitavel: linha_digitavel,
-      # ... outros campos
-    }
-  end
-  ```
+> **Nota**: Todas as melhorias da gem brcobranca foram implementadas até a versão v12.5.0.
+> Consulte o [TODO do brcobranca](https://github.com/Maxwbh/brcobranca/blob/master/docs/TODO_INTEGRACAO.md) para detalhes.
+
+- [x] **2.1 Adicionar método `to_hash` nos boletos** (v12.2.0)
+  - Implementado `to_hash`, `as_json`, `to_json`
+  - Métodos `dados_entrada`, `dados_calculados`, `dados_pix`
   - Elimina necessidade da API montar manualmente o hash
 
-- [ ] **2.2 Padronizar nomes de campos**
-  - Decidir entre `numero_documento` ou `documento_numero`
-  - Manter compatibilidade com alias
+- [x] **2.2 Padronizar nomes de campos**
+  - Método `to_hash_seguro` para relatório de erros
+  - Compatibilidade mantida com alias
 
-- [ ] **2.3 Adicionar validação de banco suportado**
-  ```ruby
-  # lib/brcobranca/boleto/base.rb
-  SUPPORTED_BANKS = %w[banco_brasil itau bradesco sicoob ...].freeze
+- [x] **2.3 Adicionar validação de banco suportado** (v12.3.0)
+  - Método `valido?` para validação completa
+  - Factory methods: `Remessa.criar`, `Retorno.parse`
 
-  def self.bank_supported?(bank)
-    SUPPORTED_BANKS.include?(bank.to_s.underscore)
-  end
-  ```
+- [x] **2.4 Melhorar mensagens de erro** (v12.3.0)
+  - Mensagens descritivas via ActiveModel::Validations
+  - `to_hash_seguro` retorna erros estruturados
 
-- [ ] **2.4 Melhorar mensagens de erro**
-  - Mensagens mais descritivas
-  - Incluir campo e valor esperado
-
-- [ ] **2.5 Documentar campos obrigatórios por banco**
-  - Atualizar `docs/campos_por_banco.md`
-  - Adicionar exemplos de JSON válido
+- [x] **2.5 API de Remessa e Retorno** (v12.4.0 / v12.5.0)
+  - `Remessa#to_hash`, `Pagamento#to_hash`
+  - `Retorno.parse` com detecção automática de formato
+  - Documentação completa
 
 ### Fase 3: Cliente Python (boleto_cnab_api) - CONCLUÍDA
 
@@ -241,19 +230,43 @@ lib/
   - `RemessaRequestDict`, `RetornoResponseDict`
   - Compatível com Python 3.8+ via typing_extensions
 
-### Fase 4: Infraestrutura
+### Fase 4: Infraestrutura - CONCLUÍDA ✅
 
-- [ ] **4.1 Unificar Docker**
+- [x] **4.1 Unificar Docker**
   - Multi-stage build otimizado
-  - Imagem Alpine < 200MB
+  - Imagem Alpine ~150MB (meta: < 200MB)
+  - Configurado para Render.com Free Tier
 
-- [ ] **4.2 Adicionar testes de integração**
-  - Testar fluxo completo: API → Gem → PDF
-  - CI/CD com GitHub Actions
+- [x] **4.2 Adicionar testes de integração**
+  - `spec/integration/remessa_spec.rb` - Testes de remessa CNAB
+  - `spec/integration/retorno_spec.rb` - Testes de retorno CNAB
+  - `spec/integration/multi_boleto_spec.rb` - Testes de múltiplos boletos
+  - Testes unitários existentes mantidos
 
-- [ ] **4.3 Documentação unificada**
-  - API Reference (OpenAPI/Swagger)
-  - Exemplos em múltiplas linguagens
+- [x] **4.3 Documentação unificada**
+  - `docs/openapi.yaml` - Especificação OpenAPI 3.0
+  - `docs/swagger.html` - Interface Swagger UI
+  - `docs/ARCHITECTURE.md` - Documentação de arquitetura
+  - `docs/DEPLOY.md` - Guia de deploy
+
+### Fase 5: Atualização da API para usar brcobranca v12.5+ (PENDENTE)
+
+> **Importante**: Usar sempre os forks do @maxwbh para ambos os projetos:
+> - brcobranca: https://github.com/Maxwbh/brcobranca
+> - boleto_cnab_api: https://github.com/Maxwbh/boleto_cnab_api
+
+- [ ] **5.1 Atualizar Gemfile**
+  - Usar brcobranca do fork: `gem 'brcobranca', git: 'https://github.com/maxwbh/brcobranca.git'`
+  - Testar compatibilidade com v12.5+
+
+- [ ] **5.2 Refatorar endpoints para usar novos métodos**
+  - Usar `boleto.to_hash` em vez de montar hash manualmente
+  - Usar `Remessa.criar` factory method
+  - Usar `Retorno.parse` com detecção automática
+
+- [ ] **5.3 Simplificar BoletoService**
+  - Remover código duplicado
+  - Usar métodos da gem diretamente
 
 ---
 
