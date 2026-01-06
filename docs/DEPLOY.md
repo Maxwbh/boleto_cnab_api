@@ -1,6 +1,14 @@
 # Guia de Deploy - Render.com Free Tier
 
+> **Versão:** 1.1.0 | **Atualizado:** 2026-01-06
+
 Este guia explica como fazer deploy da Boleto CNAB API no Render.com usando o plano gratuito.
+
+## Requisitos da v1.1.0
+
+- Docker multi-stage build (~150MB)
+- Integração com brcobranca v12.5+ (fork @maxwbh)
+- Otimizado para 512MB RAM
 
 ## Pré-requisitos
 
