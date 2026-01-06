@@ -12,14 +12,14 @@ RUN apk add --no-cache \
 # Copiar apenas arquivos necessários para bundle
 COPY Gemfile Gemfile.lock* ./
 
-# Instalar gems
+# Instalar gems no path padrão do sistema
 RUN gem install bundler:2.5.11 --no-document && \
-    bundle config set --local deployment 'true' && \
     bundle config set --local without 'development test' && \
+    bundle config set --local path '/usr/local/bundle' && \
     bundle install --jobs 4 && \
     rm -rf /usr/local/bundle/cache/*.gem && \
-    find /usr/local/bundle/gems/ -name "*.c" -delete && \
-    find /usr/local/bundle/gems/ -name "*.o" -delete
+    find /usr/local/bundle/gems/ -name "*.c" -delete 2>/dev/null || true && \
+    find /usr/local/bundle/gems/ -name "*.o" -delete 2>/dev/null || true
 
 # Runtime stage
 FROM alpine:3.19
