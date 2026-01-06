@@ -373,17 +373,17 @@ lib/
 ### Alta Prioridade
 1. ~~**Refatorar boleto_api.rb em módulos**~~ ✅ - CONCLUÍDO (Fase 1)
 2. ~~**Extrair ErrorHandler**~~ ✅ - CONCLUÍDO (Fase 1)
-3. **Adicionar `to_hash` na gem** - Simplifica API (Fase 2 - requer brcobranca)
+3. ~~**Adicionar `to_hash` na gem**~~ ✅ - CONCLUÍDO (brcobranca v12.5 + Fase 5)
 
 ### Média Prioridade
-4. **Padronizar nomes de campos** - Evita confusão
-5. **Melhorar documentação de campos** - Facilita uso
+4. ~~**Padronizar nomes de campos**~~ ✅ - CONCLUÍDO (brcobranca v12.3)
+5. ~~**Melhorar documentação de campos**~~ ✅ - CONCLUÍDO (OpenAPI + ARCHITECTURE.md)
 6. ~~**Publicar cliente Python no PyPI**~~ ✅ - CONCLUÍDO (Fase 3)
 
 ### Baixa Prioridade
 7. ~~**Otimizar imagem Docker**~~ ✅ - CONCLUÍDO (multi-stage build para Render.com)
-8. **Adicionar Swagger** - Documentação interativa
-9. **Testes de integração** - Qualidade de código
+8. ~~**Adicionar Swagger**~~ ✅ - CONCLUÍDO (docs/openapi.yaml + swagger.html)
+9. ~~**Testes de integração**~~ ✅ - CONCLUÍDO (spec/integration/)
 
 ---
 
@@ -438,12 +438,34 @@ Santander, Sicredi, Sicoob, Caixa, Ailos
 
 ## Conclusão
 
-A separação clara de responsabilidades entre os projetos já existe conceitualmente. O trabalho principal é:
+### ✅ INTEGRAÇÃO CONCLUÍDA
 
-1. **brcobranca**: Manter como está, adicionar pequenas melhorias (`to_hash`, mensagens de erro)
-2. **boleto_cnab_api**: Refatorar de monolítico para modular, melhorar testabilidade
+Todas as 5 fases do plano de integração foram implementadas com sucesso:
 
-Seguindo este TODO, os projetos ficarão mais simples, manuteníveis e extensíveis.
+| Projeto | Status | Versão |
+|---------|--------|--------|
+| **brcobranca** | ✅ Completo | v12.5.0 |
+| **boleto_cnab_api** | ✅ Completo | v1.1.0 |
+
+### Resumo das Entregas:
+
+1. **brcobranca v12.5.0**:
+   - `to_hash`, `as_json`, `to_json` para boletos
+   - `Remessa.criar` factory method
+   - `Retorno.parse` com detecção automática
+   - Validações melhoradas
+
+2. **boleto_cnab_api v1.1.0**:
+   - Arquitetura modular (12 arquivos vs 1 monolítico)
+   - Integração com brcobranca v12.5+
+   - Cliente Python com TypedDict
+   - Documentação OpenAPI/Swagger
+   - Testes de integração
+   - Docker otimizado para Render.com
+
+### Repositórios (usar sempre os forks @maxwbh):
+- https://github.com/Maxwbh/brcobranca
+- https://github.com/Maxwbh/boleto_cnab_api
 
 ---
 
