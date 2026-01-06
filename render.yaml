@@ -16,7 +16,7 @@ services:
     autoDeploy: true
 
     # Branch principal
-    branch: main
+    branch: master
 
     # Health check
     healthCheckPath: /api/health
