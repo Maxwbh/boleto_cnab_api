@@ -249,24 +249,31 @@ lib/
   - `docs/ARCHITECTURE.md` - Documentação de arquitetura
   - `docs/DEPLOY.md` - Guia de deploy
 
-### Fase 5: Atualização da API para usar brcobranca v12.5+ (PENDENTE)
+### Fase 5: Atualização da API para usar brcobranca v12.5+ - CONCLUÍDA ✅
 
 > **Importante**: Usar sempre os forks do @maxwbh para ambos os projetos:
 > - brcobranca: https://github.com/Maxwbh/brcobranca
 > - boleto_cnab_api: https://github.com/Maxwbh/boleto_cnab_api
 
-- [ ] **5.1 Atualizar Gemfile**
-  - Usar brcobranca do fork: `gem 'brcobranca', git: 'https://github.com/maxwbh/brcobranca.git'`
-  - Testar compatibilidade com v12.5+
+- [x] **5.1 Gemfile já usa fork maxwbh**
+  - `gem 'brcobranca', git: 'https://github.com/maxwbh/brcobranca.git'`
+  - Compatível com v12.5+
 
-- [ ] **5.2 Refatorar endpoints para usar novos métodos**
-  - Usar `boleto.to_hash` em vez de montar hash manualmente
-  - Usar `Remessa.criar` factory method
-  - Usar `Retorno.parse` com detecção automática
+- [x] **5.2 BoletoService refatorado**
+  - Usa `boleto.to_hash` quando disponível (v12.5+)
+  - Usa `boleto.dados_calculados` para nosso_numero
+  - Fallback para versões anteriores mantido
 
-- [ ] **5.3 Simplificar BoletoService**
-  - Remover código duplicado
-  - Usar métodos da gem diretamente
+- [x] **5.3 RemessaService refatorado**
+  - Usa `Brcobranca::Remessa.criar` quando disponível (v12.4+)
+  - Factory method com detecção automática de banco/tipo
+  - Fallback para versões anteriores mantido
+
+- [x] **5.4 RetornoService refatorado**
+  - Usa `Brcobranca::Retorno.parse` quando disponível (v12.5+)
+  - Detecção automática de formato CNAB
+  - Usa `pagamento.to_hash` para serialização
+  - Fallback para versões anteriores mantido
 
 ---
 

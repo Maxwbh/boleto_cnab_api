@@ -36,6 +36,7 @@ module BoletoApi
         end
 
         # Retorna dados completos do boleto (sem gerar arquivo)
+        # Usa o método to_hash do brcobranca v12.5+ quando disponível
         #
         # @param bank [String] Nome do banco
         # @param values [Hash] Dados do boleto
@@ -47,33 +48,17 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          {
-            valid: true,
-            bank: bank,
-            nosso_numero: boleto.nosso_numero_boleto,
-            nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
-            codigo_barras: boleto.codigo_barras,
-            codigo_barras_segunda_parte: safe_call(boleto, :codigo_barras_segunda_parte),
-            linha_digitavel: safe_call(boleto, :linha_digitavel),
-            agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto),
-            carteira: boleto.carteira,
-            numero_documento: boleto.documento_numero,
-            valor: boleto.valor,
-            valor_documento: safe_call(boleto, :valor_documento) || boleto.valor,
-            data_vencimento: boleto.data_vencimento,
-            data_documento: boleto.data_documento,
-            data_processamento: boleto.data_processamento,
-            cedente: boleto.cedente,
-            documento_cedente: boleto.documento_cedente,
-            sacado: boleto.sacado,
-            sacado_documento: boleto.sacado_documento,
-            agencia: boleto.agencia,
-            conta_corrente: boleto.conta_corrente,
-            convenio: boleto.convenio
-          }
+          # Usa to_hash do brcobranca v12.5+ se disponível
+          if boleto.respond_to?(:to_hash)
+            boleto.to_hash.merge(valid: true, bank: bank)
+          else
+            # Fallback para versões anteriores
+            build_boleto_hash(boleto, bank)
+          end
         end
 
         # Retorna apenas nosso_numero e dados relacionados
+        # Usa dados_calculados do brcobranca v12.5+ quando disponível
         #
         # @param bank [String] Nome do banco
         # @param values [Hash] Dados do boleto
@@ -85,14 +70,20 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          {
-            valid: true,
-            nosso_numero: boleto.nosso_numero_boleto,
-            nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
-            codigo_barras: boleto.codigo_barras,
-            linha_digitavel: safe_call(boleto, :linha_digitavel),
-            agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto)
-          }
+          # Usa dados_calculados do brcobranca v12.5+ se disponível
+          if boleto.respond_to?(:dados_calculados)
+            boleto.dados_calculados.merge(valid: true)
+          else
+            # Fallback para versões anteriores
+            {
+              valid: true,
+              nosso_numero: boleto.nosso_numero_boleto,
+              nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
+              codigo_barras: boleto.codigo_barras,
+              linha_digitavel: safe_call(boleto, :linha_digitavel),
+              agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto)
+            }
+          end
         end
 
         # Gera arquivo do boleto (PDF, JPG, PNG, TIF)
@@ -186,6 +177,34 @@ module BoletoApi
           object.send(method)
         rescue StandardError
           nil
+        end
+
+        # Fallback para versões anteriores do brcobranca (< v12.5)
+        def build_boleto_hash(boleto, bank)
+          {
+            valid: true,
+            bank: bank,
+            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
+            codigo_barras: boleto.codigo_barras,
+            codigo_barras_segunda_parte: safe_call(boleto, :codigo_barras_segunda_parte),
+            linha_digitavel: safe_call(boleto, :linha_digitavel),
+            agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto),
+            carteira: boleto.carteira,
+            numero_documento: boleto.documento_numero,
+            valor: boleto.valor,
+            valor_documento: safe_call(boleto, :valor_documento) || boleto.valor,
+            data_vencimento: boleto.data_vencimento,
+            data_documento: boleto.data_documento,
+            data_processamento: boleto.data_processamento,
+            cedente: boleto.cedente,
+            documento_cedente: boleto.documento_cedente,
+            sacado: boleto.sacado,
+            sacado_documento: boleto.sacado_documento,
+            agencia: boleto.agencia,
+            conta_corrente: boleto.conta_corrente,
+            convenio: boleto.convenio
+          }
         end
       end
     end
