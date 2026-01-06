@@ -39,6 +39,7 @@ RUN apk add --no-cache \
     ruby \
     ghostscript \
     ghostscript-fonts \
+    && gem install bundler:2.5.11 --no-document \
     && rm -rf /var/cache/apk/*
 
 # Criar usuário não-root
@@ -59,7 +60,10 @@ RUN mkdir -p tmp log && chown -R app:app tmp log
 ENV RACK_ENV=production \
     PORT=9292 \
     MALLOC_ARENA_MAX=2 \
-    RUBY_GC_HEAP_GROWTH_FACTOR=1.1
+    RUBY_GC_HEAP_GROWTH_FACTOR=1.1 \
+    BUNDLE_PATH=/usr/local/bundle \
+    GEM_HOME=/usr/local/bundle \
+    PATH="/usr/local/bundle/bin:$PATH"
 
 # Expor porta
 EXPOSE 9292
