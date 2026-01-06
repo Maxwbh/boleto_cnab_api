@@ -1,0 +1,99 @@
+GIT
+  remote: https://github.com/maxwbh/brcobranca.git
+  revision: 800b794222a3c58d9220d9a64ae5c8ee64a21096
+  specs:
+    brcobranca (12.6.0)
+      fast_blank
+      parseline (>= 1.0.3)
+      rghost (>= 0.9.8)
+      rghost_barcode (>= 0.9)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (8.1.1)
+      base64
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.3.1)
+      connection_pool (>= 2.2.5)
+      drb
+      i18n (>= 1.6, < 2)
+      json
+      logger (>= 1.4.2)
+      minitest (>= 5.1)
+      securerandom (>= 0.3)
+      tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
+    base64 (0.3.0)
+    bigdecimal (4.0.1)
+    concurrent-ruby (1.3.6)
+    connection_pool (3.0.2)
+    drb (2.2.3)
+    dry-configurable (1.3.0)
+      dry-core (~> 1.1)
+      zeitwerk (~> 2.6)
+    dry-core (1.2.0)
+      concurrent-ruby (~> 1.0)
+      logger
+      zeitwerk (~> 2.6)
+    dry-inflector (1.2.0)
+    dry-logic (1.6.0)
+      bigdecimal
+      concurrent-ruby (~> 1.0)
+      dry-core (~> 1.1)
+      zeitwerk (~> 2.6)
+    dry-types (1.7.1)
+      concurrent-ruby (~> 1.0)
+      dry-core (~> 1.0)
+      dry-inflector (~> 1.0)
+      dry-logic (~> 1.4)
+      zeitwerk (~> 2.6)
+    fast_blank (1.0.1)
+    grape (3.0.1)
+      activesupport (>= 7.0)
+      dry-configurable
+      dry-types (>= 1.1)
+      mustermann-grape (~> 1.1.0)
+      rack (>= 2)
+      zeitwerk
+    i18n (1.14.8)
+      concurrent-ruby (~> 1.0)
+    json (2.18.0)
+    logger (1.7.0)
+    minitest (6.0.1)
+      prism (~> 1.5)
+    mustermann (3.0.4)
+      ruby2_keywords (~> 0.0.1)
+    mustermann-grape (1.1.0)
+      mustermann (>= 1.0.0)
+    mutex_m (0.3.0)
+    nio4r (2.7.5)
+    parseline (1.0.3)
+    prism (1.7.0)
+    puma (7.1.0)
+      nio4r (~> 2.0)
+    rack (3.2.4)
+    rghost (0.9.8)
+    rghost_barcode (0.9)
+    ruby2_keywords (0.0.5)
+    securerandom (0.4.1)
+    tzinfo (2.0.6)
+      concurrent-ruby (~> 1.0)
+    uri (1.1.1)
+    zeitwerk (2.7.4)
+
+PLATFORMS
+  ruby
+  x86_64-linux
+
+DEPENDENCIES
+  base64
+  bigdecimal
+  brcobranca!
+  grape
+  mutex_m
+  puma
+  rghost (= 0.9.8)
+
+BUNDLED WITH
+   2.5.11
