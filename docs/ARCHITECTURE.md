@@ -1,6 +1,18 @@
 # Arquitetura da API
 
-Este documento descreve a arquitetura modular da Boleto CNAB API após a refatoração da Fase 1.
+> **Versão:** 1.1.0 | **Data:** 2026-01-06
+
+Este documento descreve a arquitetura modular da Boleto CNAB API v1.1.0.
+
+## Integração com brcobranca v12.5+
+
+A API integra com o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) v12.5.0:
+
+| Service | Método brcobranca | Fallback |
+|---------|------------------|----------|
+| BoletoService | `boleto.to_hash`, `dados_calculados` | Mapeamento manual |
+| RemessaService | `Brcobranca::Remessa.criar` | Factory legado |
+| RetornoService | `Brcobranca::Retorno.parse` | Load_lines direto |
 
 ## Estrutura de Diretórios
 
@@ -252,8 +264,20 @@ puts result[:linha_digitavel]
 
 ## Métricas
 
-| Métrica | Antes | Depois |
-|---------|-------|--------|
+| Métrica | v1.0.0 (Antes) | v1.1.0 (Atual) |
+|---------|----------------|----------------|
 | Linhas em boleto_api.rb | 444 | 53 |
-| Arquivos na lib/ | 1 | 12 |
+| Arquivos na lib/boleto_api/ | 1 | 12 |
 | Módulos separados | 0 | 4 (config, services, endpoints, middleware) |
+| Testes de integração | 0 | 3 (remessa, retorno, multi_boleto) |
+| Documentação OpenAPI | ❌ | ✅ (docs/openapi.yaml) |
+| Cliente Python com tipos | ❌ | ✅ (TypedDict) |
+
+## Repositórios
+
+- **brcobranca:** https://github.com/Maxwbh/brcobranca
+- **boleto_cnab_api:** https://github.com/Maxwbh/boleto_cnab_api
+
+---
+
+**Mantido por:** Maxwell Oliveira (@maxwbh) - M&S do Brasil LTDA
