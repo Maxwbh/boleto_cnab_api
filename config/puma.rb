@@ -22,28 +22,24 @@ threads min_threads, max_threads
 # Preload app para compartilhar memória entre workers
 preload_app!
 
-# Diretório de trabalho
-directory '/usr/src/app'
+# Usar diretório atual (não hardcoded)
+# Isso permite funcionar tanto com /app quanto /usr/src/app
 
 # PID e state files
 pidfile 'tmp/puma.pid'
 state_path 'tmp/puma.state'
 
-# Logs
-stdout_redirect 'log/puma.stdout.log', 'log/puma.stderr.log', true if ENV['RACK_ENV'] == 'production'
+# Logs vão para stdout/stderr (melhor para containers/Render)
+# Não usar stdout_redirect em produção containerizada
 
-# Graceful shutdown
-on_worker_boot do
+# Graceful shutdown - usando hooks atualizados (Puma 8 compat)
+before_worker_boot do
   # Reconectar a qualquer banco de dados se necessário
 end
 
 # Lifecycle hooks
 before_fork do
   # Cleanup antes de fork
-end
-
-on_restart do
-  # Cleanup durante restart
 end
 
 # Baixar prioridade do GC para melhor throughput
