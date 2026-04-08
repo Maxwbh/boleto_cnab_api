@@ -62,6 +62,7 @@ ENV RACK_ENV=production \
     MALLOC_ARENA_MAX=2 \
     RUBY_GC_HEAP_GROWTH_FACTOR=1.1 \
     BUNDLE_PATH=/usr/local/bundle \
+    BUNDLE_WITHOUT=development:test \
     GEM_HOME=/usr/local/bundle \
     PATH="/usr/local/bundle/bin:$PATH"
 
