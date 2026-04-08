@@ -113,6 +113,11 @@ class BoletoClient:
 
             return response
 
+        except requests.exceptions.RetryError as e:
+            raise BoletoAPIError(
+                f"Servidor indisponível após múltiplas tentativas: {str(e)}",
+                status_code=500
+            ) from e
         except requests.Timeout as e:
             raise BoletoTimeoutError(f"Timeout após {self.timeout}s") from e
         except requests.ConnectionError as e:
