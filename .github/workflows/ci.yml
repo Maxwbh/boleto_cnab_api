@@ -30,7 +30,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           load: true
       - name: Install test pre-requisites
-        run: pip install pytest
+        run: pip install -e "./python-client[dev]"
       - name: Test
         run: pytest -v
       - name: Push image
