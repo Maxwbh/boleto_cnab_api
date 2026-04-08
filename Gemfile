@@ -8,3 +8,9 @@ gem 'mutex_m'
 gem 'bigdecimal'
 # Usar versão específica 0.9.8 do RubyGems (compatível com brcobranca)
 gem 'rghost', '0.9.8'
+gem 'ofx'
+
+group :test do
+  gem 'rspec'
+  gem 'rack-test'
+end
