@@ -23,15 +23,18 @@ services:
       start_period: 40s
 
   # Serviço para rodar testes
+  # Uso: docker-compose --profile test run --rm test
   test:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bundle exec rspec --format documentation
+    command: sh -c "bundle install && bundle exec rspec --format documentation"
     volumes:
       - ./spec:/usr/src/app/spec
       - ./lib:/usr/src/app/lib
     environment:
       - RACK_ENV=test
+      # Desabilita o BUNDLE_WITHOUT do runtime para instalar gems de teste
+      - BUNDLE_WITHOUT=development
     profiles:
       - test
