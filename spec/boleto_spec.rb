@@ -174,7 +174,8 @@ RSpec.describe 'Boleto API' do
 
         expect(last_response.status).to eq(400)
         body = JSON.parse(last_response.body)
-        expect(body['error']).to include('type is missing')
+        # A mensagem 'type is missing' vem em 'details', com 'error' genérico
+        expect(body['details'] || body['error']).to include('type is missing')
       end
     end
 

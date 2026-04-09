@@ -3,23 +3,27 @@
 require 'spec_helper'
 
 RSpec.describe 'Multi-Bank Validation' do
-  let(:fixtures) { JSON.parse(File.read('spec/fixtures/sample_data.json')) }
+  # Carregar fixtures no nível de classe (disponível para blocos each)
+  FIXTURES = JSON.parse(File.read('spec/fixtures/sample_data.json'))
 
-  # Lista de bancos para testar
-  let(:banks) do
-    {
-      'banco_brasil' => fixtures['banco_brasil_valido'],
-      'sicoob' => fixtures['sicoob_valido'],
-      'bradesco' => fixtures['bradesco_valido'],
-      'itau' => fixtures['itau_valido'],
-      'caixa' => fixtures['caixa_valido'],
-      'santander' => fixtures['santander_valido']
-    }
-  end
+  BANKS = {
+    'banco_brasil' => FIXTURES['banco_brasil_valido'],
+    'sicoob'       => FIXTURES['sicoob_valido'],
+    'bradesco'     => FIXTURES['bradesco_valido'],
+    'itau'         => FIXTURES['itau_valido'],
+    'caixa'        => FIXTURES['caixa_valido'],
+    'santander'    => FIXTURES['santander_valido']
+  }.freeze
+
+  MAJOR_BANKS = {
+    'banco_brasil' => FIXTURES['banco_brasil_valido'],
+    'sicoob'       => FIXTURES['sicoob_valido'],
+    'itau'         => FIXTURES['itau_valido']
+  }.freeze
 
   describe 'GET /api/boleto/validate' do
     context 'validating all supported banks' do
-      banks.each do |bank_name, data|
+      BANKS.each do |bank_name, data|
         it "validates #{bank_name} successfully" do
           get '/api/boleto/validate', {
             bank: bank_name,
@@ -36,7 +40,7 @@ RSpec.describe 'Multi-Bank Validation' do
 
   describe 'GET /api/boleto/data' do
     context 'getting data from all supported banks' do
-      banks.each do |bank_name, data|
+      BANKS.each do |bank_name, data|
         it "returns data for #{bank_name} without errors" do
           get '/api/boleto/data', {
             bank: bank_name,
@@ -54,35 +58,25 @@ RSpec.describe 'Multi-Bank Validation' do
           expect(body['codigo_barras']).not_to be_nil
           expect(body['codigo_barras']).not_to be_empty
 
-          # Campos que podem ser nil (depende do banco)
-          # Mas devem estar presentes no response
+          # Campos que podem ser nil (depende do banco) mas devem estar presentes
           expect(body).to have_key('linha_digitavel')
           expect(body).to have_key('nosso_numero_dv')
           expect(body).to have_key('agencia_conta_boleto')
-
-          # Log para debug
-          puts "\n#{bank_name.upcase}:"
-          puts "  codigo_barras: #{body['codigo_barras']}"
-          puts "  linha_digitavel: #{body['linha_digitavel'] || 'nil'}"
-          puts "  nosso_numero: #{body['nosso_numero']}"
         end
       end
     end
 
     context 'handling safe method access' do
       it 'returns nil for linha_digitavel when method does not exist' do
-        # Testar especificamente o Sicoob que pode não ter linha_digitavel
         get '/api/boleto/data', {
           bank: 'sicoob',
-          data: fixtures['sicoob_valido'].to_json
+          data: FIXTURES['sicoob_valido'].to_json
         }
 
         expect(last_response.status).to eq(200)
         body = JSON.parse(last_response.body)
 
-        # Deve ter a chave, mas pode ser nil
         expect(body).to have_key('linha_digitavel')
-        # Não deve causar erro 500
         expect(last_response.status).not_to eq(500)
       end
     end
@@ -90,7 +84,7 @@ RSpec.describe 'Multi-Bank Validation' do
 
   describe 'GET /api/boleto/nosso_numero' do
     context 'generating nosso_numero for all banks' do
-      banks.each do |bank_name, data|
+      BANKS.each do |bank_name, data|
         it "generates nosso_numero for #{bank_name}" do
           get '/api/boleto/nosso_numero', {
             bank: bank_name,
@@ -111,14 +105,7 @@ RSpec.describe 'Multi-Bank Validation' do
 
   describe 'GET /api/boleto (PDF generation)' do
     context 'generating PDF for major banks' do
-      # Testar apenas os principais para economizar tempo
-      major_banks = {
-        'banco_brasil' => fixtures['banco_brasil_valido'],
-        'sicoob' => fixtures['sicoob_valido'],
-        'itau' => fixtures['itau_valido']
-      }
-
-      major_banks.each do |bank_name, data|
+      MAJOR_BANKS.each do |bank_name, data|
         it "generates PDF for #{bank_name}" do
           get '/api/boleto', {
             bank: bank_name,
@@ -140,7 +127,7 @@ RSpec.describe 'Multi-Bank Validation' do
 
   describe 'Field mapping compatibility' do
     context 'numero_documento vs documento_numero' do
-      banks.each do |bank_name, data|
+      BANKS.each do |bank_name, data|
         it "handles numero_documento correctly for #{bank_name}" do
           # Enviar apenas numero_documento (sem documento_numero)
           test_data = data.dup
@@ -164,7 +151,7 @@ RSpec.describe 'Multi-Bank Validation' do
 
   describe 'Error resilience' do
     it 'does not crash with NoMethodError for any bank' do
-      banks.each do |bank_name, data|
+      BANKS.each do |bank_name, data|
         get '/api/boleto/data', {
           bank: bank_name,
           data: data.to_json

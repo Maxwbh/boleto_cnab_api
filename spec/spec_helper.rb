@@ -2,6 +2,10 @@
 
 ENV['RACK_ENV'] = 'test'
 
+# Força encoding UTF-8 para leitura de fixtures com caracteres acentuados
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
+
 require 'rack/test'
 require 'rspec'
 require 'json'

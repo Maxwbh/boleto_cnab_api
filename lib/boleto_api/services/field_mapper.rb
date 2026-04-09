@@ -4,9 +4,22 @@ module BoletoApi
   module Services
     # Serviço para mapeamento e conversão de campos
     class FieldMapper
-      # Mapeamento de campos alternativos para os nomes corretos da gem
+      # Mapeamento de campos alternativos para os nomes corretos da gem (para boletos)
       FIELD_MAPPINGS = {
         'numero_documento' => 'documento_numero'
+      }.freeze
+
+      # Mapeamento de campos para pagamentos (Brcobranca::Remessa::Pagamento usa nomes diferentes)
+      PAGAMENTO_FIELD_MAPPINGS = {
+        'sacado'           => 'nome_sacado',
+        'sacado_documento' => 'documento_sacado',
+        'sacado_endereco'  => 'endereco_sacado',
+        'sacado_cidade'    => 'cidade_sacado',
+        'sacado_uf'        => 'uf_sacado',
+        'sacado_cep'       => 'cep_sacado',
+        'sacado_bairro'    => 'bairro_sacado',
+        'numero_documento' => 'numero',
+        'documento_numero' => 'numero'
       }.freeze
 
       # Campos de data para boletos
@@ -45,15 +58,17 @@ module BoletoApi
 
         # Mapeia campos para pagamentos
         def map_pagamento(values)
-          result = map(values, date_fields: PAGAMENTO_DATE_FIELDS)
+          result = values.dup
+          map_field_names!(result, PAGAMENTO_FIELD_MAPPINGS)
+          convert_dates!(result, PAGAMENTO_DATE_FIELDS)
           result['data_vencimento'] ||= Date.today
           result
         end
 
         private
 
-        def map_field_names!(values)
-          FIELD_MAPPINGS.each do |from, to|
+        def map_field_names!(values, mappings = FIELD_MAPPINGS)
+          mappings.each do |from, to|
             next unless values.key?(from)
 
             if values.key?(to)

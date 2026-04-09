@@ -17,6 +17,8 @@ module BoletoApi
         error_response(400, 'Boleto inválido', e.message, 'BoletoInvalido')
       rescue Brcobranca::RemessaInvalida => e
         error_response(400, 'Remessa inválida', e.message, 'RemessaInvalida')
+      rescue Brcobranca::NaoImplementado => e
+        error_response(400, 'Operação não suportada', e.message, 'NaoImplementado')
       rescue NameError => e
         error_response(400, 'Banco ou tipo não encontrado', e.message, 'NameError')
       rescue NoMethodError => e

@@ -99,6 +99,7 @@ module BoletoApi
           result = Services::BoletoService.generate_multi(boletos_data, format: params[:type])
 
           if result[:valid]
+            status 200
             content_type Config::Constants.content_type_for(params[:type])
             header['Content-Disposition'] = "attachment; filename=boletos-multi.#{params[:type]}"
             env['api.format'] = :binary

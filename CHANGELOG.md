@@ -5,31 +5,64 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
-## [1.2.0] - 2026-04-08
+## [1.2.0] - 2026-04-09
 
 ### Adicionado
 
 #### Endpoint OFX (Extrato Bancário)
-- ✅ `POST /api/ofx/parse` - Parsing de arquivos OFX com retorno JSON estruturado
-- ✅ Suporte a OFX v1 (SGML) e v2 (XML)
-- ✅ Conversão automática de encoding Latin-1 para UTF-8
-- ✅ Filtro `somente_creditos=true` para retornar apenas créditos
-- ✅ Extração automática de `nosso_numero` do campo memo por banco
+- `POST /api/ofx/parse` - Parsing de arquivos OFX com retorno JSON estruturado
+- Suporte a OFX v1 (SGML) e v2 (XML)
+- Conversão automática de encoding Latin-1 para UTF-8
+- Filtro `somente_creditos=true` para retornar apenas créditos
+- Extração automática de `nosso_numero` do campo memo por banco
 
 #### Módulo NossoNumeroExtractor
-- ✅ Extração por regex para Sicoob (756), Itaú (341), BB (001), Bradesco (237), Caixa (104)
-- ✅ Fallback genérico para bancos não mapeados
+- Extração por regex para Sicoob (756), Itaú (341), BB (001), Bradesco (237), Caixa (104)
+- Fallback genérico para bancos não mapeados
 
 #### Testes
-- ✅ 20 testes unitários para NossoNumeroExtractor
-- ✅ 14 testes unitários para OFXParserService
-- ✅ 7 testes de integração para endpoint OFX
-- ✅ Fixtures OFX para Sicoob e Itaú
+- 20 testes unitários para NossoNumeroExtractor
+- 14 testes unitários para OFXParserService
+- 7 testes de integração para endpoint OFX
+- Fixtures OFX para Sicoob e Itaú
+- **Total: 158 testes Ruby + 44 testes Python (202 passando)**
+
+#### Documentação
+- `docs/README.md` - Índice central da documentação
+- `docs/api/ofx-parsing.md` - Guia detalhado do endpoint OFX
+- `docs/openapi.yaml` atualizado com schemas `OfxResponse`, `OfxTransacao`, `OfxError`
+- Troubleshooting reescrito com seções por endpoint incluindo OFX
 
 ### Modificado
-- 📦 Gemfile: adicionada gem `ofx` para parsing de extratos bancários
-- 📦 Gemfile: adicionadas gems `rspec` e `rack-test` no grupo de teste
-- 🔧 ErrorHandler: tratamento de `Grape::Exceptions::ValidationErrors` como HTTP 400
+- Gemfile: adicionada gem `ofx` para parsing de extratos bancários
+- Gemfile: adicionadas gems `rspec` e `rack-test` no grupo de teste
+- ErrorHandler: trata `Grape::Exceptions::ValidationErrors` e `Brcobranca::NaoImplementado` como HTTP 400
+- BoletoService.create: filtra campos não suportados por banco (evita NoMethodError em Bradesco por `digito_conta`)
+- BoletoService.data: normaliza contrato público (`documento_numero` → `numero_documento` alias)
+- BoletoService.nosso_numero: mantém compatibilidade com `nosso_numero` como chave formatada
+- BoletoService.generate_multi: valida array vazio
+- RemessaService: factory method usa `**kwargs` corretamente (Ruby 3.0+)
+- RemessaService: converte hashes em objetos `Brcobranca::Remessa::Pagamento`
+- FieldMapper: novo mapeamento `PAGAMENTO_FIELD_MAPPINGS` (sacado → nome_sacado, etc)
+- Endpoints POST retornam explicitamente status 200 para binários (boleto, remessa, retorno, multi)
+- Dockerfile: `BUNDLE_WITHOUT=development:test` no runtime stage
+- Dockerfile: label de versão atualizado para 1.2.0
+- docker-compose: serviço test instala dev deps antes de rodar rspec
+- CI workflow: tag Docker em lowercase, dependências pytest instaladas via pip install -e
+
+### Corrigido
+- Remessa: `tipo:` → `formato:` (chave correta para `Brcobranca::Remessa.criar`)
+- Remessa: passagem posicional → keyword arguments em Ruby 3.0+
+- Remessa: formato correto `cnab400`/`cnab240` (não apenas `400`/`240`)
+- Client Python: `RetryError` convertido para `BoletoAPIError`
+- Fixtures: `caixa_valido` carteira `"SR"` → `"1"`, `santander_valido` ajustado para convenio válido
+- `spec_helper.rb`: forçar encoding UTF-8 para arquivos com acentos
+- `all_banks_spec.rb`: correção de scoping (`let` dentro de `context.each`)
+
+### Removido
+- `docs/DEPLOY.md` (duplicado do `DEPLOY.md` na raiz)
+- `docs/TODO_INTEGRACAO.md` (roadmap concluído, histórico disponível em commits)
+- `docs/swagger.html` (deve ser gerado sob demanda do `openapi.yaml`)
 
 ---
 
