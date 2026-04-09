@@ -55,15 +55,19 @@ module BoletoApi
           values_copy = values.dup
           pagamentos_data = values_copy.delete('pagamentos') || values_copy.delete(:pagamentos) || []
 
-          # Prepara dados para o factory
-          factory_params = values_copy.merge(
+          # Converte hashes de pagamento em objetos Brcobranca::Remessa::Pagamento
+          pagamentos = pagamentos_data.map { |p| create_pagamento(p) }
+
+          # Prepara dados para o factory - symbolizar chaves pois vêm do JSON.parse (strings)
+          # e Ruby 3.0+ exige symbols para keyword arguments
+          factory_params = values_copy.transform_keys(&:to_sym).merge(
             banco: bank,
-            tipo: cnab_type.to_s.gsub('cnab', ''),
-            pagamentos: pagamentos_data.map { |p| FieldMapper.map_pagamento(p) }
+            formato: cnab_type.to_s,
+            pagamentos: pagamentos
           )
 
           begin
-            remessa = Brcobranca::Remessa.criar(factory_params)
+            remessa = Brcobranca::Remessa.criar(**factory_params)
 
             if remessa.valid?
               content = remessa.gera_arquivo
