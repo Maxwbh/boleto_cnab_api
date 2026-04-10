@@ -18,6 +18,7 @@ module BoletoApi
         # @return [Hash] { valid: Boolean, content: String/nil, errors: Array }
         def generate(bank, cnab_type, values)
           validate_cnab_type!(cnab_type)
+          validate_payload!(values)
 
           # Usa factory method do brcobranca v12.4+ se disponível
           if remessa_factory_available?
@@ -114,6 +115,38 @@ module BoletoApi
         def validate_cnab_type!(cnab_type)
           unless Config::Constants.cnab_type_supported?(cnab_type)
             raise ArgumentError, "Tipo CNAB '#{cnab_type}' não suportado. Tipos disponíveis: #{Config::Constants::CNAB_TYPES.join(', ')}"
+          end
+        end
+
+        # Valida que o payload é um Hash contendo 'pagamentos'.
+        # Um erro comum do cliente é enviar um Array direto como root do JSON
+        # ao invés de um objeto { "pagamentos": [...], ...outros campos }.
+        def validate_payload!(values)
+          if values.is_a?(Array)
+            raise ArgumentError,
+                  'Payload da remessa deve ser um objeto JSON (Hash) com chaves ' \
+                  "como 'pagamentos', 'agencia', 'conta_corrente', etc. " \
+                  "Recebido: Array com #{values.size} item(ns). " \
+                  "Envie o array dentro de { \"pagamentos\": [...] }."
+          end
+
+          unless values.is_a?(Hash)
+            raise ArgumentError,
+                  "Payload da remessa deve ser um Hash, recebido: #{values.class}"
+          end
+
+          pagamentos = values['pagamentos'] || values[:pagamentos]
+          if pagamentos.nil?
+            raise ArgumentError, "Campo 'pagamentos' é obrigatório no payload da remessa"
+          end
+
+          unless pagamentos.is_a?(Array)
+            raise ArgumentError,
+                  "Campo 'pagamentos' deve ser um Array, recebido: #{pagamentos.class}"
+          end
+
+          if pagamentos.empty?
+            raise ArgumentError, "Campo 'pagamentos' não pode estar vazio"
           end
         end
 

@@ -3,6 +3,11 @@
 # Configuração do Puma otimizada para Render.com Free Tier
 # Limite de memória: 512MB
 
+# CRÍTICO: força flush imediato de stdout/stderr
+# Sem isso, Render/Docker bufferizam logs e eles não aparecem em tempo real
+$stdout.sync = true
+$stderr.sync = true
+
 # Porta
 port ENV.fetch('PORT', 9292)
 
@@ -22,17 +27,21 @@ threads min_threads, max_threads
 # Preload app para compartilhar memória entre workers
 preload_app!
 
-# Usar diretório atual (não hardcoded)
-# Isso permite funcionar tanto com /app quanto /usr/src/app
-
 # PID e state files
 pidfile 'tmp/puma.pid'
 state_path 'tmp/puma.state'
 
-# Logs vão para stdout/stderr (melhor para containers/Render)
-# Não usar stdout_redirect em produção containerizada
+# Logs de request do Puma (method, path, status, duration)
+# Complementar ao RequestLogger da API
+log_requests true
 
-# Graceful shutdown - usando hooks atualizados (Puma 8 compat)
+# Hook após boot: garante que stdout/stderr estão em sync no worker
+on_worker_boot do
+  $stdout.sync = true
+  $stderr.sync = true
+end
+
+# Graceful shutdown
 before_worker_boot do
   # Reconectar a qualquer banco de dados se necessário
 end
@@ -42,9 +51,9 @@ before_fork do
   # Cleanup antes de fork
 end
 
-# Baixar prioridade do GC para melhor throughput
+# Error handler de baixo nível
 if ENV['RACK_ENV'] == 'production'
-  lowlevel_error_handler do |e, env|
+  lowlevel_error_handler do |e, _env|
     [500, {}, ["Erro interno do servidor\n"]]
   end
 end
