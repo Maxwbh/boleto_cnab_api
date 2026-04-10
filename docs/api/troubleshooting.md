@@ -7,6 +7,7 @@ Este guia ajuda a resolver problemas comuns ao usar a API.
 ## Índice
 
 - [Logging](#logging)
+- [Deploy no Render.com](#deploy-no-rendercom)
 - [Erros Comuns — Boletos](#erros-comuns--boletos)
 - [Erros Comuns — Remessa CNAB](#erros-comuns--remessa-cnab)
 - [Erros Comuns — Retorno CNAB](#erros-comuns--retorno-cnab)
@@ -27,6 +28,80 @@ Erros são logados via `ErrorHandler`:
 ```
 2026-04-09T12:00:00.000+0000 [ERROR] [400] ValidationError: Parâmetro inválido - file is missing
 ```
+
+## Deploy no Render.com
+
+### Logs não aparecem no dashboard do Render
+
+**Causa:** Em ambientes containerizados, o Ruby bufferiza `stdout/stderr` em blocos. Os logs só aparecem quando o buffer enche, o que pode demorar muito ou nunca acontecer em baixo volume.
+
+**Solução (já aplicada a partir da v1.2.0):** O projeto força `$stdout.sync = true` e `$stderr.sync = true` em 3 pontos:
+- `config.ru` (entry point do Rack)
+- `config/puma.rb` (antes do Puma bootar)
+- `lib/boleto_api.rb` (quando a aplicação é carregada)
+
+Além disso, `log_requests true` está habilitado no Puma para logar cada request automaticamente.
+
+**Verificação local:**
+```ruby
+require 'boleto_api'
+BoletoApi.logger.info 'teste'
+puts $stdout.sync  # deve imprimir 'true'
+```
+
+**Se ainda assim não aparecer:**
+1. Verifique que está usando a v1.2.0+ (`cat VERSION`)
+2. Force um rebuild da imagem no Render (Manual Deploy → Clear build cache & deploy)
+3. No dashboard do Render, clique em "Logs" e role para cima (Render mostra últimas 1000 linhas)
+
+### HTTP 429 — Too Many Requests (cold start)
+
+**Causa:** Isto **não é rate limiting da API** — a API Grape não possui rate limiting. O 429 vem do próprio **Render.com free tier**:
+
+1. **Cold start (sleep mode):** Após 15 minutos de inatividade, o Render suspende o serviço. A primeira request pode demorar 30-60s para acordar.
+2. **Durante o wake up, requests subsequentes podem receber 429 ou 503** enquanto o serviço se inicializa.
+3. Se o cliente envia múltiplas requests em paralelo ou em sequência rápida, as primeiras acordam o serviço e as seguintes podem receber 429 enquanto o wake está em progresso.
+
+**Exemplo no log do cliente:**
+```
+ERROR ... Erro BRCobranca: 429 - Too Many Requests
+ERROR ... Erro BRCobranca: 429 - Too Many Requests  (480ms depois)
+```
+
+**Soluções:**
+
+| Opção | Custo | Descrição |
+|-------|-------|-----------|
+| **1. Retry com backoff no cliente** | Grátis | Implementar retry exponencial (1s, 2s, 4s, 8s) até 4 tentativas |
+| **2. Ping service (manter acordado)** | Grátis | Usar [cron-job.org](https://cron-job.org) ou [UptimeRobot](https://uptimerobot.com) para pingar `/api/health` a cada 10-14 minutos |
+| **3. Upgrade para Starter ($7/mês)** | Pago | Elimina sleep mode e aumenta RAM para 2GB |
+
+**Exemplo de retry em Python (no cliente):**
+
+```python
+import time
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+session = requests.Session()
+retry = Retry(
+    total=4,
+    backoff_factor=1,           # 1s, 2s, 4s, 8s
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=['GET', 'POST']
+)
+session.mount('https://', HTTPAdapter(max_retries=retry))
+
+# Primeira chamada acorda o servidor
+response = session.get('https://boleto-cnab-api.onrender.com/api/health', timeout=60)
+```
+
+**Exemplo de ping service (cron-job.org):**
+- URL: `https://seu-service.onrender.com/api/health`
+- Intervalo: a cada 10 minutos
+- Método: GET
+- Timeout: 30s
 
 ## Erros Comuns — Boletos
 
