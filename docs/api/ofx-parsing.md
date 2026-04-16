@@ -1,6 +1,6 @@
 # Parsing de Arquivos OFX
 
-> **Versão:** 1.2.0 | **Endpoint:** `POST /api/ofx/parse`
+> **Versão:** 1.3.0 | **Endpoint:** `POST /api/ofx/parse`
 
 Guia completo do endpoint de parsing de extratos bancários OFX.
 

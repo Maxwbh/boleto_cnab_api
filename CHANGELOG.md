@@ -5,6 +5,47 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.3.0] - 2026-04-10
+
+### Adicionado
+
+#### Banco C6 (336) — NOVO
+- ✅ `banco_c6` adicionado em `SUPPORTED_BANKS` e `CNAB400_BANKS`
+- ✅ Suporte completo a geração de boletos C6 (código 336)
+- ✅ Remessa e retorno CNAB 400 para Banco C6
+- ✅ PIX híbrido suportado (campo `emv`)
+- ✅ Fixture `banco_c6_valido` em `spec/fixtures/sample_data.json`
+- ✅ Testes no `all_banks_spec.rb` incluindo PDF generation
+
+#### PIX Híbrido documentado
+- 📄 `docs/api/pix.md` — Guia completo de PIX híbrido
+- 📄 Bancos com PIX: Banco do Brasil, Bradesco, Itaú, Sicoob, Caixa, Banco C6, Santander, Sicredi
+- 📄 Campos `emv` e `pix_label` adicionados no schema OpenAPI `BoletoData`
+- 📄 Objeto `pix` no schema `BoletoResponse`
+
+#### Documentação brcobranca-fork.md reescrita
+- 📄 Tabela completa de 18 bancos com colunas Boleto, CNAB 400, CNAB 240, PIX
+- 📄 Histórico de versões do fork (v12.0 → v12.6.1)
+- 📄 Métodos modernos da gem: `to_hash`, `dados_calculados`, `dados_entrada`, `dados_pix`, `valido?`, `to_hash_seguro`
+- 📄 Factory methods: `Brcobranca::Remessa.criar`, `Brcobranca::Retorno.parse`
+- 📄 Seção detalhada por banco com particularidades
+
+### Modificado
+- 📦 **brcobranca atualizado**: 12.6.0 → 12.6.1 (traz suporte nativo a Banco C6)
+- 📖 OpenAPI v1.2.0 → v1.3.0, schema `BankCode` inclui `banco_c6`
+- 📖 README.md, ARCHITECTURE.md, python-client/README.md atualizados para v1.3.0
+- 📖 `docs/fields/all-banks.md` inclui seção detalhada do Banco C6
+
+### Versão da Gem
+
+Este release atualiza brcobranca de 12.6.0 → 12.6.1, trazendo:
+- Banco C6 (336) com CNAB 400 completo
+- PIX expandido (6 bancos: Bradesco, Itaú, Banco C6, Sicoob, Caixa, Banco Brasil)
+- Sicoob: suporte a Carteira 9 e Layout 810
+- PrawnBolepix (alternativa ao Ghostscript para PIX)
+
+---
+
 ## [1.2.0] - 2026-04-09
 
 ### Adicionado

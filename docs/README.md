@@ -1,6 +1,6 @@
 # Documentação — Boleto CNAB API
 
-> **Versão:** 1.2.0
+> **Versão:** 1.3.0
 
 Documentação técnica da Boleto CNAB API — REST API para geração de boletos, CNAB (remessa/retorno) e parsing de extratos OFX.
 
@@ -18,6 +18,7 @@ Documentação técnica da Boleto CNAB API — REST API para geração de boleto
 | [openapi.yaml](./openapi.yaml) | Especificação OpenAPI 3.0 completa |
 | [api/troubleshooting.md](./api/troubleshooting.md) | Solução de problemas comuns |
 | [api/ofx-parsing.md](./api/ofx-parsing.md) | Guia detalhado do endpoint OFX |
+| [api/pix.md](./api/pix.md) | Guia de PIX híbrido em boletos |
 
 ### Endpoints
 

@@ -1,6 +1,6 @@
 # Troubleshooting — Boleto CNAB API
 
-> **Versão:** 1.2.0
+> **Versão:** 1.3.0
 
 Este guia ajuda a resolver problemas comuns ao usar a API.
 
@@ -35,7 +35,7 @@ Erros são logados via `ErrorHandler`:
 
 **Causa:** Em ambientes containerizados, o Ruby bufferiza `stdout/stderr` em blocos. Os logs só aparecem quando o buffer enche, o que pode demorar muito ou nunca acontecer em baixo volume.
 
-**Solução (já aplicada a partir da v1.2.0):** O projeto força `$stdout.sync = true` e `$stderr.sync = true` em 3 pontos:
+**Solução (já aplicada a partir da v1.3.0):** O projeto força `$stdout.sync = true` e `$stderr.sync = true` em 3 pontos:
 - `config.ru` (entry point do Rack)
 - `config/puma.rb` (antes do Puma bootar)
 - `lib/boleto_api.rb` (quando a aplicação é carregada)
@@ -50,7 +50,7 @@ puts $stdout.sync  # deve imprimir 'true'
 ```
 
 **Se ainda assim não aparecer:**
-1. Verifique que está usando a v1.2.0+ (`cat VERSION`)
+1. Verifique que está usando a v1.3.0+ (`cat VERSION`)
 2. Force um rebuild da imagem no Render (Manual Deploy → Clear build cache & deploy)
 3. No dashboard do Render, clique em "Logs" e role para cima (Render mostra últimas 1000 linhas)
 
@@ -188,7 +188,7 @@ print(validate.json())
 
 ### 1. `wrong number of arguments`
 
-**Causa (corrigido em v1.2.0):** Passagem incorreta de keyword arguments para `Brcobranca::Remessa.criar`. Se você ver esse erro em uma versão antiga, atualize para v1.2.0+.
+**Causa (corrigido em v1.3.0):** Passagem incorreta de keyword arguments para `Brcobranca::Remessa.criar`. Se você ver esse erro em uma versão antiga, atualize para v1.3.0+.
 
 ### 2. Formato CNAB incorreto
 

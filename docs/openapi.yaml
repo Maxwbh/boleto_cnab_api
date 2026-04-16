@@ -16,20 +16,21 @@ info:
 
     ## Bancos Suportados
 
-    | Banco | Código | Boleto | CNAB 240 | CNAB 400 |
-    |-------|--------|--------|----------|----------|
-    | Banco do Brasil | 001 | ✅ | ✅ | ✅ |
-    | Itaú | 341 | ✅ | ❌ | ✅ |
-    | Bradesco | 237 | ✅ | ❌ | ✅ |
-    | Caixa | 104 | ✅ | ✅ | ❌ |
-    | Santander | 033 | ✅ | ✅ | ✅ |
-    | Sicoob | 756 | ✅ | ✅ | ✅ |
-    | Sicredi | 748 | ✅ | ✅ | ❌ |
-    | Banrisul | 041 | ✅ | ❌ | ✅ |
-    | Unicred | 136 | ✅ | ✅ | ✅ |
-    | Ailos | 085 | ✅ | ✅ | ❌ |
+    | Banco | Código | Boleto | CNAB 240 | CNAB 400 | PIX |
+    |-------|--------|--------|----------|----------|-----|
+    | Banco do Brasil | 001 | ✅ | ✅ | ✅ | ✅ |
+    | Itaú | 341 | ✅ | ❌ | ✅ | ✅ |
+    | Bradesco | 237 | ✅ | ❌ | ✅ | ✅ |
+    | Caixa | 104 | ✅ | ✅ | ❌ | ✅ |
+    | Santander | 033 | ✅ | ✅ | ✅ | ✅ |
+    | Sicoob | 756 | ✅ | ✅ | ✅ | ✅ |
+    | Sicredi | 748 | ✅ | ✅ | ❌ | ✅ |
+    | Banrisul | 041 | ✅ | ❌ | ✅ | — |
+    | Banco C6 | 336 | ✅ | ❌ | ✅ | ✅ |
+    | Unicred | 136 | ✅ | ✅ | ✅ | — |
+    | Ailos | 085 | ✅ | ✅ | ❌ | — |
 
-  version: 1.2.0
+  version: 1.3.0
   contact:
     name: Maxwell da Silva Oliveira
     email: maxwbh@gmail.com
@@ -432,13 +433,14 @@ components:
         - banestes
         - banco_nordeste
         - banco_brasilia
+        - banco_c6
         - unicred
         - credisis
         - safra
         - citibank
         - hsbc
         - ailos
-      description: Código do banco suportado
+      description: Código do banco suportado (18 bancos brasileiros)
 
     OutputType:
       type: string
@@ -545,6 +547,17 @@ components:
           type: string
         instrucao6:
           type: string
+        emv:
+          type: string
+          description: |
+            Payload EMV do PIX (para boleto híbrido). Quando enviado, o boleto
+            gera QR Code PIX embutido. Suportado por: Banco do Brasil, Bradesco,
+            Itaú, Sicoob, Caixa, Banco C6, Santander, Sicredi.
+          example: '00020126580014br.gov.bcb.pix...'
+        pix_label:
+          type: string
+          description: Texto exibido ao lado do QR Code no boleto híbrido
+          example: 'Escaneie para pagar via PIX'
 
     BoletoResponse:
       type: object
@@ -554,7 +567,11 @@ components:
           example: banco_brasil
         nosso_numero:
           type: string
-          description: Nosso número formatado
+          description: Nosso número formatado (corresponde a nosso_numero_boleto da gem)
+          example: '00000123456-X'
+        nosso_numero_boleto:
+          type: string
+          description: Alias de nosso_numero (nome interno da gem brcobranca)
           example: '00000123456-X'
         nosso_numero_dv:
           type: string
@@ -583,6 +600,19 @@ components:
           type: string
         sacado:
           type: string
+        pix:
+          type: object
+          nullable: true
+          description: |
+            Dados do PIX híbrido (quando o campo `emv` foi fornecido na entrada).
+            Presente apenas em bancos com suporte a PIX.
+          properties:
+            emv:
+              type: string
+              description: Payload EMV do PIX (mesmo enviado na entrada)
+            qrcode_base64:
+              type: string
+              description: QR Code em base64 PNG (quando disponível)
 
     NossoNumeroResponse:
       type: object

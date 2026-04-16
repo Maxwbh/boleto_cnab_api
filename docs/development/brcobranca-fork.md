@@ -1,219 +1,349 @@
-# BRCobranca - Informações Técnicas
+# BRCobrança — Gem Utilizada
 
-> Detalhes sobre a gem BRCobranca utilizada neste projeto
+> **Versão atual usada pelo projeto:** `12.6.1` (master @ `6b5eb7b`)
+> **Repositório:** [github.com/Maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)
 
-## 📦 Gem Utilizada
+Fork mantido por Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) do projeto original [kivanio/brcobranca](https://github.com/kivanio/brcobranca), com melhorias específicas para uso em APIs REST e suporte ampliado a bancos brasileiros.
 
-Este projeto utiliza a gem **[maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)** para geração de boletos bancários.
-
-## 🔍 Campo `documento_numero`
-
-### Nome Correto na Gem
-
-⚠️ **IMPORTANTE:** O nome correto do campo na gem é `documento_numero` (não `numero_documento`).
+## Instalação (Gemfile)
 
 ```ruby
-# ✅ CORRETO - Nome interno na gem
-attr_accessor :documento_numero
-
-# ❌ ERRO COMUM - Cliente pode enviar assim
-{ "numero_documento": "NF-2025-001" }
+gem 'brcobranca', git: 'https://github.com/maxwbh/brcobranca.git'
 ```
 
-### Solução Implementada
+## Histórico de Versões do Fork
 
-A API faz **mapeamento automático** para compatibilidade:
+| Versão | Data | Principais mudanças |
+|--------|------|---------------------|
+| **12.6.1** | 2026-04-08 | Suporte completo a **Banco C6 (336)** CNAB 400 (remessa + retorno + boleto) + PIX para 6 bancos |
+| **12.6.0** | 2026-01-03 | Métodos de validação seguros (`valido?`, `to_hash_seguro`) — Fase 2 |
+| **12.5.0** | — | `Brcobranca::Retorno.parse` (factory com auto-detecção), `pagamento.to_hash` |
+| **12.4.0** | — | `Brcobranca::Remessa.criar` (factory), `remessa.to_hash` |
+| **12.3.0** | — | Validações seguras via ActiveModel, mensagens melhoradas |
+| **12.2.0** | — | `to_hash`, `as_json`, `to_json`, `dados_entrada`, `dados_calculados`, `dados_pix` |
+| **12.1.x** | — | Módulo de formatação de campos + docs Rails |
+| **12.0.x** | 2025-11 | Reestruturação da documentação, suporte a Ruby 3.4 |
 
-```ruby
-# lib/boleto_api.rb (linhas 39-47)
-if values.key?('numero_documento') && !values.key?('documento_numero')
-  BoletoApi.logger.info "🔄 Convertendo 'numero_documento' para 'documento_numero'"
-  values['documento_numero'] = values.delete('numero_documento')
-elsif values.key?('numero_documento') && values.key?('documento_numero')
-  BoletoApi.logger.info "⚠️  Ambos campos enviados. Usando 'documento_numero'"
-  values.delete('numero_documento')
-end
-```
+## Bancos Suportados (18)
 
-**Benefício:** Clientes podem enviar `numero_documento` e a API converte automaticamente!
+| Código | Banco | Classe | Boleto | CNAB 400 | CNAB 240 | PIX |
+|--------|-------|--------|:------:|:--------:|:--------:|:---:|
+| 001 | Banco do Brasil | `BancoBrasil` | ✅ | ✅ | ✅ | ✅ |
+| 004 | Banco do Nordeste | `BancoNordeste` | ✅ | ✅ | — | — |
+| 021 | Banestes | `Banestes` | ✅ | — | — | — |
+| 033 | Santander | `Santander` | ✅ | ✅ | ✅ | ✅ |
+| 041 | Banrisul | `Banrisul` | ✅ | ✅ | — | — |
+| 070 | Banco de Brasília | `BancoBrasilia` | ✅ | ✅ | — | — |
+| 085 | Ailos | `Ailos` | ✅ | — | ✅ | — |
+| 097 | Credisis | `Credisis` | ✅ | ✅ | — | — |
+| 104 | Caixa | `Caixa` | ✅ | — | ✅ | ✅ |
+| 136 | Unicred | `Unicred` | ✅ | ✅ | ✅ | — |
+| 237 | Bradesco | `Bradesco` | ✅ | ✅ | — | ✅ |
+| **336** | **Banco C6** | **`BancoC6`** | ✅ | ✅ | — | ✅ |
+| 341 | Itaú | `Itau` | ✅ | ✅ | — | ✅ |
+| 399 | HSBC | `Hsbc` | ✅ | — | — | — |
+| 422 | Safra | `Safra` | ✅ | — | — | — |
+| 745 | Citibank | `Citibank` | ✅ | ✅ | — | — |
+| 748 | Sicredi | `Sicredi` | ✅ | — | ✅ | ✅ |
+| 756 | Sicoob | `Sicoob` | ✅ | ✅ | ✅ | ✅ |
 
-## 📋 Campos Disponíveis
+> Novidades v1.3.0 (boleto_cnab_api): adição de **Banco C6** em `SUPPORTED_BANKS` e `CNAB400_BANKS`.
 
-### Classe Base
+## API Moderna da Gem (v12.5+)
 
-Todos os boletos herdam de `Brcobranca::Boleto::Base` que define:
+### `boleto.to_hash`
 
-**Campos Obrigatórios:**
-- `agencia` - Agência bancária
-- `conta_corrente` - Conta corrente
-- `nosso_numero` - Número sequencial do boleto **no banco**
-- `cedente` - Nome do beneficiário
-- `documento_cedente` - CPF/CNPJ do beneficiário
-- `sacado` - Nome do pagador
-- `sacado_documento` - CPF/CNPJ do pagador
-- `valor` - Valor do boleto
-- `data_vencimento` - Data de vencimento
-
-**Campos Opcionais Importantes:**
-- `documento_numero` - Número da NF/pedido (controle interno)
-- `sacado_endereco` - Endereço do pagador
-- `data_documento` - Data de emissão
-- `instrucao1` a `instrucao7` - Instruções
-- `local_pagamento` - Local de pagamento
-- `cedente_endereco` - Endereço do beneficiário
-- `avalista` - Nome do avalista
-- `avalista_documento` - CPF/CNPJ do avalista
-
-**Campos com Valores Padrão:**
-- `moeda` - Padrão: `'9'` (Real)
-- `especie` - Padrão: `'R$'`
-- `aceite` - Padrão: `'S'` (Sim)
-- `especie_documento` - Padrão: `'DM'` (Duplicata Mercantil)
-- `quantidade` - Padrão: `1`
-
-## 🏦 Campos Específicos por Banco
-
-### Banco do Brasil (001)
-
-```ruby
-class BancoBrasil < Base
-  attr_accessor :convenio      # OBRIGATÓRIO (4 a 8 dígitos)
-  attr_accessor :carteira      # Padrão: '18'
-  attr_accessor :codigo_servico
-end
-```
-
-**Tamanho do `nosso_numero` varia conforme convênio:**
-- Convênio 4 dígitos → nosso_numero máx 7 dígitos
-- Convênio 6 dígitos → nosso_numero máx 5 ou 17 dígitos
-- Convênio 7 dígitos → nosso_numero máx 10 dígitos
-- Convênio 8 dígitos → nosso_numero máx 9 dígitos
-
-### Sicoob (756)
-
-```ruby
-class Sicoob < Base
-  attr_accessor :convenio     # OBRIGATÓRIO
-  attr_accessor :carteira     # Padrão: '1'
-  attr_accessor :variacao     # OBRIGATÓRIO (ex: '01')
-  attr_accessor :modalidade   # Padrão: '01'
-end
-```
-
-**Restrições importantes:**
-- `aceite` **DEVE** ser `'N'` (não `'S'`)
-- `especie_documento` **DEVE** ser enviado (padrão: `'DM'`)
-
-## 🔧 Validações
-
-### Campos Numéricos
-
-Devem ser strings numéricas ou números:
-- `convenio`
-- `agencia`
-- `conta_corrente`
-- `nosso_numero`
-
-### Campos de Data
-
-Aceita objetos `Date` ou strings no formato:
-- `'YYYY/MM/DD'` (ex: `'2025/12/31'`)
-- `'DD/MM/YYYY'` (ex: `'31/12/2025'`)
-
-A API converte automaticamente:
-
-```ruby
-# lib/boleto_api.rb (linhas 49-52)
-date_fields = %w[data_documento data_vencimento data_processamento]
-date_fields.each do |date_field|
-  values[date_field] = Date.parse(values[date_field]) if values[date_field]
-end
-```
-
-## 📊 Métodos Importantes
-
-### Geração de Dados
+Retorna hash completo com dados de entrada + calculados (ideal para responses de API):
 
 ```ruby
 boleto = Brcobranca::Boleto::BancoBrasil.new(dados)
-
-# Validação
-boleto.valid?                   # true/false
-boleto.errors.messages          # Hash com erros
-
-# Dados calculados
-boleto.nosso_numero_boleto      # Nosso número formatado
-boleto.nosso_numero_dv          # Dígito verificador
-boleto.codigo_barras            # Código de barras completo
-boleto.linha_digitavel          # Linha digitável
-boleto.agencia_conta_boleto     # Agência/conta formatada
+hash = boleto.to_hash
+# => {
+#   convenio: "...", moeda: "9", carteira: "18",
+#   codigo_barras: "00191...", linha_digitavel: "00191.23456...",
+#   nosso_numero_boleto: "00000123456-X", nosso_numero_dv: "X",
+#   agencia_conta_boleto: "3073 / 12345678-0",
+#   pix: nil | { emv: "...", qrcode_png: "<base64>" }
+# }
 ```
 
-### Geração de Arquivos
+### `boleto.dados_calculados`
+
+Apenas os dados **derivados** (sem os campos de entrada):
 
 ```ruby
-# PDF
-boleto.to_pdf
-
-# Imagem
-boleto.to_jpg
-boleto.to_png
-boleto.to_tif
-
-# Lote de boletos
-Brcobranca::Boleto::Base.lote(boletos, formato: :pdf)
+boleto.dados_calculados
+# => { banco, banco_dv, agencia_dv, nosso_numero_dv,
+#      codigo_barras, linha_digitavel, ... }
 ```
 
-## 🚨 Erros Comuns
+### `boleto.dados_entrada`
 
-### 1. NoMethodError: undefined method `numero_documento=`
+Apenas os dados **enviados** pelo cliente (sem derivados):
 
-**Causa:** Tentar setar `numero_documento` diretamente na gem.
-
-**Solução:** Usar `documento_numero` ou deixar a API converter automaticamente.
-
-### 2. Sicoob com aceite='S'
-
-**Causa:** Sicoob exige `aceite='N'`, não `'S'`.
-
-**Solução:** Sempre enviar `aceite='N'` para Sicoob.
-
-### 3. Campos removidos para Sicoob
-
-**Causa:** Remover `especie_documento` ou `aceite` pensando que são opcionais.
-
-**Solução:** Enviar todos os campos, deixar a gem validar. Não filtrar por banco.
-
-## 📚 Referências
-
-- **Repositório:** [github.com/Maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)
-- **Documentação de Campos:** [docs/fields/README.md](../fields/README.md)
-- **Exemplos Práticos:** [docs/fields/examples.md](../fields/examples.md)
-
-## 🔄 Fluxo de Processamento
-
-```
-Cliente
-  ↓ envia "numero_documento"
-API (lib/boleto_api.rb)
-  ↓ converte para "documento_numero"
-Gem BRCobranca
-  ↓ valida e gera
-Boleto (PDF/dados)
+```ruby
+boleto.dados_entrada
+# => { agencia, conta_corrente, convenio, valor, ... }
 ```
 
-## ✅ Validações na API
+### `boleto.dados_pix`
 
-A API implementa as seguintes validações antes de chamar a gem:
+Dados do PIX híbrido (apenas em bancos com suporte):
 
-1. **JSON válido** - Parse de JSON
-2. **Mapeamento de campos** - `numero_documento` → `documento_numero`
-3. **Conversão de datas** - String → Date
-4. **Chamada da gem** - Cria objeto boleto
-5. **Validação da gem** - `boleto.valid?`
-6. **Geração** - PDF ou dados
+```ruby
+boleto.dados_pix
+# => { emv: "00020126...", qrcode_base64: "..." }
+```
+
+### `boleto.valido?`
+
+Validação que **retorna boolean** (não lança exceção) e popula `errors`:
+
+```ruby
+boleto.valido?  # => true | false
+boleto.errors.messages  # => { nosso_numero: ["não pode estar em branco"] }
+```
+
+### `boleto.to_hash_seguro`
+
+Hash com dados sensíveis mascarados (CPF/CNPJ parcial) — útil para logs:
+
+```ruby
+boleto.to_hash_seguro
+# => { sacado_documento: "123***89-00", documento_cedente: "12***/0001-00", ... }
+```
+
+### Factories — `Brcobranca::Remessa.criar`
+
+Cria remessa com detecção automática de banco/formato:
+
+```ruby
+remessa = Brcobranca::Remessa.criar(
+  banco: 'banco_brasil',
+  formato: 'cnab400',
+  pagamentos: [pagamento1, pagamento2],
+  agencia: '3073',
+  convenio: '01234567',
+  # ... demais campos
+)
+remessa.valid?         # => true | false
+remessa.gera_arquivo   # => String binário CNAB
+remessa.to_hash        # => Hash estruturado
+```
+
+### Factories — `Brcobranca::Retorno.parse`
+
+Parseia retorno com auto-detecção de layout CNAB:
+
+```ruby
+pagamentos = Brcobranca::Retorno.parse(
+  banco: 'banco_brasil',
+  arquivo: file   # File, StringIO ou path
+)
+# => Array<Brcobranca::Retorno::RetornoXxx>
+pagamentos.first.to_hash
+# => { nosso_numero, codigo_ocorrencia, valor_pago, data_credito, ... }
+```
+
+## PIX Híbrido (v12.6.1+)
+
+Bancos com suporte a PIX embutido no boleto via **PixMixin**:
+
+- ✅ Banco do Brasil (001)
+- ✅ Bradesco (237)
+- ✅ Itaú (341)
+- ✅ Sicoob (756)
+- ✅ Caixa (104)
+- ✅ Banco C6 (336)
+- ✅ Santander (033) — suporte original
+- ✅ Sicredi (748)
+
+**Como usar:**
+
+```ruby
+boleto = Brcobranca::Boleto::Sicoob.new(dados.merge(
+  emv: '00020126580014br.gov.bcb.pix...',  # payload EMV do PIX
+  pix_label: 'Escaneie para pagar via PIX'
+))
+
+# O PDF gerado terá QR Code do PIX + linha digitável tradicional
+pdf = boleto.to_pdf
+```
+
+A API também retorna o objeto `pix` em `/api/boleto/data` quando o boleto é híbrido.
+
+## Template Alternativo: PrawnBolepix
+
+A partir de v12.6+, existe alternativa ao Ghostscript (rghost) usando **Prawn**:
+
+- Vantagens: Ruby puro, sem dependência de `gs` binário
+- Requer gems: `prawn`, `rqrcode`, `chunky_png`
+- Ideal para: containers minimalistas sem Ghostscript
+
+Atualmente o `boleto_cnab_api` usa **rghost** por compatibilidade, mas migração está em estudo.
+
+## Mapeamento de Campos
+
+### Campos comuns a todos os bancos
+
+| Campo na API | Campo na gem | Obrigatório |
+|--------------|--------------|-------------|
+| `agencia` | `agencia` | ✅ |
+| `conta_corrente` | `conta_corrente` | ✅ |
+| `nosso_numero` | `nosso_numero` | ✅ |
+| `cedente` | `cedente` | ✅ |
+| `documento_cedente` | `documento_cedente` | ✅ |
+| `sacado` | `sacado` | ✅ |
+| `sacado_documento` | `sacado_documento` | ✅ |
+| `valor` | `valor` | ✅ |
+| `data_vencimento` | `data_vencimento` | ✅ |
+| `numero_documento` | `documento_numero` | ⚠️ **alias** |
+| `convenio` | `convenio` | depende do banco |
+| `carteira` | `carteira` | depende do banco |
+
+> **Nota:** A API converte automaticamente `numero_documento` → `documento_numero` e filtra campos não suportados por banco (ex: `digito_conta` no Bradesco).
+
+### Campos específicos por banco
+
+#### Banco do Brasil (001)
+
+```ruby
+convenio       # obrigatório (4 a 8 dígitos)
+carteira       # padrão: '18'
+codigo_servico # opcional
+```
+
+Tamanho do `nosso_numero` conforme convênio:
+- 4 dígitos → nosso_numero máx 7 dígitos
+- 6 dígitos → nosso_numero máx 5 ou 17 dígitos
+- 7 dígitos → nosso_numero máx 10 dígitos
+- 8 dígitos → nosso_numero máx 9 dígitos
+
+#### Sicoob (756)
+
+```ruby
+convenio    # obrigatório
+carteira    # padrão: '1', também aceita '9' (contrato)
+variacao    # obrigatório (3 dígitos, ex: '019')
+modalidade  # padrão: '01'
+```
+
+**Restrições:**
+- `aceite` deve ser `'N'`
+- `especie_documento` deve ser enviado (padrão: `'DM'`)
+- Novidade v12.6+: **Carteira 9** com número de contrato
+- Novidade v12.6+: **Layout 810** onde o cliente calcula próprio DV
+
+#### Banco C6 (336) — NOVO em v12.6.1
+
+```ruby
+convenio   # obrigatório
+carteira   # valores válidos: '10' ou '20'
+# digito_conta NÃO é aceito (filtrado automaticamente pela API)
+```
+
+**Observações:**
+- CNAB 400 suportado (remessa + retorno)
+- CNAB 240 ainda **não** disponível
+- PIX híbrido suportado
+- Registro online via API oficial do C6: **ainda não integrado** (requer homologação no portal C6 Developers)
+
+#### Caixa (104)
+
+```ruby
+convenio     # obrigatório
+carteira     # valores válidos: '1' ou '2'
+digito_conta # obrigatório
+```
+
+## Validações
+
+### Formato de datas
+
+A API aceita múltiplos formatos e converte para `Date`:
+
+```
+'YYYY/MM/DD'   → '2025/12/31'
+'DD/MM/YYYY'   → '31/12/2025'
+'YYYY-MM-DD'   → '2025-12-31'
+Date object    → direto
+```
+
+### Campos numéricos
+
+Aceitos como string ou número:
+
+- `convenio`, `agencia`, `conta_corrente`, `nosso_numero`
+- `valor` (float ou string com ponto decimal)
+
+## Fluxo de Processamento
+
+```
+Cliente HTTP
+  │ { "numero_documento": "...", "valor": 100.00, ... }
+  ▼
+BoletoApi::Endpoints
+  │
+  ▼
+BoletoApi::Services::BoletoService.create(bank, values)
+  │
+  ├─► FieldMapper.map_boleto(values)
+  │   • numero_documento → documento_numero
+  │   • data_* (string) → Date
+  │
+  ├─► filter_supported_attributes(klass, mapped)
+  │   • remove campos não aceitos pelo banco
+  │   • (ex: digito_conta para Bradesco/C6)
+  │
+  ▼
+Brcobranca::Boleto::Xxx.new(filtered_values)
+  │
+  ├─► boleto.valido?         # ActiveModel validation
+  ├─► boleto.to_hash          # dados completos
+  ├─► boleto.dados_calculados # código de barras, linha digitável
+  └─► boleto.to_pdf / to_png / to_jpg / to_tif
+```
+
+## Erros Comuns
+
+### `undefined method 'X=' for instance of Boleto::Y`
+
+**Causa:** Campo não suportado por este banco.
+
+**Solução (automática na API):** O `BoletoService.create` filtra campos não aceitos antes de passar para a gem. Se ainda acontecer, algum campo novo foi adicionado sem ser filtrado — reportar issue.
+
+### `Carteira não é uma carteira válida. Utilize: X, Y`
+
+**Causa:** Cada banco aceita só certos valores de carteira.
+
+**Valores comuns:**
+- Banco do Brasil: `'18'` (padrão)
+- Sicoob: `'1'`, `'9'`
+- Bradesco: `'09'`, `'28'`
+- Itaú: `'109'`, `'175'`, `'180'`, `'174'`
+- Caixa: `'1'`, `'2'` (não aceita `'SR'`)
+- Banco C6: `'10'`, `'20'`
+
+### `Nosso numero deve ter no máximo X dígitos`
+
+**Causa:** Cada banco tem limite próprio, geralmente depende do convênio.
+
+**Solução:** Consultar manual técnico do banco ou `docs/fields/all-banks.md`.
+
+### `aceite` inválido para Sicoob
+
+**Causa:** Sicoob exige `aceite='N'`. Enviar `'S'` dá erro de validação.
+
+## Repositórios e Referências
+
+- **Gem (fork):** https://github.com/Maxwbh/brcobranca
+- **Gem (upstream):** https://github.com/kivanio/brcobranca
+- **API (este projeto):** https://github.com/Maxwbh/boleto_cnab_api
+- **Documentação de campos:** [docs/fields/README.md](../fields/README.md)
+- **Exemplos práticos:** [docs/fields/examples.md](../fields/examples.md)
+- **Compatibilidade por banco:** [docs/fields/all-banks.md](../fields/all-banks.md)
 
 ---
 
-**Última atualização:** 2025-11-26
-**Gem:** maxwbh/brcobranca
+**Última atualização:** 2026-04-10
+**Mantenedor:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) — M&S do Brasil LTDA
