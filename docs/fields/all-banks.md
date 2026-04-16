@@ -12,6 +12,7 @@
 | **Itaú** | 341 | ✅ | ✅ | ✅ | ✅ | Suporta múltiplas carteiras |
 | **Caixa Econômica** | 104 | ✅ | ✅ | ✅ | ✅ | Convenio obrigatório |
 | **Santander** | 033 | ✅ | ✅ | ✅ | ✅ | `nosso_numero` até 20 dígitos |
+| **Banco C6** | 336 | ✅ | ✅ | ✅ | ✅ | Carteira deve ser `'10'` ou `'20'` — desde v1.3.0 |
 
 ### Outros Bancos Suportados
 
@@ -21,6 +22,11 @@
 | Banrisul | 041 | ✅ |
 | Banestes | 021 | ✅ |
 | BRB | 070 | ✅ |
+| Unicred | 136 | ✅ |
+| Ailos | 085 | ✅ |
+| Credisis | 097 | ✅ |
+| Safra | 422 | ✅ |
+| Banco do Nordeste | 004 | ✅ |
 | HSBC | 399 | ⚠️ (descontinuado) |
 | Citibank | 745 | ⚠️ (descontinuado) |
 
@@ -178,6 +184,57 @@
 - ✅ Todos os métodos disponíveis
 - ✅ `nosso_numero` aceita até **20 dígitos** (maior que outros bancos)
 - ✅ Múltiplas carteiras suportadas
+
+---
+
+### 7. Banco C6 (336) — NOVO na v1.3.0
+
+**Status:** ✅ Totalmente suportado (brcobranca v12.6.1+)
+
+**Campos Específicos:**
+```json
+{
+  "agencia": "0001",
+  "conta_corrente": "1234567",
+  "convenio": "100",
+  "carteira": "10",           // APENAS '10' ou '20'
+  "nosso_numero": "12345678"
+}
+```
+
+**Particularidades:**
+- ✅ Todos os métodos disponíveis
+- ✅ PIX híbrido suportado (campo `emv`)
+- ✅ CNAB 400 para remessa e retorno
+- ❌ CNAB 240 **NÃO** suportado
+- ⚠️ Campo `digito_conta` é **filtrado automaticamente** pela API (gem não aceita)
+- ⚠️ Carteira deve ser exatamente `'10'` ou `'20'` — outros valores são rejeitados
+
+**Exemplo completo:**
+```python
+dados_c6 = {
+    "cedente": "Empresa C6 LTDA",
+    "documento_cedente": "33445566000177",
+    "sacado": "Pedro Almeida",
+    "sacado_documento": "33344455566",
+    "sacado_endereco": "Av. Faria Lima, 1500, Itaim Bibi, São Paulo, SP, CEP 04538133",
+    "agencia": "0001",
+    "conta_corrente": "1234567",
+    "carteira": "10",
+    "convenio": "100",
+    "nosso_numero": "12345678",
+    "numero_documento": "INV-2026-001",
+    "valor": 2750.00,
+    "data_vencimento": "2026/12/31",
+    "aceite": "N"
+}
+
+requests.get(f"{API_URL}/api/boleto", params={
+    "bank": "banco_c6",
+    "type": "pdf",
+    "data": json.dumps(dados_c6)
+})
+```
 
 ---
 

@@ -1,6 +1,6 @@
 # Arquitetura da API
 
-> **Versão:** 1.2.0
+> **Versão:** 1.3.0
 
 Este documento descreve a arquitetura modular da Boleto CNAB API.
 
@@ -42,7 +42,7 @@ Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca):
 lib/
 ├── boleto_api.rb              # Entry point principal
 └── boleto_api/
-    ├── version.rb             # Versão da API (1.2.0)
+    ├── version.rb             # Versão da API (1.3.0)
     ├── config/
     │   └── constants.rb       # Constantes centralizadas
     ├── services/
@@ -50,14 +50,14 @@ lib/
     │   ├── boleto_service.rb          # Lógica de boletos
     │   ├── remessa_service.rb         # Lógica de remessas CNAB
     │   ├── retorno_service.rb         # Lógica de retornos CNAB
-    │   ├── ofx_parser_service.rb      # Parsing de arquivos OFX (v1.2.0)
-    │   └── nosso_numero_extractor.rb  # Extração por banco (v1.2.0)
+    │   ├── ofx_parser_service.rb      # Parsing de arquivos OFX (v1.3.0)
+    │   └── nosso_numero_extractor.rb  # Extração por banco (v1.3.0)
     ├── endpoints/
     │   ├── health_endpoint.rb  # GET /api/health, /api/info
     │   ├── boleto_endpoint.rb  # /api/boleto/*
     │   ├── remessa_endpoint.rb # POST /api/remessa
     │   ├── retorno_endpoint.rb # POST /api/retorno
-    │   └── ofx_endpoint.rb     # POST /api/ofx/parse (v1.2.0)
+    │   └── ofx_endpoint.rb     # POST /api/ofx/parse (v1.3.0)
     └── middleware/
         ├── error_handler.rb    # Tratamento centralizado de erros
         └── request_logger.rb   # Logging de requisições
@@ -125,7 +125,7 @@ result = BoletoApi::Services::RetornoService.parse('itau', 'cnab400', file)
 # => { valid: true, pagamentos: [...], errors: [] }
 ```
 
-#### OFXParserService (v1.2.0)
+#### OFXParserService (v1.3.0)
 
 Parsing de extratos bancários OFX usando a gem `ofx`:
 
@@ -140,7 +140,7 @@ result = BoletoApi::Services::OFXParserService.parse(file, somente_creditos: fal
 - Filtro opcional `somente_creditos`
 - Extração automática de `nosso_numero` do campo memo
 
-#### NossoNumeroExtractor (v1.2.0)
+#### NossoNumeroExtractor (v1.3.0)
 
 Extração de `nosso_numero` do campo memo OFX por banco:
 
@@ -215,7 +215,7 @@ Logging estruturado em JSON:
 |--------|------|-----------|
 | POST | `/api/retorno` | Processa arquivo de retorno |
 
-#### OFXEndpoint (v1.2.0)
+#### OFXEndpoint (v1.3.0)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -306,7 +306,7 @@ bundle exec rspec spec/unit/services/ofx_parser_service_spec.rb
 bundle exec rspec spec/integration/ofx_endpoint_spec.rb
 ```
 
-**Cobertura atual (v1.2.0):**
+**Cobertura atual (v1.3.0):**
 
 | Módulo | Testes |
 |--------|--------|
@@ -347,7 +347,7 @@ puts result[:linha_digitavel]
 
 ## Métricas
 
-| Métrica | v1.0.0 | v1.1.0 | v1.2.0 |
+| Métrica | v1.0.0 | v1.1.0 | v1.3.0 |
 |---------|--------|--------|--------|
 | Linhas em boleto_api.rb | 444 | 53 | 55 |
 | Arquivos na lib/boleto_api/ | 1 | 12 | 14 |

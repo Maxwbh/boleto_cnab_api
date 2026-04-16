@@ -1,12 +1,12 @@
 # Boleto CNAB Client - Python
 
-> **Versão:** 1.2.0 | **Python:** 3.8+
+> **Versão:** 1.3.0 | **Python:** 3.8+
 
 Cliente Python oficial para a API de geração de Boletos Bancários Brasileiros.
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
-[![Version](https://img.shields.io/badge/version-1.2.0-green)](../VERSION)
+[![Version](https://img.shields.io/badge/version-1.3.0-green)](../VERSION)
 
 ## 📋 Características
 
@@ -34,6 +34,10 @@ Cliente Python oficial para a API de geração de Boletos Bancários Brasileiros
 | Santander | 033 | ✅ |
 | Sicredi | 748 | ✅ |
 | Banrisul | 041 | ✅ |
+| **Banco C6** | **336** | ✅ (novo em v1.3.0) |
+| + 9 outros | — | ✅ |
+
+Veja [docs/fields/all-banks.md](../docs/fields/all-banks.md) para lista completa.
 
 ## 📦 Instalação
 
@@ -435,7 +439,7 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](../L
 
 Este cliente utiliza a API Boleto CNAB, que por sua vez usa a gem [BRCobranca](https://github.com/Maxwbh/brcobranca) para geração de boletos bancários brasileiros.
 
-## 📄 Parsing de Extratos OFX (v1.2.0)
+## 📄 Parsing de Extratos OFX (v1.3.0)
 
 O endpoint `POST /api/ofx/parse` permite parsear extratos bancários OFX.
 O cliente Python ainda não possui um método helper dedicado, mas pode ser usado via `requests`:
@@ -464,9 +468,9 @@ Veja [docs/api/ofx-parsing.md](../docs/api/ofx-parsing.md) para detalhes do endp
 
 ---
 
-**Versão:** 1.2.0
+**Versão:** 1.3.0
 
-### Novidades v1.2.0
+### Novidades v1.3.0
 
 - Endpoint `POST /api/ofx/parse` para parsing de extratos OFX
 - Extração automática de `nosso_numero` por banco

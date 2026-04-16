@@ -8,7 +8,7 @@ Este projeto é um FORK atualizado de https://github.com/akretion/boleto_cnab_ap
 
 [![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 [![Python Package](https://img.shields.io/badge/python-3.7%2B-blue)](python-client/)
-[![Version](https://img.shields.io/badge/version-1.2.0-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-1.3.0-green)](VERSION)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ## 🚀 Quick Start
@@ -162,12 +162,13 @@ Ver mais exemplos em [`examples/python/`](./examples/python/)
 
 - ✅ Banco do Brasil (001)
 - ✅ Sicoob (756)
-- ✅ Sicredi
-- ✅ Santander
-- ✅ Bradesco
-- ✅ Itaú
-- ✅ Caixa Econômica Federal
-- ✅ E mais 9 bancos!
+- ✅ Sicredi (748)
+- ✅ Santander (033)
+- ✅ Bradesco (237)
+- ✅ Itaú (341)
+- ✅ Caixa Econômica Federal (104)
+- ✅ **Banco C6 (336)** — novo em v1.3.0
+- ✅ E mais 10 bancos (18 no total)!
 
 Ver documentação completa de campos em [`docs/fields/README.md`](./docs/fields/README.md)
 
@@ -211,7 +212,7 @@ bundle exec rspec --format documentation
 boleto_cnab_api/
 ├── lib/
 │   ├── boleto_api.rb                     # Entry point principal
-│   └── boleto_api/                       # Módulos da API (v1.2.0)
+│   └── boleto_api/                       # Módulos da API (v1.3.0)
 │       ├── version.rb                    # Versão da API
 │       ├── config/
 │       │   └── constants.rb              # Constantes centralizadas
@@ -258,7 +259,7 @@ boleto_cnab_api/
 │   └── python/
 ├── python-client/                        # Cliente Python oficial
 ├── scripts/                              # Scripts de automação
-├── VERSION                               # Versão atual (1.2.0)
+├── VERSION                               # Versão atual (1.3.0)
 ├── CHANGELOG.md                          # Histórico de versões
 ├── Dockerfile                            # Multi-stage build otimizado
 ├── docker-compose.yml                    # Orquestração Docker
@@ -354,7 +355,7 @@ O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plata
 
 Este projeto segue [Versionamento Semântico](https://semver.org/) (MAJOR.MINOR.PATCH).
 
-**Versão atual:** `1.2.0` (veja [VERSION](VERSION))
+**Versão atual:** `1.3.0` (veja [VERSION](VERSION))
 
 **Histórico:** Veja [CHANGELOG.md](CHANGELOG.md) para todas as mudanças.
 
