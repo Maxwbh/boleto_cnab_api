@@ -12,13 +12,15 @@ RSpec.describe 'Multi-Bank Validation' do
     'bradesco'     => FIXTURES['bradesco_valido'],
     'itau'         => FIXTURES['itau_valido'],
     'caixa'        => FIXTURES['caixa_valido'],
-    'santander'    => FIXTURES['santander_valido']
+    'santander'    => FIXTURES['santander_valido'],
+    'banco_c6'     => FIXTURES['banco_c6_valido']
   }.freeze
 
   MAJOR_BANKS = {
     'banco_brasil' => FIXTURES['banco_brasil_valido'],
     'sicoob'       => FIXTURES['sicoob_valido'],
-    'itau'         => FIXTURES['itau_valido']
+    'itau'         => FIXTURES['itau_valido'],
+    'banco_c6'     => FIXTURES['banco_c6_valido']
   }.freeze
 
   describe 'GET /api/boleto/validate' do
