@@ -33,8 +33,8 @@ bundle exec rackup -p 9292
 ### 3. Verificar se a API está rodando
 
 ```bash
-curl http://localhost:9292/health
-# Deve retornar: {"status":"ok","message":"API is running"}
+curl http://localhost:9292/api/health
+# Deve retornar: {"status":"OK"}
 ```
 
 ## 🚀 Exemplos Disponíveis
@@ -263,10 +263,10 @@ client = BoletoClient('https://boleto-api-staging.onrender.com')
 {
     "agencia": "1565",
     "conta_corrente": "123456789",
-    "digito_conta": "1",  # OBRIGATÓRIO
-    "convenio": "654321",  # OBRIGATÓRIO
-    "carteira": "RG",
-    "nosso_numero": "500000000000000"  # 15 dígitos!
+    "digito_conta": "1",      # OBRIGATÓRIO
+    "convenio": "654321",     # OBRIGATÓRIO
+    "carteira": "1",          # '1' ou '2' (não aceita 'RG', 'SR', etc)
+    "nosso_numero": "500000000000000"  # 15 dígitos
 }
 ```
 
@@ -278,7 +278,21 @@ client = BoletoClient('https://boleto-api-staging.onrender.com')
     "conta_corrente": "1234567",
     "digito_conta": "8",
     "carteira": "102",
+    "convenio": "1234567",    # OBRIGATÓRIO
     "nosso_numero": "12345678"
+}
+```
+
+### Banco C6 (336) — novo em v1.3.0
+
+```python
+{
+    "agencia": "0001",
+    "conta_corrente": "1234567",
+    "carteira": "10",         # APENAS '10' ou '20'
+    "convenio": "100",        # OBRIGATÓRIO
+    "nosso_numero": "12345678"
+    # NÃO envie digito_conta (a API filtra automaticamente)
 }
 ```
 
@@ -369,5 +383,5 @@ MIT License - veja [LICENSE](../../LICENSE)
 
 ---
 
-**Última atualização:** 2025-11-27
-**Versão:** 1.0.0
+**Última atualização:** 2026-04-10
+**Versão:** 1.3.0

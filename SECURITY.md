@@ -4,10 +4,13 @@
 
 Mantemos ativamente as seguintes versões:
 
-| Versão | Suportada          |
-| ------ | ------------------ |
-| 1.0.x  | ✅ Sim             |
-| < 1.0  | ❌ Não             |
+| Versão | Suportada          | Observação |
+| ------ | ------------------ | ---------- |
+| 1.3.x  | ✅ Sim             | Atual (recomendada) |
+| 1.2.x  | ⚠️ Críticas apenas | Migre para 1.3.x |
+| 1.1.x  | ❌ Não             | Descontinuada |
+| 1.0.x  | ❌ Não             | Descontinuada |
+| < 1.0  | ❌ Não             | Descontinuada |
 
 ## 🐛 Reportando uma Vulnerabilidade
 
@@ -36,7 +39,7 @@ Vulnerabilidades de segurança devem ser reportadas de forma privada.
 
    Tipo: Command Injection
    Localização: lib/boleto_api.rb:123
-   Versão afetada: 1.0.0
+   Versão afetada: 1.3.0
 
    Descrição:
    O parâmetro 'nosso_numero' não é sanitizado antes de ser

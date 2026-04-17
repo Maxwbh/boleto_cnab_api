@@ -7,7 +7,9 @@
 - [Campos Comuns](#campos-comuns)
 - [Banco do Brasil (001)](#banco-do-brasil-001)
 - [Sicoob (756)](#sicoob-756)
+- [Banco C6 (336)](#banco-c6-336)
 - [Diferenças Importantes](#diferenças-importantes)
+- [Todos os Bancos](./all-banks.md) — Lista completa com todos os 18 bancos suportados
 
 ## 🎯 Legenda
 
@@ -239,11 +241,14 @@ boleto_sicoob = {
 
 ## 📚 Documentação Adicional
 
+- [Todos os Bancos](./all-banks.md) - Lista completa e compatibilidade por banco
 - [Exemplos Práticos](./examples.md) - Exemplos de código Python/Ruby
+- [PIX Híbrido](../api/pix.md) - Guia de boleto com QR Code PIX
 - [Troubleshooting](../api/troubleshooting.md) - Solução de problemas
 - [Detalhes Técnicos](../development/brcobranca-fork.md) - Informações sobre BRCobranca
 
 ---
 
-**Última atualização:** 2025-11-26
-**Gem:** [maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)
+**Última atualização:** 2026-04-10
+**Gem:** [maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) v12.6.1
+**Versão da API:** 1.3.0
