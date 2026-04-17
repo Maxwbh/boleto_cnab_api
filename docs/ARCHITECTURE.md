@@ -26,15 +26,17 @@ A API é construída sobre o framework [Grape](https://github.com/ruby-grape/gra
          └──────────────────┘
 ```
 
-## Integração com brcobranca v12.5+
+## Integração com brcobranca v12.6.1
 
-Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca):
+Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (master @ `6b5eb7b`, versão 12.6.1):
 
 | Service | Método brcobranca | Fallback |
 |---------|------------------|----------|
 | BoletoService | `boleto.to_hash`, `dados_calculados` | Mapeamento manual |
 | RemessaService | `Brcobranca::Remessa.criar` | Factory legado |
 | RetornoService | `Brcobranca::Retorno.parse` | Load_lines direto |
+
+Veja [development/brcobranca-fork.md](./development/brcobranca-fork.md) para detalhes da gem e histórico de versões.
 
 ## Estrutura de Diretórios
 
@@ -162,18 +164,25 @@ BoletoApi::Services::NossoNumeroExtractor.extrair('COBRANCA SICOOB 0000012345', 
 
 #### ErrorHandler
 
-Tratamento centralizado de exceções:
+Tratamento centralizado de exceções. **Ordem importa** (Ruby captura a primeira cláusula que casar — como `NoMethodError < NameError`, `NoMethodError` deve vir antes).
 
-| Exceção | Status HTTP | Mensagem |
-|---------|-------------|----------|
-| `JSON::ParserError` | 400 | JSON inválido |
-| `Grape::Exceptions::ValidationErrors` | 400 | Parâmetro inválido |
-| `ArgumentError` | 400 | Parâmetro inválido |
-| `Brcobranca::BoletoInvalido` | 400 | Boleto inválido |
-| `Brcobranca::RemessaInvalida` | 400 | Remessa inválida |
-| `NameError` | 400 | Banco não encontrado |
-| `NoMethodError` | 500 | Erro ao acessar campo |
-| `StandardError` | 500 | Erro interno |
+| Ordem | Exceção | Status HTTP | Mensagem |
+|-------|---------|-------------|----------|
+| 1 | `JSON::ParserError` | 400 | JSON inválido |
+| 2 | `Grape::Exceptions::ValidationErrors` | 400 | Parâmetro inválido |
+| 3 | `ArgumentError` | 400 | Parâmetro inválido |
+| 4 | `TypeError` | 400 | Tipo de dado inválido |
+| 5 | `Brcobranca::BoletoInvalido` | 400 | Boleto inválido |
+| 6 | `Brcobranca::RemessaInvalida` | 400 | Remessa inválida |
+| 7 | `Brcobranca::NaoImplementado` | 400 | Operação não suportada |
+| 8 | `NoMethodError` | 500 | Erro ao acessar método |
+| 9 | `NameError` | 400 | Banco ou tipo não encontrado |
+| 10 | `StandardError` | 500 | Erro interno |
+
+**Recursos adicionais (v1.3.0):**
+- Logs incluem `origin` (primeiro frame do backtrace em `lib/boleto_api/`)
+- Backtrace completo (top 10) quando `LOG_BACKTRACE=true` (padrão)
+- Response body inclui `origin` em modo dev/staging (`API_DEBUG=true`)
 
 #### RequestLogger
 
@@ -347,13 +356,15 @@ puts result[:linha_digitavel]
 
 ## Métricas
 
-| Métrica | v1.0.0 | v1.1.0 | v1.3.0 |
-|---------|--------|--------|--------|
-| Linhas em boleto_api.rb | 444 | 53 | 55 |
-| Arquivos na lib/boleto_api/ | 1 | 12 | 14 |
-| Serviços | 0 | 4 | 6 |
-| Endpoints | 1 | 4 | 5 |
-| Testes totais | ~30 | ~60 | ~92 |
+| Métrica | v1.0.0 | v1.1.0 | v1.2.0 | v1.3.0 |
+|---------|--------|--------|--------|--------|
+| Linhas em boleto_api.rb | 444 | 53 | 55 | 60 |
+| Arquivos na lib/boleto_api/ | 1 | 12 | 14 | 14 |
+| Serviços | 0 | 4 | 6 | 6 |
+| Endpoints | 1 | 4 | 5 | 5 |
+| Bancos suportados | 10 | 17 | 17 | **18** (+Banco C6) |
+| Testes Ruby | ~30 | ~60 | 158 | **165** |
+| Testes Python | 0 | ~20 | 44 | **44** |
 
 ## Repositórios
 

@@ -439,7 +439,7 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](../L
 
 Este cliente utiliza a API Boleto CNAB, que por sua vez usa a gem [BRCobranca](https://github.com/Maxwbh/brcobranca) para geração de boletos bancários brasileiros.
 
-## 📄 Parsing de Extratos OFX (v1.3.0)
+## 📄 Parsing de Extratos OFX (v1.2.0+)
 
 O endpoint `POST /api/ofx/parse` permite parsear extratos bancários OFX.
 O cliente Python ainda não possui um método helper dedicado, mas pode ser usado via `requests`:
@@ -471,6 +471,12 @@ Veja [docs/api/ofx-parsing.md](../docs/api/ofx-parsing.md) para detalhes do endp
 **Versão:** 1.3.0
 
 ### Novidades v1.3.0
+
+- Suporte ao **Banco C6 (336)** — basta usar `bank='banco_c6'` com carteira `'10'` ou `'20'`
+- PIX híbrido documentado (8 bancos) — adicione `emv` ao payload
+- brcobranca atualizado para v12.6.1
+
+### Novidades v1.2.0
 
 - Endpoint `POST /api/ofx/parse` para parsing de extratos OFX
 - Extração automática de `nosso_numero` por banco

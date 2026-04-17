@@ -304,7 +304,7 @@ bundle exec rackup -p 9292
 **Recursos do Free Tier:**
 - ✅ 512 MB RAM
 - ✅ 100 GB bandwidth/mês
-- ✅ Auto-deploy do `main`
+- ✅ Auto-deploy do `master`
 - ⚠️ Sleep após 15min inatividade
 
 ### Railway / Fly.io
@@ -315,22 +315,24 @@ O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plata
 
 ### ✅ Recursos Implementados
 
-- 🏦 **Geração de boletos** - 18+ bancos brasileiros suportados
-- 📤 **Remessa CNAB** - Geração de arquivos CNAB240/400 para todos os bancos compatíveis
-- 📥 **Retorno CNAB** - Parsing de arquivos de retorno com detecção automática
-- 📄 **Parsing OFX** - Extrato bancário → JSON com extração de nosso_numero por banco
-- 🐍 **Cliente Python oficial** - Interface Pythonic com retry automático e type hints
-- 📦 **Instalação via pip** - Pacote Python distribuível e fácil de instalar
-- 🔢 **Versionamento semântico** - Sistema MAJOR.MINOR.PATCH com script automático
-- 📋 **CHANGELOG completo** - Histórico de todas as versões e mudanças
+- 🏦 **Geração de boletos** — 18 bancos brasileiros suportados (inclui Banco C6 desde v1.3.0)
+- 📤 **Remessa CNAB** — Geração de arquivos CNAB240/400 para todos os bancos compatíveis
+- 📥 **Retorno CNAB** — Parsing de arquivos de retorno com detecção automática
+- 📄 **Parsing OFX** — Extrato bancário → JSON com extração de nosso_numero por banco
+- 💠 **PIX Híbrido** — Boleto com QR Code PIX embutido (BB, Bradesco, Itaú, Sicoob, Caixa, C6, Santander, Sicredi)
+- 🐍 **Cliente Python oficial** — Interface Pythonic com retry automático e type hints
+- 📦 **Instalação via pip** — Pacote Python distribuível e fácil de instalar
+- 🔢 **Versionamento semântico** — Sistema MAJOR.MINOR.PATCH com script automático
+- 📋 **CHANGELOG completo** — Histórico de todas as versões e mudanças
 - 🔄 Mapeamento automático `numero_documento` ↔ `documento_numero`
+- 🔎 Filtragem automática de campos não suportados por banco (evita `NoMethodError`)
 - 📊 Endpoint `/api/boleto/data` para obter dados sem gerar PDF
 - 📝 Documentação completa de campos por banco
-- ⏱️ Logs estruturados com timestamps e tempo de processamento
-- 🧪 Testes automatizados com RSpec (cobertura completa)
+- ⏱️ Logs estruturados em JSON com timestamps e duração (stdout unbuffered)
+- 🧪 Testes automatizados (165 Ruby + 44 Python = 209 testes)
 - 💡 Exemplos práticos Python com tratamento de erros
 - 🗂️ Estrutura de projeto moderna e organizada
-- 🔍 Tratamento robusto de erros com hints
+- 🔍 Tratamento robusto de erros com origin/backtrace nos logs
 - 🐳 Docker Compose para desenvolvimento local
 - 🚀 Otimizado para Render Free Tier (512MB RAM)
 - 🛡️ Acesso seguro a métodos com `respond_to?` e `rescue`
@@ -390,13 +392,25 @@ Contribuições são bem-vindas! Sinta-se livre para abrir issues ou pull reques
 
 ## 🔗 Links Úteis
 
-**Documentação:**
-- [Cliente Python - README](./python-client/README.md)
+**Documentação Central:**
+- [📚 Índice da Documentação](./docs/README.md)
+- [Arquitetura](./docs/ARCHITECTURE.md)
+- [OpenAPI 3.0 Spec](./docs/openapi.yaml)
+
+**Guias:**
+- [Guia de Deploy](./DEPLOY.md)
+- [Cliente Python](./python-client/README.md)
 - [Exemplos Python](./examples/python/README.md)
+- [Scripts de Versionamento](./scripts/README.md)
+
+**Referência:**
 - [Documentação de Campos por Banco](./docs/fields/README.md)
 - [Compatibilidade de Todos os Bancos](./docs/fields/all-banks.md)
-- [Guia de Deploy](./DEPLOY.md)
-- [Scripts de Versionamento](./scripts/README.md)
+- [Exemplos de Payload](./docs/fields/examples.md)
+
+**API:**
+- [Parsing OFX](./docs/api/ofx-parsing.md)
+- [PIX Híbrido](./docs/api/pix.md)
 - [Troubleshooting](./docs/api/troubleshooting.md)
 
 **Gem BRCobranca:**

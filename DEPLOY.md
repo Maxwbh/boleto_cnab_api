@@ -34,7 +34,7 @@ ls Dockerfile render.yaml Gemfile
 # Se estiver tudo ok, fazer push
 git add .
 git commit -m "Deploy para Render"
-git push origin main
+git push origin master
 ```
 
 ### 2. Criar Serviço no Render
@@ -120,7 +120,7 @@ curl https://boleto-cnab-api.onrender.com/api/health
 O `render.yaml` já está configurado com `autoDeploy: true`.
 
 **Isso significa:**
-- ✅ Push para `main` → Deploy automático
+- ✅ Push para `master` → Deploy automático
 - ✅ Pull Request merged → Deploy automático
 - ✅ Não precisa fazer nada manual
 
@@ -299,7 +299,7 @@ Antes de fazer deploy, verifique:
 - [ ] `Dockerfile` presente e testado localmente
 - [ ] `render.yaml` com configurações corretas
 - [ ] `Gemfile` atualizado
-- [ ] Código commitado e pushed para `main`
+- [ ] Código commitado e pushed para `master`
 - [ ] Testes passando (`bundle exec rspec`)
 - [ ] Health check funcionando (`/api/health`)
 
