@@ -37,6 +37,7 @@ Documentação técnica da Boleto CNAB API — REST API para geração de boleto
 ## Arquitetura
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — Estrutura modular, services, middleware, fluxos
+- [ROADMAP.md](./ROADMAP.md) — Roadmap de funcionalidades (pendentes e concluídas)
 - [development/brcobranca-fork.md](./development/brcobranca-fork.md) — Detalhes da gem brcobranca
 
 ## Guia de Campos por Banco
