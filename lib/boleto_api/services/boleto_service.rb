@@ -76,19 +76,18 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          # Monta response garantindo contrato público consistente da API.
-          # brcobranca v12.5+ usa 'nosso_numero_boleto' internamente, mas
-          # a API sempre retorna 'nosso_numero' para compatibilidade.
+          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : boleto.nosso_numero.to_s
+
           base = {
             valid: true,
-            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: nn_formatado,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
             codigo_barras: boleto.codigo_barras,
             linha_digitavel: safe_call(boleto, :linha_digitavel),
             agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto)
           }
 
-          # Se disponível, inclui também os dados calculados adicionais (sem sobrescrever)
           if boleto.respond_to?(:dados_calculados)
             boleto.dados_calculados.merge(base)
           else
@@ -205,19 +204,15 @@ module BoletoApi
           values
         end
 
-        # Normaliza o hash para o contrato público da API:
-        # - documento_numero → numero_documento (alias público)
-        # - nosso_numero é setado para o valor formatado (nosso_numero_boleto)
-        #   quando disponível, mantendo compatibilidade
+        # Normaliza o hash para o contrato público da API.
         def normalize_public_contract(hash, boleto)
-          # Alias público: numero_documento
+          hash[:nosso_numero] = boleto.nosso_numero.to_s
+          hash[:nosso_numero_formatado] = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : hash[:nosso_numero]
+          hash[:nosso_numero_dv] = safe_call(boleto, :nosso_numero_dv)
+          hash.delete(:nosso_numero_boleto)
+
           if hash.key?(:documento_numero) && !hash.key?(:numero_documento)
             hash[:numero_documento] = hash[:documento_numero]
-          end
-
-          # Garantir nosso_numero (já vem do to_hash, mas reforça com o formatado)
-          if boleto.respond_to?(:nosso_numero_boleto) && hash[:nosso_numero_boleto].nil?
-            hash[:nosso_numero_boleto] = boleto.nosso_numero_boleto rescue nil
           end
 
           hash
@@ -236,7 +231,8 @@ module BoletoApi
           {
             valid: true,
             bank: bank,
-            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: boleto.nosso_numero_boleto.to_s,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
             codigo_barras: boleto.codigo_barras,
             codigo_barras_segunda_parte: safe_call(boleto, :codigo_barras_segunda_parte),
