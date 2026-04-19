@@ -43,8 +43,9 @@ Documentação técnica da Boleto CNAB API — REST API para geração de boleto
 ## Guia de Campos por Banco
 
 - [fields/README.md](./fields/README.md) — Overview dos campos
+- [fields/nosso-numero.md](./fields/nosso-numero.md) — Nosso numero: entrada, saida, conciliacao
 - [fields/all-banks.md](./fields/all-banks.md) — Compatibilidade por banco
-- [fields/examples.md](./fields/examples.md) — Exemplos práticos de payloads
+- [fields/examples.md](./fields/examples.md) — Exemplos praticos de payloads
 
 ## Cliente Python
 
