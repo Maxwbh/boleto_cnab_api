@@ -207,7 +207,33 @@ paths:
             format: json
       responses:
         '200':
-          description: Arquivo gerado
+          description: Arquivo gerado. Headers adicionais trazem dados do boleto.
+          headers:
+            X-Nosso-Numero:
+              schema:
+                type: string
+              description: Nosso número padronizado (valor cru, sem DV).
+              example: '000000123'
+            X-Nosso-Numero-Formatado:
+              schema:
+                type: string
+              description: Nosso número formatado (impresso no boleto, com DV).
+              example: '01234567000000123'
+            X-Nosso-Numero-DV:
+              schema:
+                type: string
+              description: Dígito verificador do nosso número.
+              example: '9'
+            X-Codigo-Barras:
+              schema:
+                type: string
+              description: Código de barras (44 dígitos).
+              example: '00196131200001500000000000123456700000012318'
+            X-Linha-Digitavel:
+              schema:
+                type: string
+              description: Linha digitável formatada.
+              example: '00190.00009 00123.456709 00000.123182 6 13120000150000'
           content:
             application/pdf:
               schema:
@@ -257,7 +283,23 @@ paths:
                   description: Arquivo JSON com array de boletos
       responses:
         '200':
-          description: Arquivo gerado com múltiplos boletos
+          description: |
+            Arquivo gerado com múltiplos boletos. Headers adicionais trazem
+            metadados de cada boleto no arquivo.
+          headers:
+            X-Boletos-Count:
+              schema:
+                type: integer
+              description: Número total de boletos gerados.
+              example: 3
+            X-Boletos-Info:
+              schema:
+                type: string
+                format: json
+              description: |
+                Array JSON com metadados de cada boleto (bank, nosso_numero,
+                nosso_numero_formatado, nosso_numero_dv, codigo_barras, linha_digitavel).
+              example: '[{"bank":"banco_brasil","nosso_numero":"000000123","nosso_numero_formatado":"01234567000000123","nosso_numero_dv":"9","codigo_barras":"...","linha_digitavel":"..."}]'
           content:
             application/pdf:
               schema:

@@ -78,6 +78,15 @@ module BoletoApi
           if result[:valid]
             content_type Config::Constants.content_type_for(params[:type])
             header['Content-Disposition'] = "attachment; filename=boleto-#{params[:bank]}.#{params[:type]}"
+
+            # Headers com dados do boleto (evita chamada extra ao /data)
+            meta = result[:metadata] || {}
+            header['X-Nosso-Numero'] = meta[:nosso_numero].to_s
+            header['X-Nosso-Numero-Formatado'] = meta[:nosso_numero_formatado].to_s
+            header['X-Nosso-Numero-DV'] = meta[:nosso_numero_dv].to_s
+            header['X-Codigo-Barras'] = meta[:codigo_barras].to_s
+            header['X-Linha-Digitavel'] = meta[:linha_digitavel].to_s
+
             env['api.format'] = :binary
             result[:content]
           else
@@ -102,6 +111,12 @@ module BoletoApi
             status 200
             content_type Config::Constants.content_type_for(params[:type])
             header['Content-Disposition'] = "attachment; filename=boletos-multi.#{params[:type]}"
+
+            # Metadados de todos os boletos em um único header JSON
+            metadata = result[:metadata] || []
+            header['X-Boletos-Info'] = metadata.to_json
+            header['X-Boletos-Count'] = result[:valid_count].to_s
+
             env['api.format'] = :binary
             result[:content]
           else

@@ -100,7 +100,7 @@ module BoletoApi
         # @param bank [String] Nome do banco
         # @param values [Hash] Dados do boleto
         # @param format [String] Formato de saída ('pdf', 'jpg', 'png', 'tif')
-        # @return [Hash] { valid: Boolean, content: String/nil, errors: Hash }
+        # @return [Hash] { valid:, content:, errors:, metadata: { nosso_numero, nosso_numero_formatado, nosso_numero_dv } }
         def generate(bank, values, format: 'pdf')
           validate_output_format!(format)
           boleto = create(bank, values)
@@ -110,7 +110,12 @@ module BoletoApi
           end
 
           content = boleto.send("to_#{format}".to_sym)
-          { valid: true, content: content, errors: {} }
+          {
+            valid: true,
+            content: content,
+            errors: {},
+            metadata: boleto_metadata(boleto, bank)
+          }
         end
 
         # Gera arquivo com múltiplos boletos
@@ -131,7 +136,7 @@ module BoletoApi
             }
           end
 
-          boletos = []
+          boletos_with_bank = []
           errors = []
 
           boletos_data.each_with_index do |boleto_values, index|
@@ -146,7 +151,7 @@ module BoletoApi
               boleto = create(bank, boleto_values)
 
               if boleto.valid?
-                boletos << boleto
+                boletos_with_bank << { bank: bank, boleto: boleto }
               else
                 errors << { index: index + 1, bank: bank, errors: boleto.errors.messages }
               end
@@ -160,13 +165,22 @@ module BoletoApi
               valid: false,
               content: nil,
               errors: errors,
-              valid_count: boletos.size,
+              valid_count: boletos_with_bank.size,
               invalid_count: errors.size
             }
           end
 
+          boletos = boletos_with_bank.map { |bb| bb[:boleto] }
           content = Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
-          { valid: true, content: content, errors: [], valid_count: boletos.size, invalid_count: 0 }
+          metadata = boletos_with_bank.map { |bb| boleto_metadata(bb[:boleto], bb[:bank]) }
+          {
+            valid: true,
+            content: content,
+            errors: [],
+            valid_count: boletos.size,
+            invalid_count: 0,
+            metadata: metadata
+          }
         end
 
         private
@@ -224,6 +238,19 @@ module BoletoApi
           object.send(method)
         rescue StandardError
           nil
+        end
+
+        # Extrai metadados do boleto para uso em headers HTTP ou response JSON
+        def boleto_metadata(boleto, bank)
+          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : boleto.nosso_numero.to_s
+          {
+            bank: bank,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: nn_formatado,
+            nosso_numero_dv: safe_call(boleto, :nosso_numero_dv).to_s,
+            codigo_barras: safe_call(boleto, :codigo_barras).to_s,
+            linha_digitavel: safe_call(boleto, :linha_digitavel).to_s
+          }
         end
 
         # Fallback para versões anteriores do brcobranca (< v12.5)

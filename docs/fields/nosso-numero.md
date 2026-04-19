@@ -73,9 +73,41 @@ curl "http://localhost:9292/api/boleto/data?bank=banco_brasil&data={\"nosso_nume
 
 Envie o valor curto. A API formata automaticamente.
 
+**Opcao 1 — JSON com dados (sem PDF):**
 ```python
 dados = {"nosso_numero": "123", ...}
 response = requests.get(f"{API}/api/boleto/data", params={"bank": "banco_brasil", "data": json.dumps(dados)})
+data = response.json()
+nn     = data['nosso_numero']             # "000000123"
+nn_fmt = data['nosso_numero_formatado']    # "01234567000000123"
+nn_dv  = data['nosso_numero_dv']           # 9
+```
+
+**Opcao 2 — PDF + dados em headers (1 chamada):**
+```python
+response = requests.get(f"{API}/api/boleto", params={
+    "bank": "banco_brasil", "type": "pdf", "data": json.dumps(dados)
+})
+pdf_bytes = response.content
+nn     = response.headers['X-Nosso-Numero']            # "000000123"
+nn_fmt = response.headers['X-Nosso-Numero-Formatado']  # "01234567000000123"
+nn_dv  = response.headers['X-Nosso-Numero-DV']         # "9"
+```
+
+### Multiplos Boletos
+
+`POST /api/boleto/multi` retorna PDF + header `X-Boletos-Info` (JSON array):
+
+```python
+import json
+response = requests.post(f"{API}/api/boleto/multi",
+    data={"type": "pdf"},
+    files={"data": open("boletos.json", "rb")}
+)
+pdf_bytes = response.content
+total = int(response.headers['X-Boletos-Count'])
+info = json.loads(response.headers['X-Boletos-Info'])
+# info[i] = {"bank":..., "nosso_numero":..., "nosso_numero_formatado":..., ...}
 ```
 
 ### Remessa CNAB
