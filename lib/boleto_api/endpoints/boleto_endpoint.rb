@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'base64'
+
 module BoletoApi
   module Endpoints
     # Endpoints para operações com boletos
@@ -70,22 +72,43 @@ module BoletoApi
           requires :bank, type: String, desc: 'Nome do banco'
           requires :type, type: String, values: Config::Constants::OUTPUT_TYPES, desc: 'Formato de saída'
           requires :data, type: String, desc: 'Dados do boleto em JSON'
+          optional :include_data, type: String, default: 'false',
+                   desc: 'Se "true", retorna JSON com dados do boleto + arquivo em base64 (1 chamada). Se "false" (padrão), retorna apenas o binário.'
         end
         get do
           values = JSON.parse(params[:data])
           result = Services::BoletoService.generate(params[:bank], values, format: params[:type])
 
-          if result[:valid]
-            content_type Config::Constants.content_type_for(params[:type])
-            header['Content-Disposition'] = "attachment; filename=boleto-#{params[:bank]}.#{params[:type]}"
-            env['api.format'] = :binary
-            result[:content]
-          else
+          unless result[:valid]
             error!({
               error: 'Dados do boleto inválidos',
               validation_errors: result[:errors],
               hint: 'Verifique se todos os campos obrigatórios estão preenchidos'
             }, 400)
+          end
+
+          # Modo JSON: retorna dados completos + arquivo em base64
+          if params[:include_data].to_s.downcase == 'true'
+            data_result = Services::BoletoService.data(params[:bank], values)
+            data_result.merge(
+              content_base64: Base64.strict_encode64(result[:content]),
+              content_type: Config::Constants.content_type_for(params[:type]),
+              filename: "boleto-#{params[:bank]}.#{params[:type]}"
+            ).except(:valid)
+          else
+            # Modo binário (padrão): arquivo + headers X-*
+            content_type Config::Constants.content_type_for(params[:type])
+            header['Content-Disposition'] = "attachment; filename=boleto-#{params[:bank]}.#{params[:type]}"
+
+            meta = result[:metadata] || {}
+            header['X-Nosso-Numero'] = meta[:nosso_numero].to_s
+            header['X-Nosso-Numero-Formatado'] = meta[:nosso_numero_formatado].to_s
+            header['X-Nosso-Numero-DV'] = meta[:nosso_numero_dv].to_s
+            header['X-Codigo-Barras'] = meta[:codigo_barras].to_s
+            header['X-Linha-Digitavel'] = meta[:linha_digitavel].to_s
+
+            env['api.format'] = :binary
+            result[:content]
           end
         end
 
@@ -93,24 +116,44 @@ module BoletoApi
         params do
           requires :type, type: String, values: Config::Constants::OUTPUT_TYPES, desc: 'Formato de saída'
           requires :data, type: File, desc: 'JSON com lista de boletos (cada um com campo "bank")'
+          optional :include_data, type: String, default: 'false',
+                   desc: 'Se "true", retorna JSON com dados de todos os boletos + arquivo em base64 (1 chamada).'
         end
         post :multi do
           boletos_data = JSON.parse(params[:data][:tempfile].read)
           result = Services::BoletoService.generate_multi(boletos_data, format: params[:type])
 
-          if result[:valid]
-            status 200
-            content_type Config::Constants.content_type_for(params[:type])
-            header['Content-Disposition'] = "attachment; filename=boletos-multi.#{params[:type]}"
-            env['api.format'] = :binary
-            result[:content]
-          else
+          unless result[:valid]
             error!({
               error: "#{result[:invalid_count]} boleto(s) com erros de validação",
               validation_errors: result[:errors],
               valid_count: result[:valid_count],
               invalid_count: result[:invalid_count]
             }, 400)
+          end
+
+          # Modo JSON: retorna metadados + arquivo em base64
+          if params[:include_data].to_s.downcase == 'true'
+            status 200
+            {
+              total: result[:valid_count],
+              boletos: result[:metadata] || [],
+              content_base64: Base64.strict_encode64(result[:content]),
+              content_type: Config::Constants.content_type_for(params[:type]),
+              filename: "boletos-multi.#{params[:type]}"
+            }
+          else
+            # Modo binário (padrão): arquivo + headers
+            status 200
+            content_type Config::Constants.content_type_for(params[:type])
+            header['Content-Disposition'] = "attachment; filename=boletos-multi.#{params[:type]}"
+
+            metadata = result[:metadata] || []
+            header['X-Boletos-Info'] = metadata.to_json
+            header['X-Boletos-Count'] = result[:valid_count].to_s
+
+            env['api.format'] = :binary
+            result[:content]
           end
         end
       end
