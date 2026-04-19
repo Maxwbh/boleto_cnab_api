@@ -94,12 +94,24 @@ nn_fmt = response.headers['X-Nosso-Numero-Formatado']  # "01234567000000123"
 nn_dv  = response.headers['X-Nosso-Numero-DV']         # "9"
 ```
 
+**Opcao 3 — JSON com dados + PDF em base64 (1 chamada, recomendada):**
+```python
+import base64
+response = requests.get(f"{API}/api/boleto", params={
+    "bank": "banco_brasil", "type": "pdf",
+    "data": json.dumps(dados), "include_data": "true"
+})
+result = response.json()
+nn     = result['nosso_numero']             # "000000123"
+nn_fmt = result['nosso_numero_formatado']    # "01234567000000123"
+nn_dv  = result['nosso_numero_dv']           # 9
+pdf    = base64.b64decode(result['content_base64'])
+```
+
 ### Multiplos Boletos
 
-`POST /api/boleto/multi` retorna PDF + header `X-Boletos-Info` (JSON array):
-
+**Opcao 1 — PDF + metadados em headers:**
 ```python
-import json
 response = requests.post(f"{API}/api/boleto/multi",
     data={"type": "pdf"},
     files={"data": open("boletos.json", "rb")}
@@ -108,6 +120,18 @@ pdf_bytes = response.content
 total = int(response.headers['X-Boletos-Count'])
 info = json.loads(response.headers['X-Boletos-Info'])
 # info[i] = {"bank":..., "nosso_numero":..., "nosso_numero_formatado":..., ...}
+```
+
+**Opcao 2 — JSON com tudo (recomendada):**
+```python
+response = requests.post(f"{API}/api/boleto/multi",
+    data={"type": "pdf", "include_data": "true"},
+    files={"data": open("boletos.json", "rb")}
+)
+result = response.json()
+total = result['total']
+boletos = result['boletos']  # array com {bank, nosso_numero, nosso_numero_formatado, ...}
+pdf = base64.b64decode(result['content_base64'])
 ```
 
 ### Remessa CNAB

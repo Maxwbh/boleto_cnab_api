@@ -53,12 +53,16 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          # Usa to_hash do brcobranca v12.5+ se disponível
+          # Tenta to_hash (v12.5+), com fallback seguro em caso de erro
+          # (ex: Sicredi pode lançar Brcobranca::BoletoInvalido em codigo_barras)
           if boleto.respond_to?(:to_hash)
-            hash = boleto.to_hash.merge(valid: true, bank: bank)
+            begin
+              hash = boleto.to_hash.merge(valid: true, bank: bank)
+            rescue StandardError
+              hash = build_boleto_hash(boleto, bank)
+            end
             normalize_public_contract(hash, boleto)
           else
-            # Fallback para versões anteriores
             build_boleto_hash(boleto, bank)
           end
         end
@@ -240,9 +244,13 @@ module BoletoApi
           nil
         end
 
-        # Extrai metadados do boleto para uso em headers HTTP ou response JSON
+        # Extrai metadados do boleto para uso em headers HTTP ou response JSON.
+        # Usa safe_call para todos os campos calculados, pois algumas classes
+        # (ex: Sicredi) podem lançar Brcobranca::BoletoInvalido em codigo_barras
+        # mesmo quando o boleto passa na validação.
         def boleto_metadata(boleto, bank)
-          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : boleto.nosso_numero.to_s
+          nn_formatado = safe_call(boleto, :nosso_numero_boleto).to_s
+          nn_formatado = boleto.nosso_numero.to_s if nn_formatado.empty?
           {
             bank: bank,
             nosso_numero: boleto.nosso_numero.to_s,
@@ -254,14 +262,15 @@ module BoletoApi
         end
 
         # Fallback para versões anteriores do brcobranca (< v12.5)
+        # ou quando to_hash falha (safe_call em todos os campos calculados)
         def build_boleto_hash(boleto, bank)
           {
             valid: true,
             bank: bank,
             nosso_numero: boleto.nosso_numero.to_s,
-            nosso_numero_formatado: boleto.nosso_numero_boleto.to_s,
+            nosso_numero_formatado: safe_call(boleto, :nosso_numero_boleto).to_s,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
-            codigo_barras: boleto.codigo_barras,
+            codigo_barras: safe_call(boleto, :codigo_barras),
             codigo_barras_segunda_parte: safe_call(boleto, :codigo_barras_segunda_parte),
             linha_digitavel: safe_call(boleto, :linha_digitavel),
             agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto),
