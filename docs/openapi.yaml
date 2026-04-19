@@ -567,16 +567,24 @@ components:
           example: banco_brasil
         nosso_numero:
           type: string
-          description: Nosso número formatado (corresponde a nosso_numero_boleto da gem)
-          example: '00000123456-X'
+          description: |
+            Nosso número padronizado com zeros (SEM carteira/convênio/DV).
+            É o valor de entrada formatado pela gem, sem composição de impressão.
+          example: '000000123'
+        nosso_numero_formatado:
+          type: string
+          description: |
+            Nosso número IMPRESSO no boleto (com carteira, convênio e/ou DV,
+            conforme regra do banco). Usar este campo para exibição e conciliação.
+          example: '01234567000000123'
         nosso_numero_boleto:
           type: string
-          description: Alias de nosso_numero (nome interno da gem brcobranca)
-          example: '00000123456-X'
+          description: Alias de nosso_numero_formatado (compatibilidade)
+          example: '01234567000000123'
         nosso_numero_dv:
           type: string
-          description: Dígito verificador do nosso número
-          example: 'X'
+          description: Dígito verificador do nosso número (isolado)
+          example: '9'
         codigo_barras:
           type: string
           description: Código de barras (44 dígitos)

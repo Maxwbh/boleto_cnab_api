@@ -76,19 +76,19 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          # Monta response garantindo contrato público consistente da API.
-          # brcobranca v12.5+ usa 'nosso_numero_boleto' internamente, mas
-          # a API sempre retorna 'nosso_numero' para compatibilidade.
+          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : boleto.nosso_numero.to_s
+
           base = {
             valid: true,
-            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: nn_formatado,
+            nosso_numero_boleto: nn_formatado,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
             codigo_barras: boleto.codigo_barras,
             linha_digitavel: safe_call(boleto, :linha_digitavel),
             agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto)
           }
 
-          # Se disponível, inclui também os dados calculados adicionais (sem sobrescrever)
           if boleto.respond_to?(:dados_calculados)
             boleto.dados_calculados.merge(base)
           else
@@ -206,19 +206,24 @@ module BoletoApi
         end
 
         # Normaliza o hash para o contrato público da API.
-        # Garante que os campos de saída sejam consistentes entre endpoints:
+        # Garante campos de nosso_numero claros e distintos:
         #
-        # - nosso_numero → SEMPRE o valor formatado (com DV), igual ao impresso no boleto
-        # - nosso_numero_boleto → alias (mesmo valor de nosso_numero)
-        # - nosso_numero_dv → dígito verificador isolado
+        # - nosso_numero → valor CRU padronizado (ex: "000000123")
+        # - nosso_numero_formatado → valor IMPRESSO no boleto (ex: "01234567000000123")
+        # - nosso_numero_dv → dígito verificador (ex: "9")
+        # - nosso_numero_boleto → alias de nosso_numero_formatado (compatibilidade)
         # - documento_numero → numero_documento (alias público)
         def normalize_public_contract(hash, boleto)
-          # nosso_numero formatado (com DV) para impressão
-          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto : nil
-          if nn_formatado
-            hash[:nosso_numero] = nn_formatado
-            hash[:nosso_numero_boleto] = nn_formatado
-          end
+          # nosso_numero: valor cru padronizado (sem carteira/convênio/DV)
+          hash[:nosso_numero] = boleto.nosso_numero.to_s
+
+          # nosso_numero_formatado: valor impresso no boleto (com carteira/convênio/DV)
+          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : hash[:nosso_numero]
+          hash[:nosso_numero_formatado] = nn_formatado
+          hash[:nosso_numero_boleto] = nn_formatado
+
+          # nosso_numero_dv: dígito verificador isolado
+          hash[:nosso_numero_dv] = safe_call(boleto, :nosso_numero_dv)
 
           # Alias público: numero_documento
           if hash.key?(:documento_numero) && !hash.key?(:numero_documento)
@@ -238,10 +243,13 @@ module BoletoApi
 
         # Fallback para versões anteriores do brcobranca (< v12.5)
         def build_boleto_hash(boleto, bank)
+          nn_formatado = boleto.nosso_numero_boleto.to_s
           {
             valid: true,
             bank: bank,
-            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: nn_formatado,
+            nosso_numero_boleto: nn_formatado,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
             codigo_barras: boleto.codigo_barras,
             codigo_barras_segunda_parte: safe_call(boleto, :codigo_barras_segunda_parte),
