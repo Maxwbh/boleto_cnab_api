@@ -61,7 +61,7 @@ hash = boleto.to_hash
 # => {
 #   convenio: "...", moeda: "9", carteira: "18",
 #   codigo_barras: "00191...", linha_digitavel: "00191.23456...",
-#   nosso_numero_boleto: "00000123456-X", nosso_numero_dv: "X",
+#   nosso_numero_formatado: "00000123456-X", nosso_numero_dv: "X",
 #   agencia_conta_boleto: "3073 / 12345678-0",
 #   pix: nil | { emv: "...", qrcode_png: "<base64>" }
 # }

@@ -244,7 +244,7 @@ requests.get(f"{API_URL}/api/boleto", params={
 
 | Método | Disponibilidade | Observação |
 |--------|-----------------|------------|
-| `nosso_numero_boleto` | ✅ 100% | Sempre disponível |
+| `nosso_numero_formatado` | ✅ 100% | Valor impresso no boleto |
 | `codigo_barras` | ✅ 100% | Sempre disponível |
 | `valid?` | ✅ 100% | Validação sempre funciona |
 | `to_pdf` | ✅ 100% | Geração de PDF sempre funciona |

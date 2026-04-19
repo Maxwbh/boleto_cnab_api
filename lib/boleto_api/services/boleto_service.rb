@@ -82,7 +82,6 @@ module BoletoApi
             valid: true,
             nosso_numero: boleto.nosso_numero.to_s,
             nosso_numero_formatado: nn_formatado,
-            nosso_numero_boleto: nn_formatado,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
             codigo_barras: boleto.codigo_barras,
             linha_digitavel: safe_call(boleto, :linha_digitavel),
@@ -206,26 +205,12 @@ module BoletoApi
         end
 
         # Normaliza o hash para o contrato público da API.
-        # Garante campos de nosso_numero claros e distintos:
-        #
-        # - nosso_numero → valor CRU padronizado (ex: "000000123")
-        # - nosso_numero_formatado → valor IMPRESSO no boleto (ex: "01234567000000123")
-        # - nosso_numero_dv → dígito verificador (ex: "9")
-        # - nosso_numero_boleto → alias de nosso_numero_formatado (compatibilidade)
-        # - documento_numero → numero_documento (alias público)
         def normalize_public_contract(hash, boleto)
-          # nosso_numero: valor cru padronizado (sem carteira/convênio/DV)
           hash[:nosso_numero] = boleto.nosso_numero.to_s
-
-          # nosso_numero_formatado: valor impresso no boleto (com carteira/convênio/DV)
-          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : hash[:nosso_numero]
-          hash[:nosso_numero_formatado] = nn_formatado
-          hash[:nosso_numero_boleto] = nn_formatado
-
-          # nosso_numero_dv: dígito verificador isolado
+          hash[:nosso_numero_formatado] = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : hash[:nosso_numero]
           hash[:nosso_numero_dv] = safe_call(boleto, :nosso_numero_dv)
+          hash.delete(:nosso_numero_boleto)
 
-          # Alias público: numero_documento
           if hash.key?(:documento_numero) && !hash.key?(:numero_documento)
             hash[:numero_documento] = hash[:documento_numero]
           end
@@ -243,13 +228,11 @@ module BoletoApi
 
         # Fallback para versões anteriores do brcobranca (< v12.5)
         def build_boleto_hash(boleto, bank)
-          nn_formatado = boleto.nosso_numero_boleto.to_s
           {
             valid: true,
             bank: bank,
             nosso_numero: boleto.nosso_numero.to_s,
-            nosso_numero_formatado: nn_formatado,
-            nosso_numero_boleto: nn_formatado,
+            nosso_numero_formatado: boleto.nosso_numero_boleto.to_s,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
             codigo_barras: boleto.codigo_barras,
             codigo_barras_segunda_parte: safe_call(boleto, :codigo_barras_segunda_parte),
