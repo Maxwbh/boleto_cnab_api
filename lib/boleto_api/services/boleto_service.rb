@@ -205,19 +205,24 @@ module BoletoApi
           values
         end
 
-        # Normaliza o hash para o contrato público da API:
+        # Normaliza o hash para o contrato público da API.
+        # Garante que os campos de saída sejam consistentes entre endpoints:
+        #
+        # - nosso_numero → SEMPRE o valor formatado (com DV), igual ao impresso no boleto
+        # - nosso_numero_boleto → alias (mesmo valor de nosso_numero)
+        # - nosso_numero_dv → dígito verificador isolado
         # - documento_numero → numero_documento (alias público)
-        # - nosso_numero é setado para o valor formatado (nosso_numero_boleto)
-        #   quando disponível, mantendo compatibilidade
         def normalize_public_contract(hash, boleto)
+          # nosso_numero formatado (com DV) para impressão
+          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto : nil
+          if nn_formatado
+            hash[:nosso_numero] = nn_formatado
+            hash[:nosso_numero_boleto] = nn_formatado
+          end
+
           # Alias público: numero_documento
           if hash.key?(:documento_numero) && !hash.key?(:numero_documento)
             hash[:numero_documento] = hash[:documento_numero]
-          end
-
-          # Garantir nosso_numero (já vem do to_hash, mas reforça com o formatado)
-          if boleto.respond_to?(:nosso_numero_boleto) && hash[:nosso_numero_boleto].nil?
-            hash[:nosso_numero_boleto] = boleto.nosso_numero_boleto rescue nil
           end
 
           hash
