@@ -2,7 +2,7 @@
 
 module BoletoApi
   module Endpoints
-    # Endpoints de health check, informações e metadados
+    # Endpoints de health check, informacoes e metadados
     class HealthEndpoint < Grape::API
       format :json
 
@@ -11,7 +11,7 @@ module BoletoApi
         { status: 'OK', timestamp: Time.now.iso8601 }
       end
 
-      desc 'Informações da API'
+      desc 'Informacoes da API'
       get '/info' do
         {
           name: 'Boleto CNAB API',
@@ -54,28 +54,9 @@ module BoletoApi
         }
       end
 
-      desc 'Lista bancos suportados com capacidades por tipo'
+      desc 'Lista bancos suportados com capacidades detalhadas'
       get '/bancos' do
-        Config::Constants::SUPPORTED_BANKS.map do |bank|
-          {
-            codigo: bank,
-            boleto: true,
-            cnab400: Config::Constants::CNAB400_BANKS.include?(bank),
-            cnab240: Config::Constants::CNAB240_BANKS.include?(bank),
-            pix: bank_supports_pix?(bank)
-          }
-        end
-      end
-
-      helpers do
-        def bank_supports_pix?(bank)
-          class_name = bank.to_s.split('_').map(&:capitalize).join
-          klass = Object.const_get("Brcobranca::Boleto::#{class_name}")
-          instance = klass.new
-          instance.respond_to?(:emv=)
-        rescue StandardError
-          false
-        end
+        Services::BankInfoService.all
       end
     end
   end
