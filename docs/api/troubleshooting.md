@@ -226,6 +226,25 @@ Alguns bancos exigem campos específicos:
 
 Consulte [fields/all-banks.md](../fields/all-banks.md).
 
+### 5. Remessa PIX — banco não suportado
+
+**Response (400):**
+```json
+{"error": "Parâmetro inválido", "details": "Remessa PIX não disponível para banco 'banrisul' com formato 'cnab400'."}
+```
+
+**Solução:** Verifique a tabela de suporte PIX em [api/pix.md](./pix.md). Nem todo banco suporta PIX em todos os formatos CNAB.
+
+### 6. Sicoob Layout 810
+
+Para usar o layout alternativo onde o cliente calcula o DV, envie no payload da remessa Sicoob CNAB240:
+
+```json
+{"versao_layout_arquivo_opcao": "810", ...}
+```
+
+O valor padrão é `"081"`. O campo passa direto para a gem sem necessidade de configuração adicional na API.
+
 ## Erros Comuns — Retorno CNAB
 
 ### 1. Banco ou tipo não encontrado

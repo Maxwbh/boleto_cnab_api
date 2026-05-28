@@ -433,7 +433,9 @@ paths:
       tags:
         - Remessa
       summary: Gerar arquivo de remessa
-      description: Gera arquivo de remessa CNAB 240 ou 400
+      description: |
+        Gera arquivo de remessa CNAB 240 ou 400.
+        Com `pix=true`, gera remessa com segmento PIX (boleto híbrido).
       operationId: generateRemessa
       parameters:
         - name: bank
@@ -446,6 +448,17 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/CnabType'
+        - name: pix
+          in: query
+          required: false
+          description: |
+            Se `true`, usa classe PIX do banco para adicionar segmento PIX
+            na remessa CNAB. CNAB 400 PIX: Bradesco, Itaú, C6, Santander.
+            CNAB 240 PIX: Sicoob, Caixa, Banco do Brasil.
+          schema:
+            type: string
+            enum: ['true', 'false']
+            default: 'false'
       requestBody:
         required: true
         content:
@@ -906,6 +919,19 @@ components:
           type: string
           description: Texto exibido ao lado do QR Code no boleto híbrido
           example: 'Escaneie para pagar via PIX'
+        chave_pix:
+          type: string
+          description: 'Chave PIX (CPF, CNPJ, email, telefone ou aleatoria). Novo em brcobranca v12.8.0.'
+          example: '12345678900'
+        tipo_chave_pix:
+          type: string
+          description: 'Tipo da chave PIX.'
+          enum: ['cpf', 'cnpj', 'email', 'telefone', 'aleatoria']
+          example: 'cpf'
+        txid:
+          type: string
+          description: 'Codigo de identificacao da transacao PIX.'
+          example: 'TX20260528001'
 
     BoletoResponse:
       type: object

@@ -10,21 +10,20 @@ module BoletoApi
     class RemessaService
       class << self
         # Gera arquivo de remessa CNAB
-        # Usa Brcobranca::Remessa.criar (v12.4+) quando disponível
         #
         # @param bank [String] Nome do banco
         # @param cnab_type [String] Tipo de CNAB ('cnab400' ou 'cnab240')
         # @param values [Hash] Dados da remessa incluindo pagamentos
+        # @param pix [Boolean] Se true, usa classe PIX do banco (adiciona segmento PIX na remessa)
         # @return [Hash] { valid: Boolean, content: String/nil, errors: Array }
-        def generate(bank, cnab_type, values)
+        def generate(bank, cnab_type, values, pix: false)
           validate_cnab_type!(cnab_type)
           validate_payload!(values)
 
-          # Usa factory method do brcobranca v12.4+ se disponível
           if remessa_factory_available?
-            generate_with_factory(bank, cnab_type, values)
+            generate_with_factory(bank, cnab_type, values, pix: pix)
           else
-            generate_legacy(bank, cnab_type, values)
+            generate_legacy(bank, cnab_type, values, pix: pix)
           end
         end
 
@@ -51,8 +50,7 @@ module BoletoApi
             Brcobranca::Remessa.respond_to?(:criar)
         end
 
-        # Gera remessa usando factory method do brcobranca v12.4+
-        def generate_with_factory(bank, cnab_type, values)
+        def generate_with_factory(bank, cnab_type, values, pix: false)
           values_copy = values.dup
           pagamentos_data = values_copy.delete('pagamentos') || values_copy.delete(:pagamentos) || []
 
@@ -68,7 +66,11 @@ module BoletoApi
           )
 
           begin
-            remessa = Brcobranca::Remessa.criar(**factory_params)
+            if pix
+              remessa = create_remessa_pix(bank, cnab_type, factory_params)
+            else
+              remessa = Brcobranca::Remessa.criar(**factory_params)
+            end
 
             if remessa.valid?
               content = remessa.gera_arquivo
@@ -81,8 +83,27 @@ module BoletoApi
           end
         end
 
-        # Gera remessa usando método legado (versões anteriores)
-        def generate_legacy(bank, cnab_type, values)
+        # Cria remessa PIX usando a classe Pix do banco
+        def create_remessa_pix(bank, cnab_type, params)
+          pix_class = remessa_pix_class(bank, cnab_type)
+          params_without_factory = params.dup
+          params_without_factory.delete(:banco)
+          params_without_factory.delete(:formato)
+          pix_class.new(params_without_factory)
+        end
+
+        # Resolve a classe PIX para o banco e tipo CNAB
+        def remessa_pix_class(bank, cnab_type)
+          type_class = cnab_type.to_s.gsub('cnab', 'Cnab')
+          bank_class = bank.to_s.split('_').map(&:capitalize).join + 'Pix'
+          Object.const_get("Brcobranca::Remessa::#{type_class}::#{bank_class}")
+        rescue NameError
+          raise ArgumentError,
+                "Remessa PIX não disponível para banco '#{bank}' com formato '#{cnab_type}'. " \
+                "Bancos PIX disponíveis: Bradesco/Itaú/C6/Santander (CNAB400), Sicoob/Caixa/BB (CNAB240)."
+        end
+
+        def generate_legacy(bank, cnab_type, values, pix: false)
           pagamentos_data = values.delete('pagamentos') || values.delete(:pagamentos) || []
           pagamentos = []
           errors = []

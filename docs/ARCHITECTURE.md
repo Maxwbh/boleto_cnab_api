@@ -26,9 +26,9 @@ A API é construída sobre o framework [Grape](https://github.com/ruby-grape/gra
          └──────────────────┘
 ```
 
-## Integração com brcobranca v12.7.1
+## Integração com brcobranca v12.8.0
 
-Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.7.1):
+Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.8.0):
 
 | Service | Método brcobranca | Fallback |
 |---------|------------------|----------|
