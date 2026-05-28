@@ -1,6 +1,18 @@
 # PIX Híbrido no Boleto
 
-> **Versão:** 1.3.0 (brcobranca v12.7.1+)
+> **Versão:** 1.3.0 (brcobranca v12.8.0+)
+
+## Novos campos PIX (v12.8.0)
+
+A partir da brcobranca v12.8.0, o boleto aceita 3 campos adicionais para PIX:
+
+| Campo | Tipo | Descricao |
+|-------|------|-----------|
+| `chave_pix` | String | Chave PIX (CPF, CNPJ, email, telefone ou aleatoria) |
+| `tipo_chave_pix` | String | Tipo da chave: `cpf`, `cnpj`, `email`, `telefone`, `aleatoria` |
+| `txid` | String | Codigo de identificacao da transacao PIX |
+
+Esses campos sao opcionais e complementam o `emv`. Quando enviados, aparecem no `dados_pix` do response.
 
 ## Duas formas de usar PIX
 

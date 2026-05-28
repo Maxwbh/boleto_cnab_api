@@ -1,6 +1,6 @@
 # BRCobrança — Gem Utilizada
 
-> **Versão atual usada pelo projeto:** `12.7.1` (master @ `70b5f6f`)
+> **Versão atual usada pelo projeto:** `12.8.0` (master @ `dbfd683`)
 > **Repositório:** [github.com/Maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)
 
 Fork mantido por Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) do projeto original [kivanio/brcobranca](https://github.com/kivanio/brcobranca), com melhorias específicas para uso em APIs REST e suporte ampliado a bancos brasileiros.
@@ -15,6 +15,7 @@ gem 'brcobranca', git: 'https://github.com/maxwbh/brcobranca.git'
 
 | Versão | Data | Principais mudanças |
 |--------|------|---------------------|
+| **12.8.0** | 2026-05-28 | Novos campos PIX no boleto: `chave_pix`, `tipo_chave_pix`, `txid`. `dados_pix` expandido com `qrcode_disponivel` |
 | **12.7.1** | 2026-05-28 | Fix compatibilidade rghost 0.9.9 |
 | **12.7.0** | 2026-04-20 | Modulo `Brcobranca::Bancos` (registro centralizado de capacidades), carteiras por banco, extras (Sicoob cart 9/layout 810) |
 | **12.7.0** | 2026-04-08 | Suporte completo a **Banco C6 (336)** CNAB 400 (remessa + retorno + boleto) + PIX para 6 bancos |

@@ -919,6 +919,19 @@ components:
           type: string
           description: Texto exibido ao lado do QR Code no boleto híbrido
           example: 'Escaneie para pagar via PIX'
+        chave_pix:
+          type: string
+          description: 'Chave PIX (CPF, CNPJ, email, telefone ou aleatoria). Novo em brcobranca v12.8.0.'
+          example: '12345678900'
+        tipo_chave_pix:
+          type: string
+          description: 'Tipo da chave PIX.'
+          enum: ['cpf', 'cnpj', 'email', 'telefone', 'aleatoria']
+          example: 'cpf'
+        txid:
+          type: string
+          description: 'Codigo de identificacao da transacao PIX.'
+          example: 'TX20260528001'
 
     BoletoResponse:
       type: object
