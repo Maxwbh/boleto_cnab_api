@@ -26,9 +26,9 @@ A API é construída sobre o framework [Grape](https://github.com/ruby-grape/gra
          └──────────────────┘
 ```
 
-## Integração com brcobranca v12.6.1
+## Integração com brcobranca v12.7.1
 
-Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (master @ `6b5eb7b`, versão 12.6.1):
+Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.7.1):
 
 | Service | Método brcobranca | Fallback |
 |---------|------------------|----------|
@@ -52,8 +52,9 @@ lib/
     │   ├── boleto_service.rb          # Lógica de boletos
     │   ├── remessa_service.rb         # Lógica de remessas CNAB
     │   ├── retorno_service.rb         # Lógica de retornos CNAB
-    │   ├── ofx_parser_service.rb      # Parsing de arquivos OFX (v1.3.0)
-    │   └── nosso_numero_extractor.rb  # Extração por banco (v1.3.0)
+    │   ├── ofx_parser_service.rb      # Parsing de arquivos OFX
+    │   ├── nosso_numero_extractor.rb  # Extração por banco
+    │   └── bank_info_service.rb       # Capacidades por banco (via Brcobranca::Bancos)
     ├── endpoints/
     │   ├── health_endpoint.rb  # GET /api/health, /api/info
     │   ├── boleto_endpoint.rb  # /api/boleto/*
@@ -160,6 +161,18 @@ BoletoApi::Services::NossoNumeroExtractor.extrair('COBRANCA SICOOB 0000012345', 
 | Caixa | 104 | `\d{14,17}` |
 | Genérico | (outros) | `\d{7,17}` |
 
+#### BankInfoService (v12.7.1)
+
+Retorna capacidades detalhadas de cada banco usando `Brcobranca::Bancos` (v12.7.0+):
+
+```ruby
+BoletoApi::Services::BankInfoService.all
+# => [{ banco: "banco_brasil", codigo: "001", nome: "Banco do Brasil",
+#        boleto: { suportado: true, pix: true, carteiras: ["18",...] },
+#        remessa: { formatos: ["cnab400","cnab240","cnab240_pix"] },
+#        retorno: { formatos: ["cnab400"] }, extras: {} }, ...]
+```
+
 ### Middleware
 
 #### ErrorHandler
@@ -200,7 +213,9 @@ Logging estruturado em JSON:
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/api/health` | Status da API |
-| GET | `/api/info` | Informações da API (versão, bancos suportados) |
+| GET | `/api/info` | Versao, bancos suportados, formatos |
+| GET | `/api/metadata` | Versao API + gem brcobranca, lista de endpoints |
+| GET | `/api/bancos` | 18 bancos com capacidades detalhadas (via Brcobranca::Bancos) |
 
 #### BoletoEndpoint
 
@@ -209,8 +224,8 @@ Logging estruturado em JSON:
 | GET | `/api/boleto/validate` | Valida dados do boleto |
 | GET | `/api/boleto/data` | Retorna dados completos |
 | GET | `/api/boleto/nosso_numero` | Gera nosso_numero |
-| GET | `/api/boleto` | Gera boleto (PDF/JPG/PNG/TIF) |
-| POST | `/api/boleto/multi` | Gera múltiplos boletos |
+| GET | `/api/boleto` | Gera boleto (PDF/JPG/PNG/TIF). Com `include_data=true` retorna JSON + base64 |
+| POST | `/api/boleto/multi` | Gera multiplos boletos. Com `include_data=true` retorna JSON + base64 |
 
 #### RemessaEndpoint
 

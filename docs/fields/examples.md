@@ -465,6 +465,7 @@ Ao gerar um boleto, verifique se está enviando:
 
 ---
 
-**Data de Criação:** 2025-11-25
-**Mantido por:** Maxwell da Silva Oliveira (@maxwbh)
+**Veja tambem:** [examples/python/README.md](../../examples/python/README.md) para scripts executaveis.
+
+**Mantido por:** Maxwell da Silva Oliveira (@maxwbh) — M&S do Brasil LTDA
 **M&S do Brasil Ltda**

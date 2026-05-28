@@ -6,17 +6,17 @@
 
 | Feature | brcobranca | boleto_cnab_api | Versão |
 |---------|:----------:|:---------------:|--------|
-| Banco C6 (336) — CNAB 400 | ✅ v12.6.1 | ✅ | v1.3.0 |
-| PIX Híbrido (8 bancos) | ✅ v12.6.1 | ✅ docs | v1.3.0 |
-| Sicoob Carteira 9 (`numero_contrato`) | ✅ v12.6.1 | ✅ funcional | v1.3.0 |
+| Banco C6 (336) — CNAB 400 | ✅ v12.7.0 | ✅ | v1.3.0 |
+| PIX Híbrido (8 bancos) | ✅ v12.7.0 | ✅ docs | v1.3.0 |
+| Sicoob Carteira 9 (`numero_contrato`) | ✅ v12.7.0 | ✅ funcional | v1.3.0 |
 | Parsing OFX | n/a (gem `ofx`) | ✅ | v1.2.0 |
 | `GET /api/bancos` | n/a | ✅ | v1.3.0 |
 | `GET /api/metadata` | n/a | ✅ | v1.3.0 |
-| Template Prawn (sem GhostScript) | ✅ v12.6.1 | 🟡 pendente | — |
+| Template Prawn (sem GhostScript) | ✅ v12.7.0 | 🟡 pendente | — |
 | `POST /api/boleto/prawn` | ✅ | 🟡 pendente | — |
 | Remessa PIX (`POST /api/remessa/pix`) | ✅ | 🟡 pendente | — |
 | Dockerfile sem GhostScript (Prawn) | ✅ | 🟡 pendente | — |
-| Sicoob Layout 810 | ✅ v12.6.1 | 🟡 pendente | — |
+| Sicoob Layout 810 | ✅ v12.7.0 | 🟡 pendente | — |
 | Sicoob API V3 (registro online) | n/a | 🔴 futuro | — |
 | C6 Bank API (registro online) | n/a | 🔴 futuro | — |
 
@@ -28,7 +28,7 @@
 
 ### 1. Template Prawn (alternativa ao GhostScript)
 
-**O que é:** A brcobranca v12.6.1 introduziu `PrawnBolepix`, um template que gera boletos
+**O que é:** A brcobranca v12.7.0 introduziu `PrawnBolepix`, um template que gera boletos
 usando a gem Prawn (Ruby puro) ao invés de RGhost (que precisa de GhostScript binário).
 
 **Benefícios:**
@@ -109,7 +109,7 @@ imagem ~50-70MB menor e deploy mais rápido.
 
 ### v1.3.0 (2026-04-10)
 - ✅ Banco C6 (336) — CNAB 400 completo
-- ✅ brcobranca atualizado para v12.6.1
+- ✅ brcobranca atualizado para v12.7.0
 - ✅ `GET /api/bancos` — lista bancos com capacidades
 - ✅ `GET /api/metadata` — versão da API e gem
 - ✅ PIX híbrido documentado (8 bancos)

@@ -1,6 +1,6 @@
 # PIX Híbrido no Boleto
 
-> **Versão:** 1.3.0 (brcobranca v12.6.1+)
+> **Versão:** 1.3.0 (brcobranca v12.7.0+)
 
 O boleto híbrido combina **boleto bancário tradicional** com **QR Code PIX**, permitindo que o sacado escolha pagar via código de barras/linha digitável OU via PIX.
 

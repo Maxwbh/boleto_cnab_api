@@ -2,49 +2,100 @@
 
 module BoletoApi
   module Services
-    # Retorna informacoes detalhadas de cada banco suportado,
-    # detectando capacidades diretamente das classes da gem brcobranca.
+    # Retorna informacoes detalhadas de cada banco suportado.
+    # Usa Brcobranca::Bancos (v12.7.0+) quando disponivel,
+    # com fallback para deteccao via const_get.
     class BankInfoService
       class << self
         def all
-          Config::Constants::SUPPORTED_BANKS.map { |bank| info(bank) }
-        end
-
-        def info(bank)
-          class_name = bank_class_name(bank)
-          {
-            banco: bank,
-            codigo: bank_codigo(class_name),
-            boleto: {
-              suportado: true,
-              formatos: Config::Constants::OUTPUT_TYPES,
-              pix: pix?(class_name)
-            },
-            remessa: remessa_info(class_name),
-            retorno: retorno_info(class_name)
-          }
+          if bancos_api_available?
+            Brcobranca::Bancos.todos.map { |b| format_from_gem(b) }
+          else
+            Config::Constants::SUPPORTED_BANKS.map { |bank| format_from_detection(bank) }
+          end
         end
 
         private
 
-        def remessa_info(class_name)
+        def bancos_api_available?
+          defined?(Brcobranca::Bancos) && Brcobranca::Bancos.respond_to?(:todos)
+        end
+
+        # Usa dados ricos do Brcobranca::Bancos (v12.7.0+)
+        def format_from_gem(banco)
+          cnab = banco[:cnab] || {}
+          pix = banco[:pix] || {}
+
+          remessa_formatos = []
+          retorno_formatos = []
+
+          cnab.each do |formato, tipos|
+            remessa_formatos << "cnab#{formato}" if tipos[:remessa]
+            retorno_formatos << "cnab#{formato}" if tipos[:retorno]
+          end
+
+          pix.each do |formato, _klass|
+            remessa_formatos << "cnab#{formato}_pix"
+          end
+
+          {
+            banco: snake_case(banco[:boleto]),
+            codigo: banco[:codigo],
+            nome: banco[:nome],
+            boleto: {
+              suportado: true,
+              formatos: Config::Constants::OUTPUT_TYPES,
+              pix: pix.any?,
+              carteiras: banco[:carteiras] || []
+            },
+            remessa: {
+              suportado: remessa_formatos.any?,
+              formatos: remessa_formatos
+            },
+            retorno: {
+              suportado: retorno_formatos.any?,
+              formatos: retorno_formatos
+            },
+            extras: banco[:extras] || {}
+          }
+        end
+
+        # Fallback: deteccao via const_get (pre-v12.7.0)
+        def format_from_detection(bank)
+          class_name = bank.to_s.split('_').map(&:capitalize).join
+          {
+            banco: bank,
+            codigo: bank_codigo(class_name),
+            nome: bank,
+            boleto: {
+              suportado: true,
+              formatos: Config::Constants::OUTPUT_TYPES,
+              pix: pix?(class_name),
+              carteiras: []
+            },
+            remessa: detect_remessa(class_name),
+            retorno: detect_retorno(class_name),
+            extras: {}
+          }
+        end
+
+        def detect_remessa(class_name)
           formatos = []
           formatos << 'cnab400' if class_exists?("Brcobranca::Remessa::Cnab400::#{class_name}")
           formatos << 'cnab240' if class_exists?("Brcobranca::Remessa::Cnab240::#{class_name}")
-          formatos << 'cnab400_pix' if class_exists?("Brcobranca::Remessa::Cnab400::#{class_name}Pix")
-          formatos << 'cnab240_pix' if class_exists?("Brcobranca::Remessa::Cnab240::#{class_name}Pix")
           { suportado: formatos.any?, formatos: formatos }
         end
 
-        def retorno_info(class_name)
+        def detect_retorno(class_name)
           formatos = []
           formatos << 'cnab400' if class_exists?("Brcobranca::Retorno::Cnab400::#{class_name}")
           formatos << 'cnab240' if class_exists?("Brcobranca::Retorno::Cnab240::#{class_name}")
           { suportado: formatos.any?, formatos: formatos }
         end
 
-        def bank_class_name(bank)
-          bank.to_s.split('_').map(&:capitalize).join
+        def snake_case(name)
+          name.to_s.gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
+              .gsub(/([a-z\d])([A-Z])/, '\1_\2').downcase
         end
 
         def bank_codigo(class_name)

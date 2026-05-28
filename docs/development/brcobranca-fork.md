@@ -1,6 +1,6 @@
 # BRCobrança — Gem Utilizada
 
-> **Versão atual usada pelo projeto:** `12.6.1` (master @ `6b5eb7b`)
+> **Versão atual usada pelo projeto:** `12.7.1` (master @ `70b5f6f`)
 > **Repositório:** [github.com/Maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)
 
 Fork mantido por Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) do projeto original [kivanio/brcobranca](https://github.com/kivanio/brcobranca), com melhorias específicas para uso em APIs REST e suporte ampliado a bancos brasileiros.
@@ -15,7 +15,9 @@ gem 'brcobranca', git: 'https://github.com/maxwbh/brcobranca.git'
 
 | Versão | Data | Principais mudanças |
 |--------|------|---------------------|
-| **12.6.1** | 2026-04-08 | Suporte completo a **Banco C6 (336)** CNAB 400 (remessa + retorno + boleto) + PIX para 6 bancos |
+| **12.7.1** | 2026-05-28 | Fix compatibilidade rghost 0.9.9 |
+| **12.7.0** | 2026-04-20 | Modulo `Brcobranca::Bancos` (registro centralizado de capacidades), carteiras por banco, extras (Sicoob cart 9/layout 810) |
+| **12.7.0** | 2026-04-08 | Suporte completo a **Banco C6 (336)** CNAB 400 (remessa + retorno + boleto) + PIX para 6 bancos |
 | **12.6.0** | 2026-01-03 | Métodos de validação seguros (`valido?`, `to_hash_seguro`) — Fase 2 |
 | **12.5.0** | — | `Brcobranca::Retorno.parse` (factory com auto-detecção), `pagamento.to_hash` |
 | **12.4.0** | — | `Brcobranca::Remessa.criar` (factory), `remessa.to_hash` |
@@ -145,7 +147,7 @@ pagamentos.first.to_hash
 # => { nosso_numero, codigo_ocorrencia, valor_pago, data_credito, ... }
 ```
 
-## PIX Híbrido (v12.6.1+)
+## PIX Híbrido (v12.7.0+)
 
 Bancos com suporte a PIX embutido no boleto via **PixMixin**:
 
@@ -234,7 +236,7 @@ modalidade  # padrão: '01'
 - Novidade v12.6+: **Carteira 9** com número de contrato
 - Novidade v12.6+: **Layout 810** onde o cliente calcula próprio DV
 
-#### Banco C6 (336) — NOVO em v12.6.1
+#### Banco C6 (336) — NOVO em v12.7.0
 
 ```ruby
 convenio   # obrigatório
