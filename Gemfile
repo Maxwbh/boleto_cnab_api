@@ -9,17 +9,24 @@ gem 'grape'
 # Servidor HTTP
 gem 'puma'
 
-# Geração de PDF (requerido pela brcobranca)
+# Geração de PDF via RGhost (requerido pela brcobranca, usa GhostScript)
 gem 'rghost', '~> 0.9.8'
+
+# Geração de PDF via Prawn (alternativa sem GhostScript, Ruby puro)
+gem 'prawn'
+gem 'prawn-table'
+gem 'barby'
+gem 'rqrcode'
+gem 'chunky_png'
 
 # Parsing de extratos bancários OFX
 gem 'ofx'
 
-# Gems extraídas da stdlib do Ruby 3.4+
-# (necessárias para compatibilidade futura)
+# Gems extraídas da stdlib do Ruby 3.1+/3.4+
 gem 'base64'
 gem 'mutex_m'
 gem 'bigdecimal'
+gem 'matrix'
 
 group :test do
   gem 'rspec'
