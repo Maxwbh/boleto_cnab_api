@@ -26,9 +26,9 @@ A API é construída sobre o framework [Grape](https://github.com/ruby-grape/gra
          └──────────────────┘
 ```
 
-## Integração com brcobranca v12.7.0
+## Integração com brcobranca v12.7.1
 
-Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.7.0):
+Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.7.1):
 
 | Service | Método brcobranca | Fallback |
 |---------|------------------|----------|
@@ -161,7 +161,7 @@ BoletoApi::Services::NossoNumeroExtractor.extrair('COBRANCA SICOOB 0000012345', 
 | Caixa | 104 | `\d{14,17}` |
 | Genérico | (outros) | `\d{7,17}` |
 
-#### BankInfoService (v12.7.0)
+#### BankInfoService (v12.7.1)
 
 Retorna capacidades detalhadas de cada banco usando `Brcobranca::Bancos` (v12.7.0+):
 
