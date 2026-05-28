@@ -82,15 +82,24 @@ with open('boleto.pdf', 'wb') as f:
 
 | Endpoint | Método | Descrição |
 |----------|--------|-----------|
+| `/api/docs` | GET | **Swagger UI navegável (documentação interativa)** |
+| `/api/openapi.json` | GET | Especificação OpenAPI 3.0 em JSON (para Postman, Insomnia, geradores SDK) |
+| `/api/openapi.yaml` | GET | Especificação OpenAPI 3.0 em YAML |
 | `/api/health` | GET | Health check |
+| `/api/info` | GET | Versão e bancos suportados |
+| `/api/metadata` | GET | Metadados (API + brcobranca + endpoints) |
+| `/api/bancos` | GET | 18 bancos com capacidades detalhadas |
 | `/api/boleto/validate` | GET | Validar dados do boleto |
 | `/api/boleto/data` | GET | Obter dados completos (sem gerar PDF) |
 | `/api/boleto/nosso_numero` | GET | Obter nosso_numero e códigos |
-| `/api/boleto` | GET | Gerar boleto (PDF/JPG/PNG/TIF) |
-| `/api/boleto/multi` | POST | Gerar múltiplos boletos |
+| `/api/boleto` | GET | Gerar boleto (PDF/JPG/PNG/TIF). `?include_data=true` → JSON + base64 |
+| `/api/boleto/multi` | POST | Gerar múltiplos boletos. `include_data=true` → JSON + base64 |
 | `/api/remessa` | POST | Gerar arquivo de remessa CNAB |
 | `/api/retorno` | POST | Processar arquivo de retorno CNAB |
 | `/api/ofx/parse` | POST | Parsear arquivo OFX (extrato bancário) |
+
+> 📖 **Para integrar com outros sistemas:** acesse `/api/docs` no browser para Swagger UI interativa,
+> ou importe `/api/openapi.json` no Postman/Insomnia/seu gerador de SDK favorito.
 
 ### Guias Completos
 
