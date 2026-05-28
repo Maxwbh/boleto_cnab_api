@@ -124,7 +124,7 @@ DEPENDENCIES
   ofx
   puma
   rack-test
-  rghost (= 0.9.8)
+  rghost (~> 0.9.8)
   rspec
 
 BUNDLED WITH
