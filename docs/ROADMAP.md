@@ -15,7 +15,7 @@
 | Template Prawn (sem GhostScript) | ✅ v12.7.0 | ✅ `template=prawn` | v1.3.0 |
 | Remessa PIX (`pix=true`) | ✅ v12.7.0 | ✅ | v1.3.0 |
 | Sicoob Layout 810 | ✅ v12.7.0 | ✅ funcional | v1.3.0 |
-| Dockerfile sem GhostScript (Prawn) | ✅ | 🟡 pendente | — |
+| Dockerfile sem GhostScript (Prawn) | ✅ | ✅ `Dockerfile.prawn` | v1.3.0 |
 | Sicoob API V3 (registro online) | n/a | 🔴 futuro | — |
 | C6 Bank API (registro online) | n/a | 🔴 futuro | — |
 
