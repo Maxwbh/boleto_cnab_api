@@ -106,8 +106,9 @@ module BoletoApi
         # @param bank [String] Nome do banco
         # @param values [Hash] Dados do boleto
         # @param format [String] Formato de saída ('pdf', 'jpg', 'png', 'tif')
-        # @return [Hash] { valid:, content:, errors:, metadata: { nosso_numero, nosso_numero_formatado, nosso_numero_dv } }
-        def generate(bank, values, format: 'pdf')
+        # @param template [String] 'rghost' (padrão) ou 'prawn' (sem GhostScript)
+        # @return [Hash] { valid:, content:, errors:, metadata: }
+        def generate(bank, values, format: 'pdf', template: 'rghost')
           validate_output_format!(format)
           boleto = create(bank, values)
 
@@ -115,7 +116,11 @@ module BoletoApi
             return { valid: false, content: nil, errors: boleto.errors.messages }
           end
 
-          content = boleto.send("to_#{format}".to_sym)
+          content = if template.to_s == 'prawn'
+                      generate_prawn(boleto, format)
+                    else
+                      boleto.send("to_#{format}".to_sym)
+                    end
           {
             valid: true,
             content: content,
@@ -129,7 +134,7 @@ module BoletoApi
         # @param boletos_data [Array<Hash>] Lista de boletos (cada um com 'bank' e dados)
         # @param format [String] Formato de saída
         # @return [Hash] { valid: Boolean, content: String/nil, errors: Array }
-        def generate_multi(boletos_data, format: 'pdf')
+        def generate_multi(boletos_data, format: 'pdf', template: 'rghost')
           validate_output_format!(format)
 
           if boletos_data.nil? || boletos_data.empty?
@@ -177,7 +182,11 @@ module BoletoApi
           end
 
           boletos = boletos_with_bank.map { |bb| bb[:boleto] }
-          content = Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
+          content = if template.to_s == 'prawn'
+                      generate_prawn_lote(boletos)
+                    else
+                      Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
+                    end
           metadata = boletos_with_bank.map { |bb| boleto_metadata(bb[:boleto], bb[:bank]) }
           {
             valid: true,
@@ -195,6 +204,21 @@ module BoletoApi
           unless Config::Constants.bank_supported?(bank)
             raise ArgumentError, "Banco '#{bank}' não suportado. Bancos disponíveis: #{Config::Constants::SUPPORTED_BANKS.join(', ')}"
           end
+        end
+
+        # Gera PDF usando template PrawnBolepix (sem GhostScript)
+        def generate_prawn(boleto, format)
+          raise ArgumentError, "Template Prawn suporta apenas PDF (recebido: #{format})" unless format.to_s == 'pdf'
+
+          boleto.extend(Brcobranca::Boleto::Template::PrawnBolepix)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          boleto.to(:pdf)
+        end
+
+        # Gera PDF multi-página usando PrawnBolepix.lote
+        def generate_prawn_lote(boletos)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          Brcobranca::Boleto::Template::PrawnBolepix.lote(boletos)
         end
 
         def validate_output_format!(format)

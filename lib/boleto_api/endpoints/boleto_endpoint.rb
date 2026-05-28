@@ -73,11 +73,13 @@ module BoletoApi
           requires :type, type: String, values: Config::Constants::OUTPUT_TYPES, desc: 'Formato de saída'
           requires :data, type: String, desc: 'Dados do boleto em JSON'
           optional :include_data, type: String, default: 'false',
-                   desc: 'Se "true", retorna JSON com dados do boleto + arquivo em base64 (1 chamada). Se "false" (padrão), retorna apenas o binário.'
+                   desc: 'Se "true", retorna JSON com dados do boleto + arquivo em base64.'
+          optional :template, type: String, values: %w[rghost prawn], default: 'rghost',
+                   desc: 'Template de geração: "rghost" (padrão, usa GhostScript) ou "prawn" (Ruby puro, sem GhostScript).'
         end
         get do
           values = JSON.parse(params[:data])
-          result = Services::BoletoService.generate(params[:bank], values, format: params[:type])
+          result = Services::BoletoService.generate(params[:bank], values, format: params[:type], template: params[:template])
 
           unless result[:valid]
             error!({
@@ -117,11 +119,13 @@ module BoletoApi
           requires :type, type: String, values: Config::Constants::OUTPUT_TYPES, desc: 'Formato de saída'
           requires :data, type: File, desc: 'JSON com lista de boletos (cada um com campo "bank")'
           optional :include_data, type: String, default: 'false',
-                   desc: 'Se "true", retorna JSON com dados de todos os boletos + arquivo em base64 (1 chamada).'
+                   desc: 'Se "true", retorna JSON com dados de todos os boletos + arquivo em base64.'
+          optional :template, type: String, values: %w[rghost prawn], default: 'rghost',
+                   desc: 'Template: "rghost" (padrão) ou "prawn" (Ruby puro).'
         end
         post :multi do
           boletos_data = JSON.parse(params[:data][:tempfile].read)
-          result = Services::BoletoService.generate_multi(boletos_data, format: params[:type])
+          result = Services::BoletoService.generate_multi(boletos_data, format: params[:type], template: params[:template])
 
           unless result[:valid]
             error!({
