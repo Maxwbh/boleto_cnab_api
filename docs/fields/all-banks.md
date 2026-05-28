@@ -11,7 +11,7 @@
 | **Bradesco** | 237 | ✅ | ✅ | ✅ | ✅ | Requer `digito_conta` |
 | **Itaú** | 341 | ✅ | ✅ | ✅ | ✅ | Suporta múltiplas carteiras |
 | **Caixa Econômica** | 104 | ✅ | ✅ | ✅ | ✅ | Convenio obrigatório |
-| **Santander** | 033 | ✅ | ✅ | ✅ | ✅ | `nosso_numero` até 20 dígitos |
+| **Santander** | 033 | ✅ | ✅ | ✅ | ✅ | `nosso_numero` até 7 dígitos |
 | **Banco C6** | 336 | ✅ | ✅ | ✅ | ✅ | Carteira deve ser `'10'` ou `'20'` — desde v1.3.0 |
 
 ### Outros Bancos Suportados
@@ -152,7 +152,7 @@
   "agencia": "1825",
   "conta_corrente": "0000528",
   "digito_conta": "6",        // OBRIGATÓRIO
-  "carteira": "SR",           // SR, RG, etc
+  "carteira": "1",            // '1' ou '2' (nao aceita 'SR', 'RG')
   "convenio": "245274",       // OBRIGATÓRIO
   "nosso_numero": "000000000000001"  // 15 dígitos
 }
@@ -182,14 +182,14 @@
 
 **Particularidades:**
 - ✅ Todos os métodos disponíveis
-- ✅ `nosso_numero` aceita até **20 dígitos** (maior que outros bancos)
+- ✅ `nosso_numero` aceita até **7 dígitos**
 - ✅ Múltiplas carteiras suportadas
 
 ---
 
 ### 7. Banco C6 (336) — NOVO na v1.3.0
 
-**Status:** ✅ Totalmente suportado (brcobranca v12.6.1+)
+**Status:** ✅ Totalmente suportado (brcobranca v12.7.0+)
 
 **Campos Específicos:**
 ```json
