@@ -1,139 +1,171 @@
 # Roadmap — Boleto CNAB API
 
-> Baseado no [TODO_INTEGRACAO.md do brcobranca](https://github.com/Maxwbh/brcobranca/blob/master/docs/TODO_INTEGRACAO.md)
+> Atualizado em 28/05/2026 | API v1.3.0 | brcobranca v12.8.0
 
-## Status por Feature
+## Estado Atual
 
-| Feature | brcobranca | boleto_cnab_api | Versão |
-|---------|:----------:|:---------------:|--------|
-| Banco C6 (336) — CNAB 400 | ✅ v12.7.0 | ✅ | v1.3.0 |
-| PIX Híbrido (8 bancos) | ✅ v12.7.0 | ✅ docs | v1.3.0 |
-| Sicoob Carteira 9 (`numero_contrato`) | ✅ v12.7.0 | ✅ funcional | v1.3.0 |
-| Parsing OFX | n/a (gem `ofx`) | ✅ | v1.2.0 |
-| `GET /api/bancos` | n/a | ✅ | v1.3.0 |
-| `GET /api/metadata` | n/a | ✅ | v1.3.0 |
-| Template Prawn (sem GhostScript) | ✅ v12.7.0 | ✅ `template=prawn` | v1.3.0 |
-| Remessa PIX (`pix=true`) | ✅ v12.7.0 | ✅ | v1.3.0 |
-| Sicoob Layout 810 | ✅ v12.7.0 | ✅ funcional | v1.3.0 |
-| Dockerfile sem GhostScript (Prawn) | ✅ | ✅ `Dockerfile.prawn` | v1.3.0 |
-| Sicoob API V3 (registro online) | n/a | 🔴 futuro | — |
-| C6 Bank API (registro online) | n/a | 🔴 futuro | — |
+| Metrica | Valor |
+|---------|-------|
+| Versao da API | 1.3.0 |
+| brcobranca | 12.8.0 |
+| Bancos suportados | 18 |
+| Endpoints | 15 |
+| Testes Ruby | 172 |
+| Templates PDF | RGhost + Prawn |
 
-**Legenda:** ✅ implementado | 🟡 pendente (gem pronta, falta endpoint) | 🔴 futuro (requer integração com API externa)
+## Concluido
 
----
-
-## Próximas Prioridades
-
-### 1. Template Prawn (alternativa ao GhostScript)
-
-**O que é:** A brcobranca v12.7.0 introduziu `PrawnBolepix`, um template que gera boletos
-usando a gem Prawn (Ruby puro) ao invés de RGhost (que precisa de GhostScript binário).
-
-**Benefícios:**
-- Container Docker 50-70MB menor (sem GhostScript + fonts)
-- Deploy mais rápido (menos dependências)
-- Compatibilidade com ambientes sem `gs` binário
-- QR Code PIX renderizado nativamente
-
-**Gems necessárias:**
-```ruby
-group :prawn do
-  gem 'prawn'
-  gem 'rqrcode'
-  gem 'chunky_png'
-end
-```
-
-**Endpoint proposto:** `POST /api/boleto/prawn` ou parâmetro `template=prawn` no endpoint existente.
-
-**Esforço estimado:** Médio
+| Feature | Versao |
+|---------|--------|
+| 18 bancos (BB, Sicoob, Itau, Bradesco, Caixa, Santander, C6, Sicredi, Banrisul, Banestes, Nordeste, BRB, Unicred, Credisis, Safra, Citibank, HSBC, Ailos) | v1.0-v1.3 |
+| Parsing OFX com extracao de nosso_numero | v1.2.0 |
+| Banco C6 (336) CNAB 400 | v1.3.0 |
+| PIX hibrido no boleto (8 bancos) | v1.3.0 |
+| Remessa PIX (`pix=true`) — 7 bancos | v1.3.0 |
+| Sicoob Carteira 9 + Layout 810 | v1.3.0 |
+| Template Prawn (sem GhostScript) | v1.3.0 |
+| Dockerfile.prawn (imagem leve) | v1.3.0 |
+| Campos `chave_pix`, `tipo_chave_pix`, `txid` | v1.3.0 |
+| `include_data=true` (PDF + dados em 1 chamada) | v1.3.0 |
+| `GET /api/bancos` (capacidades dinamicas) | v1.3.0 |
+| Swagger UI (`/api/docs`) + OpenAPI JSON/YAML | v1.3.0 |
+| 3 campos nosso_numero (cru, formatado, DV) | v1.3.0 |
+| Brcobranca::Bancos v12.7.0+ integrado | v1.3.0 |
 
 ---
 
-### 2. Remessa PIX
+## Proximo Release: v1.4.0
 
-**O que é:** Geração de arquivos de remessa CNAB com campos PIX incorporados,
-usando os novos `PixMixin` para CNAB 400 e CNAB 240.
+### Prioridade Alta
 
-**Bancos suportados:** Bradesco, Itaú, Banco C6, Sicoob, Caixa, Banco do Brasil
+#### 1. Validacao de payload por banco
 
-**Diferença da remessa normal:** Inclui registros adicionais com chave PIX, EMV e QR Code
-para que o boleto gerado pelo banco seja híbrido.
+Hoje a API aceita qualquer campo e delega validacao para a gem. Muitos erros so aparecem na hora de gerar o PDF.
 
-**Endpoint proposto:** `POST /api/remessa/pix` ou campo `pix=true` no endpoint existente.
+**Proposta:** Endpoint `POST /api/boleto/validate` aceitar `bank` e retornar validacoes especificas:
+- Campos obrigatorios por banco (ex: `variacao` para Sicoob)
+- Tamanho do `nosso_numero` conforme convenio (BB)
+- Carteiras validas por banco
+- Usar `Brcobranca::Bancos.find(codigo)[:carteiras]` para validar
 
-**Esforço estimado:** Médio
+**Esforco:** Baixo
+
+#### 2. Suporte a CNAB 444 (Itau)
+
+O Itau usa CNAB 444 alem de CNAB 400. A gem ja suporta (`Cnab444`). A API precisa:
+- Adicionar `cnab444` ao `CNAB_TYPES` em Config::Constants
+- Testar geracao de remessa Itau com CNAB 444
+
+**Esforco:** Baixo
+
+#### 3. Cache de `/api/bancos`
+
+O endpoint `/api/bancos` instancia todas as classes de banco a cada request. Pode cachear em memoria (dados nao mudam em runtime).
+
+**Esforco:** Baixo
+
+### Prioridade Media
+
+#### 4. Cliente Python atualizado
+
+O `python-client` esta em v1.1.0 e nao conhece os novos endpoints:
+- `/api/bancos`
+- `/api/ofx/parse`
+- `include_data=true`
+- `template=prawn`
+- `pix=true` na remessa
+- Campos PIX (`chave_pix`, `tipo_chave_pix`, `txid`)
+
+**Proposta:** Atualizar para v1.3.0 com metodos dedicados.
+
+**Esforco:** Medio
+
+#### 5. Rate limiting basico
+
+A API nao tem rate limiting. No Render free tier isso nao e problema, mas em producao real pode ser necessario.
+
+**Proposta:** Middleware `Rack::Attack` com configuracao via env var.
+
+**Esforco:** Medio
+
+#### 6. Testes de integracao para Remessa PIX
+
+Os testes atuais cobrem remessa normal mas nao remessa com `pix=true`. Adicionar testes para os 7 bancos PIX.
+
+**Esforco:** Medio
+
+### Prioridade Baixa
+
+#### 7. Webhook para notificacao de pagamento
+
+Endpoint para receber webhooks de bancos (Sicoob V3, BB) quando um boleto e pago. Requer:
+- `POST /api/webhook/receive`
+- Validacao de assinatura do banco
+- Armazenamento temporario ou repasse
+
+**Esforco:** Alto
+
+#### 8. Suporte a novos bancos
+
+Bancos que podem ser adicionados na gem brcobranca:
+- **Banco Inter (077)** — popular para fintechs
+- **Banco Original (212)** — digital
+- **Pagbank/PagSeguro (290)** — e-commerce
+
+Requer implementacao na gem primeiro (Fase brcobranca).
+
+**Esforco:** Alto (gem + API)
+
+#### 9. Migrar para Prawn como padrao
+
+Quando o template Prawn estiver estavel em producao, considerar:
+- Tornar Prawn o padrao (`BOLETO_TEMPLATE=prawn`)
+- Remover GhostScript do Dockerfile principal
+- Manter RGhost como fallback para JPG/PNG/TIF
+
+**Esforco:** Baixo (apos validacao em producao)
+
+### Fora do Escopo (requer APIs externas)
+
+| Feature | Prerequisito |
+|---------|-------------|
+| Sicoob API V3 (registro online) | Certificado ICP-Brasil, OAuth2, mTLS |
+| C6 Bank API (registro online) | Homologacao no C6 Developers |
+| Banco Inter API | API publica disponivel |
 
 ---
 
-### 3. Sicoob Layout 810
+## Melhorias Tecnicas
 
-**O que é:** Layout onde o cliente calcula seu próprio dígito verificador do nosso_numero,
-ao invés de receber do banco. Útil para cooperativas com sistema legado.
-
-**Como usar:** `versao_layout: '810'` no payload do Sicoob. O boleto_cnab_api já aceita
-o campo se passado, mas não há documentação ou validação específica.
-
-**Esforço estimado:** Baixo (apenas documentação + testes)
-
----
-
-### 4. Dockerfile sem GhostScript
-
-**O que é:** Variante do Dockerfile que usa apenas Prawn (sem GhostScript). Resulta em
-imagem ~50-70MB menor e deploy mais rápido.
-
-**Pré-requisito:** Item 1 (Template Prawn)
-
-**Esforço estimado:** Baixo (após Prawn implementado)
+| Melhoria | Esforco | Impacto |
+|----------|:-------:|:-------:|
+| Atualizar Ruby para 3.4 | Baixo | Medio |
+| Adicionar Rubocop (linter) | Baixo | Baixo |
+| Coverage report (SimpleCov) | Baixo | Medio |
+| Health check mais detalhado (DB, gems, disco) | Baixo | Baixo |
+| Compressao gzip nas respostas JSON | Baixo | Medio |
+| CORS configuravel via env var | Baixo | Medio |
 
 ---
 
-### 5. APIs Online (Registro em Tempo Real)
+## Comparacao com Upstream (akretion/boleto_cnab_api)
 
-**O que é:** Integração com APIs REST dos bancos para registro de boletos em tempo real
-(ao invés do fluxo CNAB em lote).
+| Feature | Upstream (akretion) | Fork (@maxwbh) |
+|---------|:-------------------:|:--------------:|
+| brcobranca | 12.0.0 | **12.8.0** |
+| Bancos | 16 | **18** (+C6, +Ailos) |
+| PIX hibrido | — | **8 bancos** |
+| Remessa PIX | — | **7 bancos** |
+| Parsing OFX | — | **✅** |
+| Template Prawn | — | **✅** |
+| Swagger UI | — | **✅** |
+| `include_data` | — | **✅** |
+| `nosso_numero` (3 campos) | — | **✅** |
+| `/api/bancos` | — | **✅** |
+| Dockerfile Alpine | ✅ (3.20) | ✅ (ruby:3.3-alpine) |
+| Testes | ~30 | **172** |
 
-| Banco | API | Status | Pré-requisito |
-|-------|-----|--------|---------------|
-| Sicoob | Cobrança Bancária V3 | Documentação pública | Certificado ICP-Brasil, OAuth2, mTLS |
-| C6 Bank | API de Boleto | Portal fechado | Homologação no C6 Developers |
-
-**Esforço estimado:** Alto (requer infra OAuth2, cache de tokens, mTLS, WebMock para testes)
-
----
-
-## Concluído (Histórico)
-
-### v1.3.0 (2026-04-10)
-- ✅ Banco C6 (336) — CNAB 400 completo
-- ✅ brcobranca atualizado para v12.7.0
-- ✅ `GET /api/bancos` — lista bancos com capacidades
-- ✅ `GET /api/metadata` — versão da API e gem
-- ✅ PIX híbrido documentado (8 bancos)
-- ✅ Sicoob Carteira 9 funcional (`numero_contrato`)
-- ✅ Documentação reorganizada e modernizada
-
-### v1.2.0 (2026-04-09)
-- ✅ Endpoint `POST /api/ofx/parse`
-- ✅ NossoNumeroExtractor (6 bancos + genérico)
-- ✅ Fix remessa: kwargs Ruby 3.0+, `formato:` correto
-- ✅ ErrorHandler: ordem correta, backtrace nos logs
-- ✅ BoletoService: filtragem de campos por banco
-- ✅ Logging unbuffered para Render.com
-
-### v1.1.0 (2026-01-06)
-- ✅ Arquitetura modular (12 arquivos)
-- ✅ Cliente Python com TypedDict
-- ✅ OpenAPI 3.0 + Swagger
-- ✅ Docker multi-stage build
-
-### v1.0.0 (2025-11-27)
-- ✅ API REST com Grape
-- ✅ 17 bancos suportados
-- ✅ CNAB 240/400 remessa e retorno
-- ✅ Testes RSpec
+O fork @maxwbh esta significativamente a frente do upstream em funcionalidades, bancos e testes.
 
 ---
 
