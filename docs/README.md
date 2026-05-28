@@ -22,17 +22,30 @@ Documentação técnica da Boleto CNAB API — REST API para geração de boleto
 
 ### Endpoints
 
-| Endpoint | Método | Descrição |
-|----------|--------|-----------|
-| `/api/health` | GET | Health check |
-| `/api/boleto/validate` | GET | Validar dados do boleto |
-| `/api/boleto/data` | GET | Obter dados calculados |
-| `/api/boleto/nosso_numero` | GET | Gerar nosso_numero |
-| `/api/boleto` | GET | Gerar boleto (PDF/JPG/PNG/TIF) |
-| `/api/boleto/multi` | POST | Gerar múltiplos boletos |
-| `/api/remessa` | POST | Gerar arquivo de remessa CNAB |
-| `/api/retorno` | POST | Processar arquivo de retorno CNAB |
-| `/api/ofx/parse` | POST | Parsear extrato bancário OFX |
+| Endpoint | Método | Retorno |
+|----------|--------|---------|
+| `/api/health` | GET | `{"status": "OK"}` |
+| `/api/info` | GET | Versao, bancos, formatos |
+| `/api/metadata` | GET | Versao API + gem, lista de endpoints |
+| `/api/bancos` | GET | 18 bancos com capacidades (boleto, CNAB, PIX, carteiras) |
+| `/api/boleto/validate` | GET | `{"valid": true}` ou erros |
+| `/api/boleto/data` | GET | JSON com `nosso_numero`, `nosso_numero_formatado`, `nosso_numero_dv`, `codigo_barras`, `linha_digitavel` |
+| `/api/boleto/nosso_numero` | GET | Apenas campos do nosso_numero |
+| `/api/boleto` | GET | PDF + headers `X-Nosso-Numero*`. Com `include_data=true`: JSON + base64 |
+| `/api/boleto/multi` | POST | PDF multi + headers `X-Boletos-Info`. Com `include_data=true`: JSON + base64 |
+| `/api/remessa` | POST | Arquivo CNAB 240/400 |
+| `/api/retorno` | POST | JSON com pagamentos parseados |
+| `/api/ofx/parse` | POST | JSON com transacoes do extrato OFX |
+
+### Campos de nosso_numero retornados
+
+Todos os endpoints de boleto retornam **3 campos** (nunca `nosso_numero_boleto`):
+
+| Campo | Descricao | Exemplo (BB) |
+|-------|-----------|:-------------|
+| `nosso_numero` | Valor padronizado | `"000000123"` |
+| `nosso_numero_formatado` | Impresso no boleto | `"01234567000000123"` |
+| `nosso_numero_dv` | Digito verificador | `"9"` |
 
 ## Arquitetura
 

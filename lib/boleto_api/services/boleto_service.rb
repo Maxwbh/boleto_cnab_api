@@ -93,7 +93,9 @@ module BoletoApi
           }
 
           if boleto.respond_to?(:dados_calculados)
-            boleto.dados_calculados.merge(base)
+            result = boleto.dados_calculados.merge(base)
+            result.delete(:nosso_numero_boleto)
+            result
           else
             base
           end
