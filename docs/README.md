@@ -13,6 +13,14 @@ Documentação técnica da Boleto CNAB API — REST API para geração de boleto
 
 ## Referência da API
 
+### Documentação Interativa (servida pela própria API)
+
+- **`GET /api/docs`** — Swagger UI navegável (recomendado para exploração)
+- **`GET /api/openapi.json`** — Spec OpenAPI 3.0 em JSON (Postman/Insomnia/SDK)
+- **`GET /api/openapi.yaml`** — Spec OpenAPI 3.0 em YAML
+
+### Documentação Estática
+
 | Recurso | Descrição |
 |---------|-----------|
 | [openapi.yaml](./openapi.yaml) | Especificação OpenAPI 3.0 completa |

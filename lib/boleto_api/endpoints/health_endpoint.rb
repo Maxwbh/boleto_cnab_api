@@ -50,6 +50,11 @@ module BoletoApi
             remessa: 'POST /api/remessa',
             retorno: 'POST /api/retorno',
             ofx_parse: 'POST /api/ofx/parse'
+          },
+          documentation: {
+            swagger_ui: 'GET /api/docs',
+            openapi_json: 'GET /api/openapi.json',
+            openapi_yaml: 'GET /api/openapi.yaml'
           }
         }
       end
