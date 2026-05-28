@@ -12,15 +12,19 @@ module BoletoApi
           requires :bank, type: String, desc: 'Nome do banco'
           requires :type, type: String, values: Config::Constants::CNAB_TYPES, desc: 'Tipo CNAB (cnab400 ou cnab240)'
           requires :data, type: File, desc: 'JSON com dados da remessa e pagamentos'
+          optional :pix, type: String, default: 'false',
+                   desc: 'Se "true", gera remessa com segmento PIX (boleto híbrido).'
         end
         post do
           values = JSON.parse(params[:data][:tempfile].read)
-          result = Services::RemessaService.generate(params[:bank], params[:type], values)
+          pix = params[:pix].to_s.downcase == 'true'
+          result = Services::RemessaService.generate(params[:bank], params[:type], values, pix: pix)
 
           if result[:valid]
             status 200
+            suffix = pix ? '-pix' : ''
             content_type 'text/plain'
-            header['Content-Disposition'] = "attachment; filename=remessa-#{params[:bank]}-#{params[:type]}.rem"
+            header['Content-Disposition'] = "attachment; filename=remessa-#{params[:bank]}-#{params[:type]}#{suffix}.rem"
             env['api.format'] = :binary
             result[:content]
           else

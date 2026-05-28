@@ -12,11 +12,10 @@
 | Parsing OFX | n/a (gem `ofx`) | ✅ | v1.2.0 |
 | `GET /api/bancos` | n/a | ✅ | v1.3.0 |
 | `GET /api/metadata` | n/a | ✅ | v1.3.0 |
-| Template Prawn (sem GhostScript) | ✅ v12.7.0 | 🟡 pendente | — |
-| `POST /api/boleto/prawn` | ✅ | 🟡 pendente | — |
-| Remessa PIX (`POST /api/remessa/pix`) | ✅ | 🟡 pendente | — |
+| Template Prawn (sem GhostScript) | ✅ v12.7.0 | ✅ `template=prawn` | v1.3.0 |
+| Remessa PIX (`pix=true`) | ✅ v12.7.0 | ✅ | v1.3.0 |
+| Sicoob Layout 810 | ✅ v12.7.0 | ✅ funcional | v1.3.0 |
 | Dockerfile sem GhostScript (Prawn) | ✅ | 🟡 pendente | — |
-| Sicoob Layout 810 | ✅ v12.7.0 | 🟡 pendente | — |
 | Sicoob API V3 (registro online) | n/a | 🔴 futuro | — |
 | C6 Bank API (registro online) | n/a | 🔴 futuro | — |
 
