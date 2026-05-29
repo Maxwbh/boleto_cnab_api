@@ -8,14 +8,22 @@ module BoletoApi
     class BankInfoService
       class << self
         def all
+          @cached ||= build_all
+        end
+
+        def reset_cache!
+          @cached = nil
+        end
+
+        private
+
+        def build_all
           if bancos_api_available?
             Brcobranca::Bancos.todos.map { |b| format_from_gem(b) }
           else
             Config::Constants::SUPPORTED_BANKS.map { |bank| format_from_detection(bank) }
           end
         end
-
-        private
 
         def bancos_api_available?
           defined?(Brcobranca::Bancos) && Brcobranca::Bancos.respond_to?(:todos)
