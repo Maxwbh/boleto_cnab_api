@@ -80,6 +80,8 @@ module BoletoApi
             end
           rescue ArgumentError => e
             { valid: false, content: nil, errors: [e.message] }
+          rescue NoMethodError => e
+            { valid: false, content: nil, errors: ["Campo não suportado pelo banco: #{e.message}"] }
           end
         end
 
