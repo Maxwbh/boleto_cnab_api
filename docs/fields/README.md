@@ -243,8 +243,8 @@ boleto_sicoob = {
 ## 📚 Documentação Adicional
 
 - [Todos os Bancos](./all-banks.md) - Lista completa e compatibilidade por banco
-- [Exemplos Práticos](./examples.md) - Exemplos de código Python/Ruby
 - [PIX Híbrido](../api/pix.md) - Guia de boleto com QR Code PIX
+- [Exemplos Python](../../examples/python/README.md) - Scripts executáveis
 - [Troubleshooting](../api/troubleshooting.md) - Solução de problemas
 - [Detalhes Técnicos](../development/brcobranca-fork.md) - Informações sobre BRCobranca
 

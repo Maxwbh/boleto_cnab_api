@@ -154,9 +154,9 @@ docker-compose run boleto_api bundle exec rspec
 ### 1. Criar Branch
 
 ```bash
-# Atualizar main
-git checkout main
-git pull origin main
+# Atualizar master
+git checkout master
+git pull origin master
 
 # Criar branch descritiva
 git checkout -b feature/adicionar-banco-banrisul
@@ -449,30 +449,6 @@ Idealmente, novos códigos devem ter:
 | Changelog            | `CHANGELOG.md`                 |
 | Detalhes técnicos    | `docs/development/`            |
 
-### Atualizando CHANGELOG
-
-Ao fazer mudanças significativas, atualize `CHANGELOG.md`:
-
-```markdown
-## [1.1.0] - 2025-12-01
-
-### Adicionado
-- Suporte para Banco Banrisul (041)
-- Novo endpoint /api/boleto/preview
-- Validação de CNPJ/CPF
-
-### Modificado
-- Melhoria na performance do endpoint /data
-- Atualização da gem BRCobranca para 1.2.0
-
-### Corrigido
-- Linha digitável do Sicoob agora retorna valor correto
-- Timeout em requisições lentas
-
-### Removido
-- Endpoint /api/old_endpoint (deprecated em 1.0.0)
-```
-
 ## 🔀 Pull Requests
 
 ### Antes de Submeter
@@ -484,7 +460,7 @@ Checklist:
 - [ ] Documentação foi atualizada
 - [ ] CHANGELOG.md foi atualizado (se aplicável)
 - [ ] Commits seguem convenção
-- [ ] Branch está atualizado com `main`
+- [ ] Branch está atualizado com `master`
 
 ### Criando Pull Request
 

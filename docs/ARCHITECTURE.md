@@ -60,7 +60,8 @@ lib/
     │   ├── boleto_endpoint.rb  # /api/boleto/*
     │   ├── remessa_endpoint.rb # POST /api/remessa
     │   ├── retorno_endpoint.rb # POST /api/retorno
-    │   └── ofx_endpoint.rb     # POST /api/ofx/parse (v1.3.0)
+    │   ├── ofx_endpoint.rb     # POST /api/ofx/parse
+    │   └── docs_endpoint.rb    # /api/docs, /api/openapi.*
     └── middleware/
         ├── error_handler.rb    # Tratamento centralizado de erros
         └── request_logger.rb   # Logging de requisições
@@ -161,7 +162,7 @@ BoletoApi::Services::NossoNumeroExtractor.extrair('COBRANCA SICOOB 0000012345', 
 | Caixa | 104 | `\d{14,17}` |
 | Genérico | (outros) | `\d{7,17}` |
 
-#### BankInfoService (v12.7.1)
+#### BankInfoService
 
 Retorna capacidades detalhadas de cada banco usando `Brcobranca::Bancos` (v12.7.0+):
 

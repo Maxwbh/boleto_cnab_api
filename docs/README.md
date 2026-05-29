@@ -65,8 +65,7 @@ Todos os endpoints de boleto retornam **3 campos** (nunca `nosso_numero_boleto`)
 
 - [fields/README.md](./fields/README.md) — Overview dos campos
 - [fields/nosso-numero.md](./fields/nosso-numero.md) — Nosso numero: entrada, saida, conciliacao
-- [fields/all-banks.md](./fields/all-banks.md) — Compatibilidade por banco
-- [fields/examples.md](./fields/examples.md) — Exemplos praticos de payloads
+- [fields/all-banks.md](./fields/all-banks.md) — Compatibilidade e exemplos por banco
 
 ## Cliente Python
 
