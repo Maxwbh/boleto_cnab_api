@@ -343,7 +343,6 @@ Brcobranca::Boleto::Xxx.new(filtered_values)
 - **Gem (upstream):** https://github.com/kivanio/brcobranca
 - **API (este projeto):** https://github.com/Maxwbh/boleto_cnab_api
 - **Documentação de campos:** [docs/fields/README.md](../fields/README.md)
-- **Exemplos práticos:** [docs/fields/examples.md](../fields/examples.md)
 - **Compatibilidade por banco:** [docs/fields/all-banks.md](../fields/all-banks.md)
 
 ---
