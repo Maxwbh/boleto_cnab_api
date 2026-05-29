@@ -61,7 +61,7 @@ Se você precisa **gerar boletos**, **processar arquivos CNAB** ou **conciliar p
 - **OpenAPI 3.0** — Importe no Postman/Insomnia em 1 clique
 - **include_data** — PDF + dados do boleto em 1 chamada (base64)
 - **Docker ready** — Deploy em 1 minuto no Render, Railway ou qualquer cloud
-- **172 testes** — Cobertura real com todos os bancos validados
+- **217 testes** — Cobertura real com todos os bancos validados
 
 ---
 
@@ -213,7 +213,7 @@ for tx in ofx["transacoes"]:
 | Boletos | [brcobranca v12.8.0](https://github.com/Maxwbh/brcobranca) (fork com C6, PIX, Prawn) |
 | PDF | RGhost ou Prawn (sem GhostScript) |
 | OFX | gem `ofx` |
-| Testes | RSpec · 172 testes |
+| Testes | RSpec · 217 testes |
 | Docs | OpenAPI 3.0 · Swagger UI |
 | Container | Docker · Alpine Linux |
 

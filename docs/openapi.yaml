@@ -687,7 +687,7 @@ components:
           properties:
             version:
               type: string
-              example: '12.7.1'
+              example: '12.8.0'
             repository:
               type: string
               example: https://github.com/Maxwbh/brcobranca
