@@ -10,7 +10,7 @@
 | brcobranca | 12.8.0 |
 | Bancos suportados | 18 |
 | Endpoints | 15 |
-| Testes | 176 Ruby + 44 Python = 220 |
+| Testes | 217 Ruby + 44 Python = 261 |
 | Cobertura | 79.82% (SimpleCov) |
 | Templates PDF | RGhost + Prawn |
 
