@@ -2,7 +2,19 @@
 
 ENV['RACK_ENV'] = 'test'
 
-# Força encoding UTF-8 para leitura de fixtures com caracteres acentuados
+# Cobertura de testes (SimpleCov) — deve ser o PRIMEIRO require
+if ENV.fetch('COVERAGE', 'false').downcase == 'true'
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter '/spec/'
+    add_group 'Services', 'lib/boleto_api/services'
+    add_group 'Endpoints', 'lib/boleto_api/endpoints'
+    add_group 'Middleware', 'lib/boleto_api/middleware'
+    add_group 'Config', 'lib/boleto_api/config'
+    minimum_coverage 70
+  end
+end
+
 Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 
