@@ -252,4 +252,4 @@ boleto_sicoob = {
 
 **Última atualização:** 2026-04-10
 **Gem:** [maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) v12.7.1
-**Versão da API:** 1.3.1
+**Versão da API:** 1.3.2

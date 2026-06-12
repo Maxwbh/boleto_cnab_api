@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.3.1-blue?style=for-the-badge" alt="Boleto CNAB API" />
+  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.3.2-blue?style=for-the-badge" alt="Boleto CNAB API" />
 </p>
 
 <h3 align="center">
@@ -27,12 +27,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.1-green" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.3.2-green" alt="Version" />
   <img src="https://img.shields.io/badge/bancos-18-blue" alt="Bancos" />
   <img src="https://img.shields.io/badge/testes-172_passando-brightgreen" alt="Tests" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
   <img src="https://img.shields.io/badge/ruby-3.3-red" alt="Ruby" />
-  <img src="https://img.shields.io/badge/brcobranca-12.8.0-orange" alt="brcobranca" />
+  <img src="https://img.shields.io/badge/brcobranca-12.9.0-orange" alt="brcobranca" />
   <img src="https://img.shields.io/badge/PIX-8_bancos-blueviolet" alt="PIX" />
 </p>
 
@@ -214,7 +214,7 @@ for tx in ofx["transacoes"]:
 | Componente | Tecnologia |
 |-----------|-----------|
 | API | Ruby 3.3 · Grape · Puma |
-| Boletos | [brcobranca v12.8.0](https://github.com/Maxwbh/brcobranca) (fork com C6, PIX, Prawn) |
+| Boletos | [brcobranca v12.9.0](https://github.com/Maxwbh/brcobranca) (fork com C6, PIX, Prawn) |
 | PDF | RGhost ou Prawn (sem GhostScript) |
 | OFX | gem `ofx` |
 | Testes | RSpec · 217 testes |

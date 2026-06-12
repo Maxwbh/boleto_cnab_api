@@ -5,6 +5,22 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.3.2] - 2026-06-12
+
+### Modificado
+
+- 📦 **brcobranca atualizado**: `12.8.1` → `12.9.0` (revision `5e85c31` → `fa43157`).
+
+### Corrigido
+
+- 🐛 **Remessa Sicoob (CNAB400) — `carteira`/`convenio`**: a versão 12.9.0 do
+  brcobranca adiciona *setters* que normalizam os campos automaticamente
+  (`carteira` → `rjust(2, '0')`, `convenio` → `rjust(9, '0')`). Isso resolve os
+  erros de validação `"Carteira deve ter 2 dígitos."` e `"Convenio deve ter 9
+  dígitos."` que ocorriam ao gerar a remessa Sicoob com dados que geravam o
+  boleto sem problemas (a classe de boleto era mais leniente que a de remessa).
+  Agora `carteira: "1"` é aceito e tratado como `"01"`.
+
 ## [1.3.1] - 2026-06-12
 
 ### Otimizações de Docker / Render Free Tier (512MB RAM)
