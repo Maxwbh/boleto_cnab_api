@@ -6,7 +6,7 @@
 
 | Metrica | Valor |
 |---------|-------|
-| Versao da API | 1.3.0 |
+| Versao da API | 1.3.1 |
 | brcobranca | 12.8.0 |
 | Bancos suportados | 18 |
 | Endpoints | 15 |

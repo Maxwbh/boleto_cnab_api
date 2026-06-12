@@ -1,6 +1,6 @@
 # PIX Híbrido no Boleto
 
-> **Versão:** 1.3.0 (brcobranca v12.8.0+)
+> **Versão:** 1.3.1 (brcobranca v12.8.0+)
 
 ## Novos campos PIX (v12.8.0)
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.3.0-blue?style=for-the-badge" alt="Boleto CNAB API" />
+  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.3.1-blue?style=for-the-badge" alt="Boleto CNAB API" />
 </p>
 
 <h3 align="center">
@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.0-green" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.3.1-green" alt="Version" />
   <img src="https://img.shields.io/badge/bancos-18-blue" alt="Bancos" />
   <img src="https://img.shields.io/badge/testes-172_passando-brightgreen" alt="Tests" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
