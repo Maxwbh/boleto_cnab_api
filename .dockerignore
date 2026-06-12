@@ -1,55 +1,57 @@
-# Git files
+# Git
 .git
 .gitignore
+.gitattributes
 .github
 
-# Documentation (manter apenas essencial)
-DEPLOY.md
+# Documentação (não vai para a imagem)
+*.md
 docs/
+DEPLOY.md
+CHANGELOG.md
+CONTRIBUTING.md
+SECURITY.md
+README.md
+LICENSE
 
-# Test files
+# Testes
 spec/
 .rspec
+coverage/
 test_run.py
 *.pyc
 __pycache__
 
-# Examples
+# Exemplos e clientes auxiliares
 examples/
+python-client/
 
-# Editor files
+# Editores
 *~
 *.swp
 *.swo
 .vscode
 .idea
 
-# Logs
+# Logs e temporários
 *.log
 log/
-
-# Temporary files
 tmp/
 *.tmp
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
 
-# Docker files
+# Arquivos Docker / infra (não precisam ir para dentro da imagem)
 Dockerfile
+Dockerfile.prawn
 .dockerignore
 docker-compose.yml
-
-# Scripts
-start.sh
-
-# CI/CD
-.github/workflows/
-
-# Render config
 render.yaml
+start.sh
+scripts/
 
-# Ruby
+# Ruby local
 .bundle/
 vendor/bundle/
