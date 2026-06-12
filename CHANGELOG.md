@@ -5,6 +5,39 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Otimizações de Docker / Render Free Tier (512MB RAM)
+
+#### Memória
+- ✅ **jemalloc** ativado via `LD_PRELOAD` no `Dockerfile` e `Dockerfile.prawn`.
+  Substitui o allocator padrão do musl (Alpine), que tem alta fragmentação sob
+  múltiplas threads — ganho real de RAM no free tier.
+- ❌ Removido `MALLOC_ARENA_MAX`: é um tunable **exclusivo do glibc** e não tinha
+  efeito algum em Alpine/musl (era um no-op).
+- ✅ `MALLOC_CONF` (jemalloc) e `RUBY_GC_MALLOC_LIMIT` / `RUBY_GC_OLDMALLOC_LIMIT`
+  ajustados para devolver memória ociosa ao SO de forma mais agressiva.
+
+#### Imagem mais enxuta
+- ✅ `bundle clean --force` + `deployment mode` no build stage.
+- ✅ `.dockerignore` exclui `python-client/`, `*.md`, `scripts/` e `Dockerfile.prawn`
+  → contexto de build reduzido para ~330KB.
+
+#### Robustez de deploy
+- ✅ `tini` como PID 1 (`ENTRYPOINT`) → propaga `SIGTERM` ao Puma, garantindo
+  shutdown gracioso durante deploys.
+- ✅ `PUMA_WORKER_TIMEOUT=60` → evita kill do worker durante o cold start
+  (wake-up do sleep no free tier).
+- ✅ `config/puma.rb`: `min_threads=1` (elimina latência na 1ª requisição) e
+  `preload_app!` apenas em cluster mode (workers ≥ 1).
+- ✅ `HEALTHCHECK` usa `${PORT}` em vez de porta fixa.
+
+#### render.yaml
+- ✅ Valores de env como strings (padrão exigido pelo Render).
+- ✅ `PORT` não é mais fixado — o Render injeta a porta e o Puma faz bind via
+  `ENV['PORT']`.
+- 📖 `DEPLOY.md` atualizado com as novas variáveis de ambiente e dicas de OOM.
+
 ## [1.3.0] - 2026-04-10
 
 ### Adicionado
