@@ -34,7 +34,7 @@ FROM ruby:3.3-alpine
 # Labels (OCI)
 LABEL org.opencontainers.image.title="Boleto CNAB API"
 LABEL org.opencontainers.image.description="API REST para Boletos, CNAB e OFX"
-LABEL org.opencontainers.image.version="1.3.3"
+LABEL org.opencontainers.image.version="1.4.0"
 LABEL org.opencontainers.image.authors="Maxwell Oliveira <maxwbh@gmail.com>"
 LABEL org.opencontainers.image.url="https://github.com/Maxwbh/boleto_cnab_api"
 LABEL org.opencontainers.image.source="https://github.com/Maxwbh/boleto_cnab_api"

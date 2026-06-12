@@ -1,12 +1,12 @@
 # Roadmap — Boleto CNAB API
 
-> Atualizado em 29/05/2026 | API v1.3.3 | brcobranca v12.10.1
+> Atualizado em 29/05/2026 | API v1.4.0 | brcobranca v12.10.1
 
 ## Estado Atual
 
 | Metrica | Valor |
 |---------|-------|
-| Versao da API | 1.3.3 |
+| Versao da API | 1.4.0 |
 | brcobranca | 12.10.1 |
 | Bancos suportados | 18 |
 | Endpoints | 15 |

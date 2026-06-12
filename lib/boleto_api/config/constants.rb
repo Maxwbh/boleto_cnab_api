@@ -57,6 +57,27 @@ module BoletoApi
       # Tipos de saída suportados
       OUTPUT_TYPES = %w[pdf jpg png tif].freeze
 
+      # Templates de geração de PDF
+      #  - rghost : padrão, usa GhostScript (todos os formatos)
+      #  - prawn  : Ruby puro, sem GhostScript (apenas PDF)
+      #  - carne  : carnê (1 via por página; 3 vias por A4 no /multi), Prawn
+      TEMPLATES = %w[rghost prawn carne].freeze
+
+      # Templates que geram apenas PDF (Prawn)
+      PDF_ONLY_TEMPLATES = %w[prawn carne].freeze
+
+      # Campos opcionais de tema visual aplicados pelos templates Prawn.
+      # São attr_accessor na Base do brcobranca (v12.10+) e passam direto no JSON.
+      THEME_FIELDS = %w[
+        logo_empresa
+        cor_marca
+        marca_dagua
+        rodape_contato
+        fonte_ttf
+        parcela_atual
+        total_parcelas
+      ].freeze
+
       # Tipos de CNAB suportados
       CNAB_TYPES = %w[cnab400 cnab240].freeze
 
@@ -124,6 +145,14 @@ module BoletoApi
 
         def output_type_supported?(type)
           OUTPUT_TYPES.include?(type.to_s.downcase)
+        end
+
+        def template_supported?(template)
+          TEMPLATES.include?(template.to_s.downcase)
+        end
+
+        def pdf_only_template?(template)
+          PDF_ONLY_TEMPLATES.include?(template.to_s.downcase)
         end
 
         def content_type_for(output_type)

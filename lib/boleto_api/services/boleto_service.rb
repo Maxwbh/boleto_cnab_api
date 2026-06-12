@@ -116,10 +116,10 @@ module BoletoApi
             return { valid: false, content: nil, errors: boleto.errors.messages }
           end
 
-          content = if template.to_s == 'prawn'
-                      generate_prawn(boleto, format)
-                    else
-                      boleto.send("to_#{format}".to_sym)
+          content = case template.to_s
+                    when 'prawn' then generate_prawn(boleto, format)
+                    when 'carne' then generate_prawn_carne(boleto, format)
+                    else boleto.send("to_#{format}".to_sym)
                     end
           {
             valid: true,
@@ -182,10 +182,10 @@ module BoletoApi
           end
 
           boletos = boletos_with_bank.map { |bb| bb[:boleto] }
-          content = if template.to_s == 'prawn'
-                      generate_prawn_lote(boletos)
-                    else
-                      Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
+          content = case template.to_s
+                    when 'prawn' then generate_prawn_lote(boletos)
+                    when 'carne' then generate_prawn_carne_lote(boletos)
+                    else Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
                     end
           metadata = boletos_with_bank.map { |bb| boleto_metadata(bb[:boleto], bb[:bank]) }
           {
@@ -219,6 +219,21 @@ module BoletoApi
         def generate_prawn_lote(boletos)
           Prawn::Fonts::AFM.hide_m17n_warning = true
           Brcobranca::Boleto::Template::PrawnBolepix.lote(boletos)
+        end
+
+        # Gera carnê (1 via por página) usando o template PrawnCarne (sem GhostScript)
+        def generate_prawn_carne(boleto, format)
+          raise ArgumentError, "Template carnê suporta apenas PDF (recebido: #{format})" unless format.to_s == 'pdf'
+
+          boleto.extend(Brcobranca::Boleto::Template::PrawnCarne)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          boleto.to_carne(:pdf)
+        end
+
+        # Gera carnê em lote (3 vias por folha A4) usando PrawnCarne.lote_carne
+        def generate_prawn_carne_lote(boletos)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          Brcobranca::Boleto::Template::PrawnCarne.lote_carne(boletos)
         end
 
         def validate_output_format!(format)

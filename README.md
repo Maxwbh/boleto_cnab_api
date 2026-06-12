@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.3.3-blue?style=for-the-badge" alt="Boleto CNAB API" />
+  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.4.0-blue?style=for-the-badge" alt="Boleto CNAB API" />
 </p>
 
 <h3 align="center">
@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.3-green" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.4.0-green" alt="Version" />
   <img src="https://img.shields.io/badge/bancos-18-blue" alt="Bancos" />
   <img src="https://img.shields.io/badge/testes-172_passando-brightgreen" alt="Tests" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
@@ -56,7 +56,8 @@ Se você precisa **gerar boletos**, **processar arquivos CNAB** ou **conciliar p
 
 - **18 bancos** — Incluindo Banco C6 (336), o mais completo do mercado open-source
 - **PIX nativo** — Boleto híbrido com QR Code + remessa CNAB com segmento PIX
-- **2 templates PDF** — RGhost (completo) ou Prawn (sem GhostScript, 92% menor)
+- **3 templates PDF** — RGhost (completo), Prawn (sem GhostScript, 92% menor) ou Carnê (3 vias por A4)
+- **Tema visual** — Logo, cor da marca, marca d'água antifraude e fonte TTF nos PDFs Prawn
 - **Swagger UI** — Documentação interativa em `/api/docs`, teste no browser
 - **OpenAPI 3.0** — Importe no Postman/Insomnia em 1 clique
 - **include_data** — PDF + dados do boleto em 1 chamada (base64)
@@ -193,6 +194,43 @@ for tx in ofx["transacoes"]:
 
 ---
 
+## Templates de PDF: carnê e tema visual
+
+Os PDFs gerados via Prawn (sem GhostScript) aceitam um **template de carnê** e
+**campos opcionais de tema visual** passados no próprio `data`:
+
+```bash
+# Carnê de uma parcela (PDF 21x9cm)
+curl "http://localhost:9292/api/boleto?bank=sicoob&type=pdf&template=carne&data=$(python3 -c "
+import json; print(json.dumps({
+  'agencia':'4327','conta_corrente':'417270','convenio':'229385','carteira':'1',
+  'nosso_numero':'7890','cedente':'Imobiliária Lagoa Real','documento_cedente':'12345678000100',
+  'sacado':'João da Silva','sacado_documento':'12345678900','valor':2500.0,
+  'data_vencimento':'2026/12/31',
+  # --- tema visual (opcional) ---
+  'cor_marca':'006B3F','marca_dagua':'CÓPIA - SEM VALOR FISCAL',
+  'rodape_contato':'Imobiliária Lagoa Real • (71) 3333-0000',
+  'parcela_atual':1,'total_parcelas':12
+}))")" -o carne.pdf
+
+# Carnê em lote: 3 vias por folha A4 (cada item com seu "bank")
+curl -X POST "http://localhost:9292/api/boleto/multi?type=pdf&template=carne" \
+  -F 'data=@parcelas.json;type=application/json' -o carne-lote.pdf
+```
+
+| Campo de tema | Descrição |
+|---------------|-----------|
+| `logo_empresa` | Path do logo (PNG/JPG) acessível ao servidor |
+| `cor_marca` | Cor da marca em hex `RRGGBB` (contraste automático) |
+| `marca_dagua` | Texto da marca d'água diagonal antifraude (até 60 chars) |
+| `rodape_contato` | Rodapé com contato da empresa (até 120 chars) |
+| `fonte_ttf` | Path de fonte TTF (UTF-8 completo) |
+| `parcela_atual` / `total_parcelas` | Selo "PARCELA n/N" |
+
+> Os campos de tema também valem para `template=prawn`. No `rghost` (padrão) são ignorados.
+
+---
+
 ## Deploy
 
 | Opção | Comando |
@@ -215,7 +253,7 @@ for tx in ofx["transacoes"]:
 |-----------|-----------|
 | API | Ruby 3.3 · Grape · Puma |
 | Boletos | [brcobranca v12.10.1](https://github.com/Maxwbh/brcobranca) (fork com C6, PIX, Prawn) |
-| PDF | RGhost ou Prawn (sem GhostScript) |
+| PDF | RGhost, Prawn ou Carnê (sem GhostScript) |
 | OFX | gem `ofx` |
 | Testes | RSpec · 217 testes |
 | Docs | OpenAPI 3.0 · Swagger UI |
