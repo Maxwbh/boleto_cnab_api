@@ -146,5 +146,5 @@ Para automatizar versionamento em pipelines:
 
 ---
 
-**Versão:** 1.3.2
+**Versão:** 1.4.0
 **Última atualização:** 2026-04-10

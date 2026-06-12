@@ -5,6 +5,50 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.4.0] - 2026-06-12
+
+### Adicionado
+
+- 🧾 **Template de carnê** no `/api/boleto` e `/api/boleto/multi` via
+  `template=carne`: gera carnê em PDF (1 via por página; no `/multi`, 3 vias por
+  folha A4) usando `Brcobranca::Boleto::Template::PrawnCarne` (sem GhostScript).
+- 🎨 **Tema visual** nos templates Prawn (`prawn` e `carne`) — novos campos
+  **opcionais** aceitos em `data`, passados direto ao boleto (attr_accessor na
+  Base do brcobranca v12.10):
+  - `logo_empresa` — logo da empresa (path PNG/JPG)
+  - `cor_marca` — cor da marca em hex `RRGGBB` (contraste automático)
+  - `marca_dagua` — texto da marca d'água diagonal antifraude
+  - `rodape_contato` — rodapé com contato da empresa
+  - `fonte_ttf` — fonte TTF (UTF-8 completo)
+  - `parcela_atual` / `total_parcelas` — selo "PARCELA n/N"
+- 🧱 Constantes `TEMPLATES`, `PDF_ONLY_TEMPLATES` e `THEME_FIELDS` +
+  helpers `template_supported?` / `pdf_only_template?` em `Config::Constants`.
+- 🧪 Specs de integração `spec/integration/carne_boleto_spec.rb` (carnê single,
+  carnê em lote e tema no template prawn).
+- 📖 OpenAPI: parâmetro `template` documentado (`rghost`/`prawn`/`carne`) e
+  campos de tema adicionados ao schema `BoletoData`.
+
+### Modificado
+
+- 📦 **brcobranca atualizado**: `12.9.0` → `12.10.1` (revision `fa43157` → `cca5f1a`),
+  que traz PrawnCarne, PrawnTema, marca d'água, fontes TTF e fixes de PIX/QR.
+- 🐳 **Docker focado em Prawn**: a imagem principal (`Dockerfile`) passa a ser a
+  variante **sem GhostScript** (PDF-only, mais leve e com menor uso de memória —
+  ideal para o Render Free Tier). A antiga imagem com GhostScript foi movida para
+  **`Dockerfile.rghost`** (use-a para gerar JPG/PNG/TIF). O `render.yaml` e o
+  `docker-compose` (serviço padrão) usam a imagem Prawn; a variante rghost fica no
+  profile `rghost`.
+- ⚙️ **Template padrão por ambiente**: o default de `template` em `/api/boleto` e
+  `/api/boleto/multi` agora vem de `BOLETO_TEMPLATE` (helper `Constants.default_template`).
+  Na imagem principal o padrão é `prawn`; na `Dockerfile.rghost`, `rghost`.
+
+### Corrigido (herdado do brcobranca)
+
+- 🐛 **PIX/QR Code**: correção de sobreposição QR × código de barras no Bolepix
+  (Prawn e RGhost) e nível de correção de erro do QR ajustado para M (padrão BACEN).
+- 🐛 **Normalização de remessa**: além do Sicoob CNAB400 (`carteira`/`convenio`),
+  agora também Banco do Brasil CNAB 240/400 recebe padding automático de campos.
+
 ## [1.3.2] - 2026-06-12
 
 ### Modificado

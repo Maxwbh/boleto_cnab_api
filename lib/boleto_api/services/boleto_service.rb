@@ -108,7 +108,7 @@ module BoletoApi
         # @param format [String] Formato de saída ('pdf', 'jpg', 'png', 'tif')
         # @param template [String] 'rghost' (padrão) ou 'prawn' (sem GhostScript)
         # @return [Hash] { valid:, content:, errors:, metadata: }
-        def generate(bank, values, format: 'pdf', template: ENV.fetch('BOLETO_TEMPLATE', 'rghost'))
+        def generate(bank, values, format: 'pdf', template: Config::Constants.default_template)
           validate_output_format!(format)
           boleto = create(bank, values)
 
@@ -116,10 +116,10 @@ module BoletoApi
             return { valid: false, content: nil, errors: boleto.errors.messages }
           end
 
-          content = if template.to_s == 'prawn'
-                      generate_prawn(boleto, format)
-                    else
-                      boleto.send("to_#{format}".to_sym)
+          content = case template.to_s
+                    when 'prawn' then generate_prawn(boleto, format)
+                    when 'carne' then generate_prawn_carne(boleto, format)
+                    else boleto.send("to_#{format}".to_sym)
                     end
           {
             valid: true,
@@ -134,7 +134,7 @@ module BoletoApi
         # @param boletos_data [Array<Hash>] Lista de boletos (cada um com 'bank' e dados)
         # @param format [String] Formato de saída
         # @return [Hash] { valid: Boolean, content: String/nil, errors: Array }
-        def generate_multi(boletos_data, format: 'pdf', template: ENV.fetch('BOLETO_TEMPLATE', 'rghost'))
+        def generate_multi(boletos_data, format: 'pdf', template: Config::Constants.default_template)
           validate_output_format!(format)
 
           if boletos_data.nil? || boletos_data.empty?
@@ -182,10 +182,10 @@ module BoletoApi
           end
 
           boletos = boletos_with_bank.map { |bb| bb[:boleto] }
-          content = if template.to_s == 'prawn'
-                      generate_prawn_lote(boletos)
-                    else
-                      Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
+          content = case template.to_s
+                    when 'prawn' then generate_prawn_lote(boletos)
+                    when 'carne' then generate_prawn_carne_lote(boletos)
+                    else Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
                     end
           metadata = boletos_with_bank.map { |bb| boleto_metadata(bb[:boleto], bb[:bank]) }
           {
@@ -219,6 +219,21 @@ module BoletoApi
         def generate_prawn_lote(boletos)
           Prawn::Fonts::AFM.hide_m17n_warning = true
           Brcobranca::Boleto::Template::PrawnBolepix.lote(boletos)
+        end
+
+        # Gera carnê (1 via por página) usando o template PrawnCarne (sem GhostScript)
+        def generate_prawn_carne(boleto, format)
+          raise ArgumentError, "Template carnê suporta apenas PDF (recebido: #{format})" unless format.to_s == 'pdf'
+
+          boleto.extend(Brcobranca::Boleto::Template::PrawnCarne)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          boleto.to_carne(:pdf)
+        end
+
+        # Gera carnê em lote (3 vias por folha A4) usando PrawnCarne.lote_carne
+        def generate_prawn_carne_lote(boletos)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          Brcobranca::Boleto::Template::PrawnCarne.lote_carne(boletos)
         end
 
         def validate_output_format!(format)

@@ -74,8 +74,12 @@ module BoletoApi
           requires :data, type: String, desc: 'Dados do boleto em JSON'
           optional :include_data, type: String, default: 'false',
                    desc: 'Se "true", retorna JSON com dados do boleto + arquivo em base64.'
-          optional :template, type: String, values: %w[rghost prawn], default: 'rghost',
-                   desc: 'Template de geração: "rghost" (padrão, usa GhostScript) ou "prawn" (Ruby puro, sem GhostScript).'
+          optional :template, type: String, values: Config::Constants::TEMPLATES,
+                   default: Config::Constants.default_template,
+                   desc: 'Template: "rghost" (GhostScript), "prawn" (Ruby puro) ou "carne" (carnê Prawn). ' \
+                         'O padrão vem de BOLETO_TEMPLATE (imagem Docker principal usa "prawn"). ' \
+                         'prawn/carne geram apenas PDF. Tema visual opcional via campos em "data": ' \
+                         'logo_empresa, cor_marca, marca_dagua, rodape_contato, fonte_ttf, parcela_atual, total_parcelas.'
         end
         get do
           values = JSON.parse(params[:data])
@@ -120,8 +124,10 @@ module BoletoApi
           requires :data, type: File, desc: 'JSON com lista de boletos (cada um com campo "bank")'
           optional :include_data, type: String, default: 'false',
                    desc: 'Se "true", retorna JSON com dados de todos os boletos + arquivo em base64.'
-          optional :template, type: String, values: %w[rghost prawn], default: 'rghost',
-                   desc: 'Template: "rghost" (padrão) ou "prawn" (Ruby puro).'
+          optional :template, type: String, values: Config::Constants::TEMPLATES,
+                   default: Config::Constants.default_template,
+                   desc: 'Template: "rghost", "prawn" ou "carne" (carnê, 3 vias por folha A4). ' \
+                         'Padrão via BOLETO_TEMPLATE (imagem principal usa "prawn").'
         end
         post :multi do
           boletos_data = JSON.parse(params[:data][:tempfile].read)

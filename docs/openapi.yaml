@@ -30,7 +30,7 @@ info:
     | Unicred | 136 | ✅ | ✅ | ✅ | — |
     | Ailos | 085 | ✅ | ✅ | ❌ | — |
 
-  version: 1.3.2
+  version: 1.4.0
   contact:
     name: Maxwell da Silva Oliveira
     email: maxwbh@gmail.com
@@ -271,6 +271,23 @@ paths:
             type: string
             enum: ['true', 'false']
             default: 'false'
+        - name: template
+          in: query
+          required: false
+          description: |
+            Template de geração do PDF:
+            - `rghost` (padrão): usa GhostScript, suporta todos os formatos.
+            - `prawn`: Ruby puro, sem GhostScript — **apenas PDF**.
+            - `carne`: carnê (1 via por página) via Prawn — **apenas PDF**.
+
+            Os templates Prawn (`prawn`/`carne`) aplicam o tema visual opcional
+            passado em `data` (ver campos de tema no schema `BoletoData`:
+            `logo_empresa`, `cor_marca`, `marca_dagua`, `rodape_contato`,
+            `fonte_ttf`, `parcela_atual`, `total_parcelas`).
+          schema:
+            type: string
+            enum: [rghost, prawn, carne]
+            default: rghost
       responses:
         '200':
           description: |
@@ -650,7 +667,7 @@ components:
           example: Boleto CNAB API
         version:
           type: string
-          example: '1.3.2'
+          example: '1.4.0'
         supported_banks:
           type: array
           items:
@@ -675,7 +692,7 @@ components:
               example: Boleto CNAB API
             version:
               type: string
-              example: '1.3.2'
+              example: '1.4.0'
             ruby_version:
               type: string
               example: '3.3.6'
@@ -687,7 +704,7 @@ components:
           properties:
             version:
               type: string
-              example: '12.9.0'
+              example: '12.10.1'
             repository:
               type: string
               example: https://github.com/Maxwbh/brcobranca
@@ -932,6 +949,46 @@ components:
           type: string
           description: 'Codigo de identificacao da transacao PIX.'
           example: 'TX20260528001'
+        logo_empresa:
+          type: string
+          description: |
+            Tema visual (templates Prawn) — logo da empresa cedente.
+            Path de arquivo (PNG/JPG) acessível ao servidor. Novo em brcobranca v12.10.0.
+          example: '/assets/logo.png'
+        cor_marca:
+          type: string
+          description: |
+            Tema visual — cor da marca em hexadecimal RRGGBB (sem `#`). O contraste
+            do texto é calculado automaticamente. Novo em brcobranca v12.10.0.
+          example: '006B3F'
+        marca_dagua:
+          type: string
+          description: |
+            Tema visual — texto da marca d'água diagonal antifraude (até 60 chars),
+            posicionada fora das zonas do código de barras/QR. Novo em brcobranca v12.10.0.
+          example: 'CÓPIA - SEM VALOR FISCAL'
+        rodape_contato:
+          type: string
+          description: |
+            Tema visual — rodapé com contato da empresa (até 120 chars). Novo em brcobranca v12.10.0.
+          example: 'Imobiliária Lagoa Real • (71) 3333-0000'
+        fonte_ttf:
+          type: string
+          description: |
+            Tema visual — path de fonte TTF para suporte UTF-8 completo no Prawn
+            (detecção automática de variantes bold/italic). Novo em brcobranca v12.10.0.
+          example: '/assets/fonts/Roboto.ttf'
+        parcela_atual:
+          type: integer
+          description: |
+            Tema visual — número da parcela atual (selo "PARCELA n/N"). Útil no
+            template `carne`. Novo em brcobranca v12.10.0.
+          example: 1
+        total_parcelas:
+          type: integer
+          description: |
+            Tema visual — total de parcelas (selo "PARCELA n/N"). Novo em brcobranca v12.10.0.
+          example: 12
 
     BoletoResponse:
       type: object

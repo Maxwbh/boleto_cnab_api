@@ -8,7 +8,9 @@ services:
     region: oregon
     plan: free
 
-    # Dockerfile
+    # Dockerfile principal — imagem Prawn (sem GhostScript), mais leve e
+    # com menor uso de memória. Gera PDF (boleto, PIX e carnê).
+    # Para imagens JPG/PNG/TIF, troque para ./Dockerfile.rghost.
     dockerfilePath: ./Dockerfile
     dockerContext: .
 
@@ -58,6 +60,11 @@ services:
       # Nível de log
       - key: LOG_LEVEL
         value: "info"
+
+      # Template padrão de geração de PDF (imagem principal = Prawn).
+      # Já definido no Dockerfile; explícito aqui para clareza.
+      - key: BOLETO_TEMPLATE
+        value: "prawn"
 
       # Timeout de worker do Puma (evita kills durante cold start)
       - key: PUMA_WORKER_TIMEOUT
