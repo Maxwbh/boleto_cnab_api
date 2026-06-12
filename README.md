@@ -203,6 +203,10 @@ for tx in ofx["transacoes"]:
 | **Render.com** | [![Deploy](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy) |
 | **Local** | `bundle install && bundle exec rackup -p 9292` |
 
+> 🐳 **Imagem otimizada para o Render Free Tier (512MB):** jemalloc (`LD_PRELOAD`)
+> para baixa fragmentação de memória em Alpine/musl, `tini` para shutdown
+> gracioso e tuning de GC do Ruby. Detalhes em [DEPLOY.md](./DEPLOY.md).
+
 ---
 
 ## Stack

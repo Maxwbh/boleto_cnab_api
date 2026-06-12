@@ -8,7 +8,7 @@
 $stdout.sync = true
 $stderr.sync = true
 
-# Porta
+# Porta — no Render, a porta é injetada via ENV['PORT']
 port ENV.fetch('PORT', 9292)
 
 # Ambiente
@@ -16,44 +16,40 @@ environment ENV.fetch('RACK_ENV', 'production')
 
 # Workers (processos)
 # Free tier: 1 worker para economizar memória
-workers ENV.fetch('PUMA_WORKERS', 1).to_i
+worker_count = ENV.fetch('PUMA_WORKERS', 1).to_i
+workers worker_count
 
 # Threads por worker
-# Range de threads para melhor performance com baixa memória
-min_threads = ENV.fetch('PUMA_MIN_THREADS', 0).to_i
+# min_threads em 1 evita latência de criação na primeira requisição
+min_threads = ENV.fetch('PUMA_MIN_THREADS', 1).to_i
 max_threads = ENV.fetch('PUMA_MAX_THREADS', 5).to_i
 threads min_threads, max_threads
 
-# Preload app para compartilhar memória entre workers
-preload_app!
+# Timeout do worker — evita que o master mate o worker durante o cold start
+# (free tier pode demorar a "acordar" do sleep)
+worker_timeout ENV.fetch('PUMA_WORKER_TIMEOUT', 60).to_i
+
+# Modo cluster (workers >= 1): preload compartilha memória entre workers via
+# copy-on-write e permite recarregar gems sem reiniciar o master.
+# Em single mode (workers = 0) o preload é desnecessário e desperdiça memória.
+preload_app! if worker_count.positive?
 
 # PID e state files
-pidfile 'tmp/puma.pid'
-state_path 'tmp/puma.state'
+pidfile ENV.fetch('PUMA_PIDFILE', 'tmp/puma.pid')
+state_path ENV.fetch('PUMA_STATE', 'tmp/puma.state')
 
 # Logs de request do Puma (method, path, status, duration)
-# Complementar ao RequestLogger da API
 log_requests true
 
-# Hook após boot: garante que stdout/stderr estão em sync no worker
+# Hook após boot do worker: garante stdout/stderr em sync
 on_worker_boot do
   $stdout.sync = true
   $stderr.sync = true
 end
 
-# Graceful shutdown
-before_worker_boot do
-  # Reconectar a qualquer banco de dados se necessário
-end
-
-# Lifecycle hooks
-before_fork do
-  # Cleanup antes de fork
-end
-
-# Error handler de baixo nível
-if ENV['RACK_ENV'] == 'production'
-  lowlevel_error_handler do |e, _env|
-    [500, {}, ["Erro interno do servidor\n"]]
+# Error handler de baixo nível (não vaza stacktrace em produção)
+if ENV.fetch('RACK_ENV', 'production') == 'production'
+  lowlevel_error_handler do |_e, _env|
+    [500, { 'Content-Type' => 'text/plain' }, ["Erro interno do servidor\n"]]
   end
 end
