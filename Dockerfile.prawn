@@ -27,7 +27,7 @@ FROM ruby:3.3-alpine
 
 LABEL org.opencontainers.image.title="Boleto CNAB API (Prawn)"
 LABEL org.opencontainers.image.description="API REST para Boletos, CNAB e OFX — sem GhostScript"
-LABEL org.opencontainers.image.version="1.3.0"
+LABEL org.opencontainers.image.version="1.3.1"
 LABEL org.opencontainers.image.authors="Maxwell Oliveira <maxwbh@gmail.com>"
 LABEL org.opencontainers.image.url="https://github.com/Maxwbh/boleto_cnab_api"
 LABEL org.opencontainers.image.source="https://github.com/Maxwbh/boleto_cnab_api"
