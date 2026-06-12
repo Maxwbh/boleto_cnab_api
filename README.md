@@ -227,17 +227,22 @@ curl -X POST "http://localhost:9292/api/boleto/multi?type=pdf&template=carne" \
 | `fonte_ttf` | Path de fonte TTF (UTF-8 completo) |
 | `parcela_atual` / `total_parcelas` | Selo "PARCELA n/N" |
 
-> Os campos de tema também valem para `template=prawn`. No `rghost` (padrão) são ignorados.
+> Os campos de tema valem para os templates Prawn (`prawn` e `carne`). No `rghost` são ignorados.
 
 ---
 
 ## Deploy
 
+> 🐳 A **imagem Docker principal é focada em Prawn** (sem GhostScript): mais leve
+> e com menor uso de memória, gera PDF (boleto, PIX e carnê) por padrão
+> (`BOLETO_TEMPLATE=prawn`). Para gerar **imagens** (JPG/PNG/TIF) use a variante
+> `Dockerfile.rghost` (com GhostScript).
+
 | Opção | Comando |
 |-------|---------|
-| **Docker** | `docker build -t boleto-api . && docker run -p 9292:9292 boleto-api` |
-| **Docker (sem GhostScript)** | `docker build -f Dockerfile.prawn -t boleto-api .` |
-| **Docker Compose** | `docker compose up` |
+| **Docker (Prawn, padrão)** | `docker build -t boleto-api . && docker run -p 9292:9292 boleto-api` |
+| **Docker (com GhostScript / imagens)** | `docker build -f Dockerfile.rghost -t boleto-api .` |
+| **Docker Compose** | `docker compose up` (rghost: `docker compose --profile rghost up boleto_api_rghost`) |
 | **Render.com** | [![Deploy](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy) |
 | **Local** | `bundle install && bundle exec rackup -p 9292` |
 

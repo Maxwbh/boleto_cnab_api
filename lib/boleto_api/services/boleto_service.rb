@@ -108,7 +108,7 @@ module BoletoApi
         # @param format [String] Formato de saída ('pdf', 'jpg', 'png', 'tif')
         # @param template [String] 'rghost' (padrão) ou 'prawn' (sem GhostScript)
         # @return [Hash] { valid:, content:, errors:, metadata: }
-        def generate(bank, values, format: 'pdf', template: ENV.fetch('BOLETO_TEMPLATE', 'rghost'))
+        def generate(bank, values, format: 'pdf', template: Config::Constants.default_template)
           validate_output_format!(format)
           boleto = create(bank, values)
 
@@ -134,7 +134,7 @@ module BoletoApi
         # @param boletos_data [Array<Hash>] Lista de boletos (cada um com 'bank' e dados)
         # @param format [String] Formato de saída
         # @return [Hash] { valid: Boolean, content: String/nil, errors: Array }
-        def generate_multi(boletos_data, format: 'pdf', template: ENV.fetch('BOLETO_TEMPLATE', 'rghost'))
+        def generate_multi(boletos_data, format: 'pdf', template: Config::Constants.default_template)
           validate_output_format!(format)
 
           if boletos_data.nil? || boletos_data.empty?
