@@ -1,6 +1,6 @@
 # Arquitetura da API
 
-> **Versão:** 1.3.1
+> **Versão:** 1.3.2
 
 Este documento descreve a arquitetura modular da Boleto CNAB API.
 
@@ -26,9 +26,9 @@ A API é construída sobre o framework [Grape](https://github.com/ruby-grape/gra
          └──────────────────┘
 ```
 
-## Integração com brcobranca v12.8.0
+## Integração com brcobranca v12.9.0
 
-Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.8.0):
+Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.9.0):
 
 | Service | Método brcobranca | Fallback |
 |---------|------------------|----------|
@@ -44,7 +44,7 @@ Veja [development/brcobranca-fork.md](./development/brcobranca-fork.md) para det
 lib/
 ├── boleto_api.rb              # Entry point principal
 └── boleto_api/
-    ├── version.rb             # Versão da API (1.3.1)
+    ├── version.rb             # Versão da API (1.3.2)
     ├── config/
     │   └── constants.rb       # Constantes centralizadas
     ├── services/
