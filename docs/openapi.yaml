@@ -30,7 +30,7 @@ info:
     | Unicred | 136 | ✅ | ✅ | ✅ | — |
     | Ailos | 085 | ✅ | ✅ | ❌ | — |
 
-  version: 1.4.0
+  version: 1.4.1
   contact:
     name: Maxwell da Silva Oliveira
     email: maxwbh@gmail.com
@@ -667,7 +667,7 @@ components:
           example: Boleto CNAB API
         version:
           type: string
-          example: '1.4.0'
+          example: '1.4.1'
         supported_banks:
           type: array
           items:
@@ -692,7 +692,7 @@ components:
               example: Boleto CNAB API
             version:
               type: string
-              example: '1.4.0'
+              example: '1.4.1'
             ruby_version:
               type: string
               example: '3.3.6'
@@ -704,7 +704,7 @@ components:
           properties:
             version:
               type: string
-              example: '12.10.1'
+              example: '12.10.2'
             repository:
               type: string
               example: https://github.com/Maxwbh/brcobranca

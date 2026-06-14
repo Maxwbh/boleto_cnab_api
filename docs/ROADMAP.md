@@ -1,13 +1,13 @@
 # Roadmap — Boleto CNAB API
 
-> Atualizado em 29/05/2026 | API v1.4.0 | brcobranca v12.10.1
+> Atualizado em 29/05/2026 | API v1.4.1 | brcobranca v12.10.2
 
 ## Estado Atual
 
 | Metrica | Valor |
 |---------|-------|
-| Versao da API | 1.4.0 |
-| brcobranca | 12.10.1 |
+| Versao da API | 1.4.1 |
+| brcobranca | 12.10.2 |
 | Bancos suportados | 18 |
 | Endpoints | 15 |
 | Testes | 217 Ruby + 44 Python = 261 |
@@ -41,7 +41,7 @@
 
 | Feature | Upstream (akretion) | Fork (@maxwbh) |
 |---------|:-------------------:|:--------------:|
-| brcobranca | 12.0.0 | **12.10.1** |
+| brcobranca | 12.0.0 | **12.10.2** |
 | Bancos | 16 | **18** |
 | PIX hibrido | — | **8 bancos** |
 | Remessa PIX | — | **7 bancos** |

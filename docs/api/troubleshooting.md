@@ -1,6 +1,6 @@
 # Troubleshooting — Boleto CNAB API
 
-> **Versão:** 1.4.0
+> **Versão:** 1.4.1
 
 Este guia ajuda a resolver problemas comuns ao usar a API.
 

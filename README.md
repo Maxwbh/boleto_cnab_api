@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.4.0-blue?style=for-the-badge" alt="Boleto CNAB API" />
+  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.4.1-blue?style=for-the-badge" alt="Boleto CNAB API" />
 </p>
 
 <h3 align="center">
@@ -27,12 +27,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.4.0-green" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.4.1-green" alt="Version" />
   <img src="https://img.shields.io/badge/bancos-18-blue" alt="Bancos" />
   <img src="https://img.shields.io/badge/testes-172_passando-brightgreen" alt="Tests" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
   <img src="https://img.shields.io/badge/ruby-3.3-red" alt="Ruby" />
-  <img src="https://img.shields.io/badge/brcobranca-12.10.1-orange" alt="brcobranca" />
+  <img src="https://img.shields.io/badge/brcobranca-12.10.2-orange" alt="brcobranca" />
   <img src="https://img.shields.io/badge/PIX-8_bancos-blueviolet" alt="PIX" />
 </p>
 
@@ -257,7 +257,7 @@ curl -X POST "http://localhost:9292/api/boleto/multi?type=pdf&template=carne" \
 | Componente | Tecnologia |
 |-----------|-----------|
 | API | Ruby 3.3 · Grape · Puma |
-| Boletos | [brcobranca v12.10.1](https://github.com/Maxwbh/brcobranca) (fork com C6, PIX, Prawn) |
+| Boletos | [brcobranca v12.10.2](https://github.com/Maxwbh/brcobranca) (fork com C6, PIX, Prawn) |
 | PDF | RGhost, Prawn ou Carnê (sem GhostScript) |
 | OFX | gem `ofx` |
 | Testes | RSpec · 217 testes |
