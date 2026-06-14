@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/maxwbh/brcobranca.git
-  revision: cca5f1a904d208cc65cc3b436ca25bbab7101a01
+  revision: 2613452f4cfa88fba16beef420e5117eae6db941
   specs:
-    brcobranca (12.10.1)
+    brcobranca (12.10.2)
       fast_blank
       parseline (>= 1.0.3)
       rghost (>= 0.9.8)

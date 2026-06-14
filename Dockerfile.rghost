@@ -36,7 +36,7 @@ FROM ruby:3.3-alpine
 # Labels (OCI)
 LABEL org.opencontainers.image.title="Boleto CNAB API (RGhost/GhostScript)"
 LABEL org.opencontainers.image.description="API REST para Boletos, CNAB e OFX — variante com GhostScript (PDF + JPG/PNG/TIF)"
-LABEL org.opencontainers.image.version="1.4.0"
+LABEL org.opencontainers.image.version="1.4.1"
 LABEL org.opencontainers.image.authors="Maxwell Oliveira <maxwbh@gmail.com>"
 LABEL org.opencontainers.image.url="https://github.com/Maxwbh/boleto_cnab_api"
 LABEL org.opencontainers.image.source="https://github.com/Maxwbh/boleto_cnab_api"
