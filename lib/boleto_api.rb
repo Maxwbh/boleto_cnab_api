@@ -23,14 +23,11 @@ require_relative 'boleto_api/services/ofx_parser_service'
 require_relative 'boleto_api/services/bank_info_service'
 require_relative 'boleto_api/middleware/error_handler'
 require_relative 'boleto_api/middleware/request_logger'
-require_relative 'boleto_api/providers/registry'
 require_relative 'boleto_api/endpoints/health_endpoint'
 require_relative 'boleto_api/endpoints/boleto_endpoint'
 require_relative 'boleto_api/endpoints/remessa_endpoint'
 require_relative 'boleto_api/endpoints/retorno_endpoint'
 require_relative 'boleto_api/endpoints/ofx_endpoint'
-require_relative 'boleto_api/endpoints/cobranca_endpoint'
-require_relative 'boleto_api/endpoints/webhooks_endpoint'
 require_relative 'boleto_api/endpoints/docs_endpoint'
 
 module BoletoApi
@@ -68,8 +65,6 @@ module BoletoApi
     mount Endpoints::RemessaEndpoint
     mount Endpoints::RetornoEndpoint
     mount Endpoints::OFXEndpoint
-    mount Endpoints::CobrancaEndpoint
-    mount Endpoints::WebhooksEndpoint
     mount Endpoints::DocsEndpoint
   end
 end

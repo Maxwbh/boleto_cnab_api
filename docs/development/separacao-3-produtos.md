@@ -6,11 +6,14 @@
 
 ---
 
-## 0. Reconciliação com a remodelagem
+## 0. Reconciliação (decisão final)
 
-A [remodelagem](./remodelagem-gateway-servicos.md) propôs um **Bank Gateway separado em Python**. Ao definir os produtos como **3** (com **Boleto-API** no meio), o **gateway colapsa para dentro do Boleto-API** — que continua **Ruby** e absorve os providers C6/Sicoob (exatamente o esqueleto já commitado em `lib/boleto_api/providers/`).
+Evolução das decisões: a [remodelagem](./remodelagem-gateway-servicos.md) propôs um Bank Gateway em Python; depois cogitou-se colapsá-lo no Boleto-API Ruby. **Decisão final:** **todo o Ruby fica no BrCobrança** e o **Boleto-API é só Python**.
 
-**Efeito:** menos um runtime, sem reescrever providers. O estado que o Gateway teria (cofre, scheduler de conciliação) passa a viver **dentro do Boleto-API**. A ressalva do Sicoob (§4 da remodelagem) continua válida: **Boleto-API é stateful**.
+- **BrCobrança (Ruby)** = lib **+ engine HTTP de renderização** (boleto/CNAB/OFX/PDF/PIX-QR). Tudo que depende do brcobrança vive aqui.
+- **Boleto-API (Python)** = **gateway bancário** (providers C6/Sicoob, OAuth+mTLS, cofre, webhook, conciliação). **Stateful** (ressalva do polling Sicoob, §4 da remodelagem).
+
+**Efeito:** zero lógica duplicada entre idiomas. Os providers/endpoints Ruby de gateway (commit `432dddd`) foram **removidos** — não pertencem ao BrCobrança. O Ruby volta a ser **só renderização**.
 
 ---
 
@@ -18,8 +21,8 @@ A [remodelagem](./remodelagem-gateway-servicos.md) propôs um **Bank Gateway sep
 
 | Produto | É | Repo | Linguagem | Estado |
 |---|---|---|---|---|
-| **BrCobrança** | Biblioteca de primitivas de boleto/CNAB (18 bancos) | [`maxwbh/brcobranca`](https://github.com/maxwbh/brcobranca) (**já separado**) | Ruby (gem) | Stateless, puro |
-| **Boleto-API** | API HTTP + **gateway bancário** (providers C6/Sicoob, PIX, webhook, conciliação, cofre) | [`maxwbh/boleto_cnab_api`](https://github.com/maxwbh/boleto_cnab_api) (**este repo**) | Ruby (Grape) | **Stateful** (cofre + scheduler) |
+| **BrCobrança** | Lib de boleto/CNAB (18 bancos) **+ engine HTTP de renderização** | [`maxwbh/brcobranca`](https://github.com/maxwbh/brcobranca) (lib) + [`maxwbh/boleto_cnab_api`](https://github.com/maxwbh/boleto_cnab_api) (engine HTTP) | **Ruby** | Stateless, puro |
+| **Boleto-API** | **Gateway bancário** (providers C6/Sicoob, PIX, webhook, conciliação, cofre) | a extrair p/ repo próprio (esqueleto em `boleto-api-python/`) | **Python/FastAPI** | **Stateful** (cofre + scheduler) |
 | **Gestão-Contrato** | Produto de domínio: imobiliárias, contratos, cronograma, reajuste, carnê | [`maxwbh/Gestao-Contrato`](https://github.com/Maxwbh/Gestao-Contrato) (**já existe**) | **Python/Django 4.2** (PostgreSQL, Gunicorn) | Stateful (domínio) |
 
 ---
@@ -28,13 +31,14 @@ A [remodelagem](./remodelagem-gateway-servicos.md) propôs um **Bank Gateway sep
 
 ```
 Gestão-Contrato ──depende──► Boleto-API ──depende──► BrCobrança
-   (domínio)        HTTP        (API/gateway)   gem        (lib)
+   (domínio,         HTTP      (gateway,       HTTP     (Ruby: lib + engine)
+    Django)                     Python)
 ```
 
 **Regras de fronteira (invioláveis):**
 - A seta **só aponta para baixo**. BrCobrança **não conhece** Boleto-API; Boleto-API **não conhece** Gestão-Contrato.
-- **BrCobrança** não fala HTTP, não tem segredo, não conhece tenant/banco-API. Só calcula boleto/CNAB.
-- **Boleto-API** não tem regra de negócio de contrato/aluguel/reajuste. Só cobrança bancária.
+- **BrCobrança** não fala com API de banco, não tem segredo, não conhece tenant. Só **renderiza** boleto/CNAB/PIX-QR (Ruby).
+- **Boleto-API** não tem regra de negócio de contrato/aluguel/reajuste. Só cobrança bancária (Python).
 - **Gestão-Contrato** não fala com banco nem com BrCobrança direto — **sempre** via Boleto-API.
 
 > Se uma regra de aluguel vazar para o Boleto-API, ou um detalhe de banco vazar para o Gestão-Contrato, a fronteira foi violada.
@@ -43,26 +47,26 @@ Gestão-Contrato ──depende──► Boleto-API ──depende──► BrCobr
 
 ## 3. O que cada produto possui (e o que NÃO possui)
 
-### BrCobrança (lib)
-- **Possui:** algoritmos de linha digitável, código de barras, DV, CNAB400/240, particularidades por banco; geração de PDF (Prawn/RGhost).
-- **Não possui:** HTTP, credenciais, chamadas a API de banco, multi-tenant, persistência.
-- **Superfície pública:** classes Ruby (`Brcobranca::Boleto::*`, remessa/retorno). Consumida **só** pelo Boleto-API.
+### BrCobrança (Ruby) — lib + engine HTTP
+- **Possui:** algoritmos de linha digitável, código de barras, DV, CNAB400/240, particularidades por banco; geração de **PDF/carnê** (Prawn/RGhost) e **PIX-QR** (PrawnBolepix); parsing **OFX**. Exposto por um **engine HTTP** (este repo).
+- **Não possui:** credenciais, chamadas a **API de banco**, multi-tenant, persistência, OAuth/mTLS.
+- **Superfície pública (engine HTTP) — só renderização:**
+  ```
+  POST /api/render/boleto | /carne | /remessa   (gerar PDF/linha digitável/CNAB)
+  GET  /api/boleto | /data | /validate | /nosso_numero   (cálculo offline)
+  POST /api/retorno | /api/ofx/parse            (parsing CNAB retorno / OFX)
+  ```
 
-### Boleto-API (API + gateway)
-- **Possui:** endpoints HTTP; **providers** (`BrcobrancaProvider`, `C6Provider`, `SicoobProvider`); OAuth2+mTLS por tenant; **cofre de credenciais/cert**; webhooks; **conciliação** (webhook + polling Sicoob); normalização de status; montagem de carnê.
-- **Não possui:** o que é contrato/parcela/reajuste/inquilino (isso é domínio do Gestão-Contrato).
+### Boleto-API (Python) — gateway bancário
+- **Possui:** **providers** (`BrcobrancaProxy`, `C6`, `Sicoob`); OAuth2+mTLS por tenant; **cofre de credenciais/cert**; webhooks; **conciliação** (webhook + polling Sicoob); normalização de status. Para boleto offline/CNAB/carnê, faz **proxy HTTP ao BrCobrança**.
+- **Não possui:** algoritmo de boleto/CNAB (delega ao BrCobrança); regra de contrato/aluguel/reajuste (é do Gestão-Contrato).
 - **Superfície pública (contrato HTTP):**
   ```
-  POST   /api/cobranca            registra cobrança (provider por tenant)
-  GET    /api/cobranca/:id        consulta status
-  POST   /api/cobranca/:id/baixar baixa/cancela
-  POST   /api/carne               carnê (N cobranças + PDF)
-  POST   /api/pix/cob | /cobv     PIX cobrança (BACEN)
-  POST   /api/webhooks/:banco     callback do banco → evento normalizado
-  GET    /api/eventos             entrega de eventos de pagamento
-  # legado/fallback (geração offline, não-registrado):
-  GET    /api/boleto | /data | /validate | /nosso_numero
-  POST   /api/remessa | /retorno  (CNAB — em depreciação)
+  POST   /cobranca             registra cobrança (provider por tenant)
+  GET    /cobranca/:id         consulta status
+  DELETE /cobranca/:id         baixa/cancela
+  POST   /webhooks/:banco      callback do banco → evento normalizado
+  # (planejado) /carne, /pix/cob|cobv, /eventos
   ```
 
 ### Gestão-Contrato (domínio) — Django 4.2
@@ -77,11 +81,11 @@ Gestão-Contrato ──depende──► Boleto-API ──depende──► BrCobr
 
 | Produto | Hoje | Ação para separar |
 |---|---|---|
-| **BrCobrança** | ✅ Já é repo/gem separado, consumido via Gemfile | Nada estrutural. Manter como dependência versionada |
-| **Boleto-API** | Repo este; tem `/render`/CNAB + **esqueleto de providers** commitado | Evoluir providers (C6/Sicoob), adicionar **cofre** + **conciliação**; deprecar CNAB do caminho principal |
-| **Gestão-Contrato** | ✅ Existe (Django 4.2); já consome Boleto-API via HTTP, isolado em `financeiro/services/` | Migrar consumo CNAB → cobrança registrada/webhook; ajustar chave de conciliação (`nosso_numero` → `txid`) |
+| **BrCobrança** | ✅ Lib (gem) + engine HTTP (este repo); gateway Ruby **removido** → só renderização | Expor `/api/render/*` enxuto p/ o proxy Python; manter lib versionada |
+| **Boleto-API** | Esqueleto **Python/FastAPI** em `boleto-api-python/` (providers, cofre, OAuth+mTLS, testes) | Extrair p/ repo próprio; fechar paths C6/Sicoob na homologação; worker de conciliação |
+| **Gestão-Contrato** | ✅ Existe (Django 4.2); já consome o engine via HTTP, isolado em `financeiro/services/` | Apontar para o Boleto-API Python; migrar CNAB → cobrança registrada/webhook; chave `nosso_numero` → `txid` |
 
-> **A separação física já está feita:** os **3 já são repos separados** (BrCobrança gem, Boleto-API este repo, Gestão-Contrato Django). O trabalho restante **não é separar** — é **evoluir o contrato** do Boleto-API (cobrança registrada + webhook) e **migrar o consumo** no `financeiro/services/` do Django, mantendo CNAB como fallback.
+> **A separação física já está feita:** os 3 já são produtos/repos distintos. Após esta decisão, o Ruby (BrCobrança) é **só renderização** e o **gateway é Python** (Boleto-API). O trabalho restante **não é separar** — é **fechar o contrato HTTP** entre os três e **migrar o consumo** no Django, mantendo CNAB como fallback.
 
 ---
 
