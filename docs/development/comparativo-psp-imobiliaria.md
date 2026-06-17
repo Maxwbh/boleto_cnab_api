@@ -70,6 +70,49 @@ A R$ marginal de Asaas vs Iugu é parecida; **Asaas vence por não ter mensalida
 
 ---
 
+## Parceria & monetização (split / revenue-share)
+
+O Asaas tem **Programa de Parcerias** voltado a **SaaS/ERP/marketplaces** (além de
+indicação/afiliados). Para a plataforma, isso transforma o PSP de **custo** em
+**fonte de receita** — é o ângulo "embedded finance".
+
+### Como se monetiza
+1. **Split por transação** (principal): em cada cobrança da subconta (imobiliária),
+   um split destina **uma fatia para a conta principal** (sua). Você vira
+   **co-beneficiário** de cada boleto/PIX — receita **por transação**, na origem,
+   automática. É como cobrar além (ou no lugar) da mensalidade do SaaS.
+2. **Condições comerciais por volume**: tarifas diferenciadas pelo **volume agregado**
+   de todas as subcontas; a diferença entre a tarifa que você paga e a que repassa à
+   imobiliária pode virar **margem**. Negociado no programa de parceria.
+
+### Custos/mecânica a considerar
+- **Abertura de subconta é tarifada** — você escolhe **absorver** (conta principal)
+  ou **repassar** à subconta.
+- Split funciona em **PIX, boleto e cartão**, configurável por cobrança.
+
+### ⚠️ Due diligence (pontos honestos)
+- **% de split permitido, revenue-share e tarifas de parceiro NÃO são públicos** —
+  dependem de negociação com o comercial/parceria.
+- Há **reclamações** (Reclame Aqui) de "parceria white-label frustrada por falta de
+  previsão/comunicação" — validar **SLA de homologação, prazos e suporte** antes de
+  comprometer roadmap.
+
+### Perguntas para a reunião comercial (Asaas)
+- Tarifa de **boleto** e **PIX** por **faixa de volume agregado** (subcontas somadas).
+- **% de split** permitido para a conta principal e **quem assume a tarifa** no split.
+- **Custo de abertura/manutenção** de subconta e quem absorve.
+- **KYC/onboarding** da subconta (documentos, prazo médio de aprovação por imobiliária).
+- **Liquidação**: prazo do boleto (D+?), saque da subconta para o banco da imobiliária.
+- **White-label**: nível de personalização (marca nos boletos/portal) e **SLA de homologação**.
+- **Webhook**: eventos (criação/liquidação/estorno) e **assinatura/segurança**.
+- **Condições do Programa de Parceria** (revenue-share, suporte dedicado, sandbox).
+
+> **Impacto na decisão:** o revenue-share via split é um argumento **a favor do
+> Asaas vs. integração direta** — no direto C6/Sicoob **não há** essa monetização
+> embutida (você só evita tarifa; não ganha por transação de terceiros).
+
+---
+
 ## A confirmar com o PSP escolhido (antes de codar)
 - Tarifa real de **boleto** e **PIX** por volume/plano (negociação).
 - **Subconta**: onboarding (KYC) de cada imobiliária, prazos, limites.
