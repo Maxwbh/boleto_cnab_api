@@ -28,6 +28,7 @@ require_relative 'boleto_api/endpoints/boleto_endpoint'
 require_relative 'boleto_api/endpoints/remessa_endpoint'
 require_relative 'boleto_api/endpoints/retorno_endpoint'
 require_relative 'boleto_api/endpoints/ofx_endpoint'
+require_relative 'boleto_api/endpoints/render_endpoint'
 require_relative 'boleto_api/endpoints/docs_endpoint'
 
 module BoletoApi
@@ -65,6 +66,7 @@ module BoletoApi
     mount Endpoints::RemessaEndpoint
     mount Endpoints::RetornoEndpoint
     mount Endpoints::OFXEndpoint
+    mount Endpoints::RenderEndpoint
     mount Endpoints::DocsEndpoint
   end
 end
