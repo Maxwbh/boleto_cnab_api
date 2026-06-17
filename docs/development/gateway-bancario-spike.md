@@ -179,11 +179,22 @@ Este é o item de **maior esforço e risco** da migração — mais do que os en
 
 ---
 
+## Nota de revisão (volume atual)
+
+> **Atualização (volume ≈ 500 boletos/mês):** nesse patamar, o **build/manutenção da
+> integração direta não se paga** — o custo marginal economizado (~R$1k/mês) não
+> amortiza um build de R$30–60k. Para o volume atual a recomendação vira
+> **PSP-first**, com **subconta white-label** (beneficiário = imobiliária). Ver
+> [comparativo de PSP](./comparativo-psp-imobiliaria.md) (recomendado: **Asaas**).
+> A arquitetura de gateway/adapter abaixo **continua válida** — muda só **qual é o
+> primeiro provider** (PSP agora; **direto C6/Sicoob entra por gatilho de volume**,
+> ~2–4 mil boletos/mês).
+
 ## 9. Recomendação
 
-1. **Começar pelo Sicoob** (mais completo/BACEN-padrão) como primeiro `BankProvider`, em **sandbox**, provando o fluxo registro→pagamento→webhook→conciliação.
-2. **C6 como 2º conector**, depois de validar onboarding/sandbox PJ.
-3. **Evoluir a `boleto_cnab_api`** como gateway (Adapter), preservando o contrato do Gestao-Contrato e depreciando o CNAB gradualmente.
+1. **Começar pelo Sicoob** (mais completo/BACEN-padrão) como primeiro `BankProvider` **direto**, em **sandbox** — válido **quando o volume justificar** (ver nota acima).
+2. **C6 como 2º conector** direto, depois de validar onboarding/sandbox PJ.
+3. **Evoluir a `boleto_cnab_api`** como gateway (Adapter), preservando o contrato do Gestao-Contrato e depreciando o CNAB gradualmente — **com PSP como primeiro provider** no volume atual.
 4. Tratar **credenciais/cert por tenant** como épico de segurança próprio (maior risco).
 
 ---
