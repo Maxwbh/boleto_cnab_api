@@ -30,7 +30,7 @@ info:
     | Unicred | 136 | ✅ | ✅ | ✅ | — |
     | Ailos | 085 | ✅ | ✅ | ❌ | — |
 
-  version: 1.4.1
+  version: 1.5.0
   contact:
     name: Maxwell da Silva Oliveira
     email: maxwbh@gmail.com
@@ -56,6 +56,10 @@ tags:
     description: Parsing de arquivos de retorno CNAB
   - name: OFX
     description: Parsing de extratos bancários OFX
+  - name: Render
+    description: |
+      Renderização (engine BrCobrança) — dados + PDF + CNAB com corpo JSON e
+      resposta normalizada. Consumido pelo gateway Boleto-API (Python).
 
 paths:
   /api/health:
@@ -605,6 +609,142 @@ paths:
               schema:
                 $ref: '#/components/schemas/OfxError'
 
+  /api/render/boleto:
+    post:
+      tags:
+        - Render
+      summary: Renderizar boleto (dados + PDF base64)
+      description: |
+        Registra/calcula os dados do boleto (linha digitável, código de barras,
+        nosso número) e devolve o PDF em base64. Corpo JSON. Template padrão
+        `prawn` (sem GhostScript). Consumido pelo gateway via `brcobranca_proxy`.
+      operationId: renderBoleto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bank, data]
+              properties:
+                bank:
+                  type: string
+                  example: itau
+                data:
+                  type: object
+                  description: Dados do boleto (mesmos campos de /api/boleto)
+                template:
+                  type: string
+                  enum: [prawn, carne, rghost]
+                  default: prawn
+      responses:
+        '201':
+          description: Boleto renderizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nosso_numero: { type: string, example: '00000001' }
+                  linha_digitavel: { type: string }
+                  codigo_barras: { type: string }
+                  pdf_base64: { type: string, description: PDF em base64 }
+        '400':
+          description: Dados do boleto inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/render/carne:
+    post:
+      tags:
+        - Render
+      summary: Renderizar carnê (N boletos) em PDF
+      description: |
+        Gera o carnê a partir de uma lista de boletos. Template padrão `carne`
+        (3 vias por A4, sem GhostScript); `prawn` gera 1 boleto por página.
+      operationId: renderCarne
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [boletos]
+              properties:
+                bank:
+                  type: string
+                  description: Banco comum a todos (se cada boleto não trouxer o seu)
+                  example: itau
+                boletos:
+                  type: array
+                  items: { type: object }
+                  description: Lista de boletos (cada um com seus dados)
+                template:
+                  type: string
+                  enum: [carne, prawn]
+                  default: carne
+      responses:
+        '201':
+          description: Carnê renderizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pdf_base64: { type: string, description: PDF do carnê em base64 }
+        '400':
+          description: Falha ao gerar carnê
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/render/remessa:
+    post:
+      tags:
+        - Render
+      summary: Renderizar arquivo de remessa CNAB (texto)
+      description: Gera o conteúdo da remessa CNAB 240/400 com corpo JSON.
+      operationId: renderRemessa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bank, type, data]
+              properties:
+                bank:
+                  type: string
+                  example: itau
+                type:
+                  type: string
+                  enum: [cnab400, cnab240]
+                data:
+                  type: object
+                  description: Dados da remessa e pagamentos
+                pix:
+                  type: boolean
+                  default: false
+                  description: Segmento PIX (boleto híbrido)
+      responses:
+        '201':
+          description: Remessa gerada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cnab: { type: string, description: Conteúdo do arquivo CNAB }
+        '400':
+          description: Erro ao gerar remessa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   schemas:
     BankCode:
@@ -667,7 +807,7 @@ components:
           example: Boleto CNAB API
         version:
           type: string
-          example: '1.4.1'
+          example: '1.5.0'
         supported_banks:
           type: array
           items:
@@ -692,7 +832,7 @@ components:
               example: Boleto CNAB API
             version:
               type: string
-              example: '1.4.1'
+              example: '1.5.0'
             ruby_version:
               type: string
               example: '3.3.6'
