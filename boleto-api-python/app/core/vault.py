@@ -20,6 +20,10 @@ class Vault(ABC):
         raise NotImplementedError
 
 
+class CredentialNotFound(KeyError):
+    """Tenant/provider sem credenciais no cofre. Subclasse de KeyError."""
+
+
 class EnvVault(Vault):
     """Stub para desenvolvimento: lê de variáveis de ambiente.
 
@@ -35,7 +39,7 @@ class EnvVault(Vault):
             if k.upper().startswith(prefix)
         }
         if not creds:
-            raise KeyError(f"Sem credenciais no cofre para tenant={tenant_id} provider={provider}")
+            raise CredentialNotFound(f"tenant={tenant_id} provider={provider}")
         return creds
 
 
