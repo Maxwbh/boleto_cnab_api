@@ -4,6 +4,20 @@ Esqueleto do **Boleto-API reescrito em Python/FastAPI**, mantendo o **`brcobran�
 como **motor de renderização** atrás de HTTP. É a "troca de tecnologia da API" sem jogar
 fora o fosso.
 
+## ⚠️ Dois "API" — não confundir (colisão de nome)
+
+| | Produto | Repo / dir | Papel | Versão |
+|---|---|---|---|---|
+| **Este** | **Boleto-API** (gateway) | `boleto-api-python/` | providers C6/Sicoob, cofre, webhook, conciliação | FastAPI `version` em `app/main.py` |
+| Outro | **BrCobrança** (engine) | `boleto_cnab_api` (Ruby) | renderização: `/api/render/*`, boleto/CNAB/OFX/PIX-QR | `BoletoApi::VERSION` (`lib/boleto_api/version.rb`) |
+
+- O módulo/repo Ruby ainda se chama `BoletoApi`/`boleto_cnab_api`, mas pela
+  [separação em 3 produtos](../docs/development/separacao-3-produtos.md) ele é o
+  **engine BrCobrança**. O **produto "Boleto-API" é este (Python)**. O nome Ruby é legado.
+- **Versionamento independente:** cada produto versiona o seu, na sua linguagem —
+  o `version.rb` (Ruby) versiona o **engine**; este projeto versiona o **gateway**
+  na própria app FastAPI. Nenhum release acopla os dois.
+
 ## Por que Ruby continua no jogo
 - No caminho **registrado** (C6/Sicoob) o **banco devolve** linha digitável/PDF/QR → Python
   só orquestra OAuth+mTLS+JSON. **Não precisa de brcobrança.**
