@@ -21,27 +21,44 @@ fora o fosso.
 ## Por que Ruby continua no jogo
 - No caminho **registrado** (C6/Sicoob) o **banco devolve** linha digitável/PDF/QR → Python
   só orquestra OAuth+mTLS+JSON. **Não precisa de brcobrança.**
-- No caminho **offline/CNAB/carnê** (18 bancos) → `brcobranca_proxy` chama o **Boleto-Engine
-  Ruby** (`boleto_cnab_api` atual, expondo `/api/render/*`).
+- No caminho **offline/CNAB/carnê** (18 bancos) → `brcobranca_proxy` chama o **engine
+  BrCobrança (Ruby)** (`boleto_cnab_api`, expondo `/api/render/*`).
 
 À medida que a adoção da API registrada cresce, o uso do motor Ruby encolhe.
 
 ## Estrutura
 ```
 app/
-  schemas.py              # contrato canônico (pydantic) — estável p/ o Django
+  schemas.py              # contrato canônico (pydantic) — estável p/ os consumidores
   registry.py             # roteia provider + resolve credencial no cofre
-  core/vault.py           # cofre de credenciais por tenant (stateful) — INTERFACE
-  clients/oauth_mtls.py   # OAuth2 client_credentials sobre mTLS (PKCS12), scopes, headers
+  core/
+    vault.py              # cofre de credenciais por tenant (stateful) — INTERFACE
+    subscriptions.py      # registro de assinantes (callback por tenant) — multi-sistema
+    forwarder.py          # push assinado (HMAC) do evento ao consumidor
+  clients/
+    oauth_mtls.py         # OAuth2 client_credentials sobre mTLS (PKCS12), scopes, headers
+    engine.py             # cliente do engine BrCobrança (render boleto/carnê)
   providers/
     base.py               # interface BankProvider
-    brcobranca_proxy.py   # proxy HTTP -> motor Ruby (offline/CNAB)
+    brcobranca_proxy.py   # proxy HTTP -> engine Ruby (offline/CNAB)
     c6.py                 # C6 (336) registrado
     sicoob.py             # Sicoob (756) registrado (+ scopes, header client_id, polling)
   routers/
     cobranca.py           # POST /cobranca, GET/DELETE /cobranca/{id}
-    webhooks.py           # POST /webhooks/{banco}
+    carne.py              # POST /carne (registra N parcelas + carnê 3-vias)
+    webhooks.py           # POST /webhooks/{banco} e /webhooks/{banco}/{tenant_id}
 ```
+
+## Endpoints
+| Método | Rota | O que faz |
+|---|---|---|
+| POST | `/cobranca` | Registra cobrança no provider (por tenant) → resposta normalizada |
+| GET | `/cobranca/{id}` | Consulta status (`?tenant_id=&provider=`) |
+| DELETE | `/cobranca/{id}` | Baixa/cancela |
+| POST | `/carne` | Registra N parcelas + monta carnê 3-vias (PDF) |
+| POST | `/webhooks/{banco}` | Recebe webhook do banco → push ao destino **global** |
+| POST | `/webhooks/{banco}/{tenant_id}` | Idem, roteando ao consumidor **dono do tenant** |
+| GET | `/health` | Health check |
 
 ## Produto standalone — acopla a QUALQUER projeto
 O Boleto-API **não pertence a nenhum consumidor**. Qualquer projeto integra pelo
@@ -49,16 +66,24 @@ mesmo contrato (`/cobranca`, `/carne`) e recebe os eventos de pagamento por **pu
 assinado** (HMAC). O Gestão-Contrato (Django) é apenas **um** consumidor — nada
 no código é específico dele.
 
-Multi-consumidor: hoje há um destino global (`EVENT_WEBHOOK_URL`); `forward_event`
-já aceita **override por chamada** (base para callback por tenant quando o
-mapeamento webhook→tenant estiver pronto).
+**Multi-sistema (implementado):** cada tenant pertence a um consumidor, que
+registra um callback próprio (`subscriptions.resolve_callback`). O banco aponta o
+webhook de cada conta para `/webhooks/{banco}/{tenant_id}` e o evento é empurrado
+**só ao sistema dono** daquele tenant. Sem tenant na rota, cai no destino global.
+
+```
+imobA → SUB__imobA__URL (Sistema 1)
+imobB → SUB__imobB__URL (Sistema 2)   # eventos roteados por tenant
+```
 
 ## Configuração (env)
 | Var | Para quê |
 |---|---|
 | `BOLETO_ENGINE_URL` | URL do engine BrCobrança (Ruby) p/ render/CNAB |
-| `EVENT_WEBHOOK_URL` | webhook do consumidor downstream (push de eventos) |
-| `EVENT_WEBHOOK_SECRET` | segredo HMAC para assinar o evento (`X-Signature`) |
+| `EVENT_WEBHOOK_URL` | webhook do consumidor **global** (push de eventos) |
+| `EVENT_WEBHOOK_SECRET` | segredo HMAC do destino global (`X-Signature`) |
+| `SUB__<tenant>__URL` | callback **por tenant** (multi-sistema) — sobrepõe o global |
+| `SUB__<tenant>__SECRET` | segredo HMAC daquele tenant/consumidor |
 
 ## Rodar (dev)
 ```bash
@@ -75,9 +100,13 @@ uvicorn app.main:app --reload
 ## Pendências (TODO no código)
 - Fechar **paths/payloads/auth-urls** reais de C6 e Sicoob na homologação.
 - Implementar **Vault** real (KMS/Vault/DB cifrado) — `EnvVault` é só dev.
+- Trocar `subscriptions` por **store real** (DB) — `EnvSubscriptions` é só dev.
 - **Worker de conciliação** (polling Sicoob) — não incluído neste esqueleto.
-- **Validação de assinatura** dos webhooks.
-- Expor `/api/render/*` no **Boleto-Engine Ruby** (hoje são `/api/boleto`, `/api/remessa`).
+- **Validar a assinatura do webhook do BANCO** antes de confiar (entrada).
+- **Retry/fila** no push de eventos (saída) — hoje é best-effort.
+
+> ✅ Já feito: `/api/render/*` no engine Ruby; carnê 3-vias; push assinado por
+> tenant (multi-sistema).
 
 > Recomendação: extrair este diretório para um **repo próprio** (`boleto-api`) quando sair
 > do esqueleto. Vive aqui temporariamente para versionar junto da decisão.

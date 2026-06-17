@@ -1,8 +1,14 @@
 # Spike — Integração direta C6 + Sicoob e evolução para *gateway* bancário
 
 > Documento de decisão/arquitetura (ADR + spike técnico).
-> Status: **proposta** · Data: 2026-06-17 · Autor: Maxwell da Silva Oliveira
+> Status: **histórico** (parcialmente superado) · Data: 2026-06-17 · Autor: Maxwell da Silva Oliveira
 > Contexto: avaliação de modernização da `boleto_cnab_api` consumida pelo produto **Gestao-Contrato**.
+>
+> ⚠️ **Topologia superada:** este spike assume um gateway **Ruby in-place**. A decisão
+> final são **3 produtos** — engine Ruby (BrCobrança) + gateway **Python** (Boleto-API) +
+> Django (Gestão-Contrato). Ver [separação em 3 produtos](./separacao-3-produtos.md)
+> (autoritativo) e [remodelagem](./remodelagem-gateway-servicos.md). A análise de bancos
+> (C6/Sicoob, auth, scopes) e o padrão Adapter abaixo continuam válidos.
 
 ---
 
