@@ -5,6 +5,11 @@ require 'base64'
 # BoletoService referenciam Prawn::Fonts antes de qualquer extend que o
 # carregaria preguiçosamente.
 require 'prawn'
+# NOTA carnê 3-vias (PrawnCarne): no commit fixado do brcobrança, esse template
+# está quebrado em DOIS pontos — (1) falta `autoload :PrawnCarne` em
+# lib/brcobranca.rb e (2) PrawnCarne chama `PrawnTema.texto_logo_banco`, que não
+# existe. Por isso o carnê usa o lote PrawnBolepix (multi-página) abaixo.
+# Para o 3-vias A4: corrigir no fork e bumpar o pin do brcobrança.
 
 module BoletoApi
   module Endpoints
@@ -46,7 +51,7 @@ module BoletoApi
           }
         end
 
-        desc 'Renderiza um carnê (N boletos) em PDF base64 — multi-página (sem GhostScript)'
+        desc 'Renderiza um carnê (N boletos) — multi-página, PDF base64 (sem GhostScript)'
         params do
           optional :bank, type: String, desc: 'Banco comum a todos (se cada boleto não trouxer o seu)'
           requires :boletos, type: Array, desc: 'Lista de boletos (cada um com seus dados)'
@@ -58,7 +63,7 @@ module BoletoApi
           end
 
           # Template 'prawn' = PrawnBolepix.lote (1 boleto/página, sem GhostScript).
-          # O carnê 3-vias A4 (RghostCarne) exige GhostScript e não é o padrão.
+          # O 3-vias A4 (PrawnCarne) está quebrado no pin atual — ver nota no topo.
           result = Services::BoletoService.generate_multi(boletos, template: 'prawn')
           unless result[:valid]
             error!({ error: 'Falha ao gerar carnê', validation_errors: result[:errors] }, 400)
