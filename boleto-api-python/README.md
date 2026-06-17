@@ -43,12 +43,31 @@ app/
     webhooks.py           # POST /webhooks/{banco}
 ```
 
+## Produto standalone — acopla a QUALQUER projeto
+O Boleto-API **não pertence a nenhum consumidor**. Qualquer projeto integra pelo
+mesmo contrato (`/cobranca`, `/carne`) e recebe os eventos de pagamento por **push
+assinado** (HMAC). O Gestão-Contrato (Django) é apenas **um** consumidor — nada
+no código é específico dele.
+
+Multi-consumidor: hoje há um destino global (`EVENT_WEBHOOK_URL`); `forward_event`
+já aceita **override por chamada** (base para callback por tenant quando o
+mapeamento webhook→tenant estiver pronto).
+
+## Configuração (env)
+| Var | Para quê |
+|---|---|
+| `BOLETO_ENGINE_URL` | URL do engine BrCobrança (Ruby) p/ render/CNAB |
+| `EVENT_WEBHOOK_URL` | webhook do consumidor downstream (push de eventos) |
+| `EVENT_WEBHOOK_SECRET` | segredo HMAC para assinar o evento (`X-Signature`) |
+
 ## Rodar (dev)
 ```bash
 cd boleto-api-python
 python -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 export BOLETO_ENGINE_URL=http://localhost:9292   # motor Ruby
+export EVENT_WEBHOOK_URL=https://meu-consumidor/webhooks/boleto-api
+export EVENT_WEBHOOK_SECRET=troque-isto
 uvicorn app.main:app --reload
 # http://localhost:8000/docs
 ```

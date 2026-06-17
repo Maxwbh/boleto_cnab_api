@@ -4,9 +4,12 @@
 > Data: 2026-06-17. Decisões confirmadas: **push de eventos = sim**, **`/carne` = sim**
 > (ambos já implementados no lado Boleto-API).
 
-## Esquema de assinatura do push (o Django valida igual)
+> O Boleto-API é **standalone**: o Gestão-Contrato é **um** consumidor entre vários.
+> Os nomes de env abaixo são **genéricos** (não específicos do Django).
+
+## Esquema de assinatura do push (o consumidor valida igual)
 O Boleto-API encaminha o evento via `POST` assinado:
-- Header: `X-Signature: sha256=<hex(hmac_sha256(BOLETO_API_WEBHOOK_SECRET, raw_body))>`
+- Header: `X-Signature: sha256=<hex(hmac_sha256(EVENT_WEBHOOK_SECRET, raw_body))>`
 - Body: JSON compacto (sem espaços), UTF-8.
 - Validar com `hmac.compare_digest` (timing-safe) sobre o corpo **bruto**.
 
@@ -43,7 +46,7 @@ POST   /carne  body: { tenant_id, provider, account_config, bank, parcelas:[cobr
   -> { carne_pdf_base64, cobrancas:[CobrancaOut...] }   (registra N + monta carnê 3-vias)
 
 Push de pagamento (Boleto-API -> este repo):
-  POST <GESTAO_CONTRATO_WEBHOOK_URL>
+  POST <EVENT_WEBHOOK_URL do consumidor>
   header X-Signature: sha256=<hmac_sha256(secret, raw_body)>
   body { event, id, status, paid_at, valor, raw }
 
@@ -70,7 +73,7 @@ do Boleto-API, resolvidas por tenant_id.
    mantém o CNAB atual. Cutover gradual, nunca big-bang.
 
 ## Configuração
-BOLETO_API_URL, BOLETO_API_WEBHOOK_SECRET (o MESMO secret configurado no Boleto-API).
+BOLETO_API_URL, EVENT_WEBHOOK_SECRET (o MESMO secret configurado no Boleto-API).
 Não armazenar segredo bancário no Django.
 
 ## Verificação

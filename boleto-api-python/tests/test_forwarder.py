@@ -15,15 +15,15 @@ def test_sign_is_deterministic_hmac_sha256():
 
 
 def test_forward_noop_sem_url(monkeypatch):
-    monkeypatch.delenv("GESTAO_CONTRATO_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("EVENT_WEBHOOK_URL", raising=False)
     assert forwarder.forward_event({"event": "x"}) is False
 
 
 @respx.mock
 def test_forward_posts_signed_event(monkeypatch):
-    monkeypatch.setenv("GESTAO_CONTRATO_WEBHOOK_URL", "https://gc.test/financeiro/webhooks/boleto-api")
-    monkeypatch.setenv("BOLETO_API_WEBHOOK_SECRET", "segredo")
-    route = respx.post("https://gc.test/financeiro/webhooks/boleto-api").mock(
+    monkeypatch.setenv("EVENT_WEBHOOK_URL", "https://consumer.test/webhooks/boleto-api")
+    monkeypatch.setenv("EVENT_WEBHOOK_SECRET", "segredo")
+    route = respx.post("https://consumer.test/webhooks/boleto-api").mock(
         return_value=httpx.Response(200)
     )
 
@@ -37,7 +37,19 @@ def test_forward_posts_signed_event(monkeypatch):
 
 
 @respx.mock
+def test_forward_override_por_chamada(monkeypatch):
+    # override por chamada (callback por tenant) ignora o env global
+    monkeypatch.delenv("EVENT_WEBHOOK_URL", raising=False)
+    route = respx.post("https://tenant-cb.test/hook").mock(return_value=httpx.Response(204))
+    ok = forwarder.forward_event({"event": "x"}, url="https://tenant-cb.test/hook", secret="s")
+    assert ok is True
+    assert route.calls.last.request.headers["x-signature"] == forwarder.sign(
+        route.calls.last.request.content, "s"
+    )
+
+
+@respx.mock
 def test_forward_retorna_false_em_erro(monkeypatch):
-    monkeypatch.setenv("GESTAO_CONTRATO_WEBHOOK_URL", "https://gc.test/hook")
-    respx.post("https://gc.test/hook").mock(return_value=httpx.Response(500))
+    monkeypatch.setenv("EVENT_WEBHOOK_URL", "https://consumer.test/hook")
+    respx.post("https://consumer.test/hook").mock(return_value=httpx.Response(500))
     assert forwarder.forward_event({"event": "x"}) is False

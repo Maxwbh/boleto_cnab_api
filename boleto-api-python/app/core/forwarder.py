@@ -1,12 +1,16 @@
-# Push de eventos normalizados para o Gestão-Contrato (Django).
+# Push de eventos normalizados para um CONSUMIDOR downstream (qualquer projeto).
 #
-# Quando o Boleto-API recebe um webhook do banco, normaliza e ENCAMINHA o evento
-# para o Gestão-Contrato via POST assinado (HMAC-SHA256), para o Django validar
-# de forma timing-safe (hmac.compare_digest).
+# O Boleto-API é um produto standalone: o consumidor (o Gestão-Contrato é apenas
+# um deles) registra um webhook e recebe o evento normalizado via POST assinado
+# (HMAC-SHA256), validável de forma timing-safe (hmac.compare_digest).
 #
-# Esquema de assinatura (o Django deve validar igual):
+# Esquema de assinatura (o consumidor valida igual):
 #   header  X-Signature: sha256=<hex(hmac_sha256(secret, raw_body))>
 #   body    JSON compacto (separators sem espaço), UTF-8
+#
+# Destino: por padrão um webhook global (EVENT_WEBHOOK_URL / EVENT_WEBHOOK_SECRET),
+# mas forward_event aceita override por chamada — base para callback por tenant
+# (multi-consumidor) quando o mapeamento webhook->tenant estiver pronto.
 from __future__ import annotations
 
 import hashlib
@@ -22,17 +26,18 @@ def sign(body: bytes, secret: str) -> str:
     return "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
 
-def forward_event(event: dict[str, Any]) -> bool:
-    """Encaminha o evento ao Gestão-Contrato. Retorna True se entregue (2xx/3xx).
+def forward_event(event: dict[str, Any], *, url: str | None = None, secret: str | None = None) -> bool:
+    """Encaminha o evento ao consumidor downstream. True se entregue (2xx/3xx).
 
-    No-op (False) se GESTAO_CONTRATO_WEBHOOK_URL não estiver configurado — o
-    webhook do banco não deve falhar por causa do encaminhamento.
+    `url`/`secret` permitem override por chamada (ex.: callback por tenant),
+    caindo no global EVENT_WEBHOOK_URL / EVENT_WEBHOOK_SECRET. No-op (False) se
+    não houver destino — o webhook do banco não pode falhar por causa do push.
     """
-    url = os.environ.get("GESTAO_CONTRATO_WEBHOOK_URL", "")
+    url = url or os.environ.get("EVENT_WEBHOOK_URL", "")
     if not url:
         return False
 
-    secret = os.environ.get("BOLETO_API_WEBHOOK_SECRET", "")
+    secret = secret if secret is not None else os.environ.get("EVENT_WEBHOOK_SECRET", "")
     body = json.dumps(event, default=str, separators=(",", ":")).encode("utf-8")
     headers = {"Content-Type": "application/json"}
     if secret:
