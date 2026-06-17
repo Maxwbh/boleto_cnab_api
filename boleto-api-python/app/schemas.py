@@ -70,3 +70,16 @@ class WebhookEvent(BaseModel):
     paid_at: datetime | None = None
     valor: Decimal | None = None
     raw: dict[str, Any] | None = None
+
+
+class CarneIn(BaseModel):
+    tenant_id: str
+    provider: Provider
+    account_config: dict[str, Any] = Field(default_factory=dict)
+    bank: str  # nome brcobrança p/ renderização do carnê (ex: banco_c6)
+    parcelas: list[Cobranca]
+
+
+class CarneOut(BaseModel):
+    carne_pdf_base64: str | None = None
+    cobrancas: list[CobrancaOut] = Field(default_factory=list)

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.core.vault import CredentialNotFound
-from app.routers import cobranca, webhooks
+from app.routers import carne, cobranca, webhooks
 
 app = FastAPI(
     title="Boleto-API (Python)",
@@ -13,6 +13,7 @@ app = FastAPI(
 )
 
 app.include_router(cobranca.router)
+app.include_router(carne.router)
 app.include_router(webhooks.router)
 
 
