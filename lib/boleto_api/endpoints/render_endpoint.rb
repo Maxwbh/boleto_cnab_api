@@ -5,11 +5,8 @@ require 'base64'
 # BoletoService referenciam Prawn::Fonts antes de qualquer extend que o
 # carregaria preguiçosamente.
 require 'prawn'
-# NOTA carnê 3-vias (PrawnCarne): no commit fixado do brcobrança, esse template
-# está quebrado em DOIS pontos — (1) falta `autoload :PrawnCarne` em
-# lib/brcobranca.rb e (2) PrawnCarne chama `PrawnTema.texto_logo_banco`, que não
-# existe. Por isso o carnê usa o lote PrawnBolepix (multi-página) abaixo.
-# Para o 3-vias A4: corrigir no fork e bumpar o pin do brcobrança.
+# As funções de lote (carnê/multi) do BoletoService referenciam Prawn::Fonts
+# antes de qualquer extend que o carregaria preguiçosamente — garante no boot.
 
 module BoletoApi
   module Endpoints
@@ -51,10 +48,12 @@ module BoletoApi
           }
         end
 
-        desc 'Renderiza um carnê (N boletos) — multi-página, PDF base64 (sem GhostScript)'
+        desc 'Renderiza um carnê (N boletos) — 3 vias por A4, PDF base64 (sem GhostScript)'
         params do
           optional :bank, type: String, desc: 'Banco comum a todos (se cada boleto não trouxer o seu)'
           requires :boletos, type: Array, desc: 'Lista de boletos (cada um com seus dados)'
+          optional :template, type: String, values: %w[carne prawn],
+                   default: 'carne', desc: 'carne = 3 vias A4 (PrawnCarne); prawn = 1 boleto/página'
         end
         post :carne do
           boletos = params[:boletos].map do |b|
@@ -62,9 +61,8 @@ module BoletoApi
             params[:bank] ? h.merge('bank' => params[:bank]) : h
           end
 
-          # Template 'prawn' = PrawnBolepix.lote (1 boleto/página, sem GhostScript).
-          # O 3-vias A4 (PrawnCarne) está quebrado no pin atual — ver nota no topo.
-          result = Services::BoletoService.generate_multi(boletos, template: 'prawn')
+          # 'carne' = PrawnCarne.lote_carne (3 vias A4, sem GhostScript).
+          result = Services::BoletoService.generate_multi(boletos, template: params[:template])
           unless result[:valid]
             error!({ error: 'Falha ao gerar carnê', validation_errors: result[:errors] }, 400)
           end

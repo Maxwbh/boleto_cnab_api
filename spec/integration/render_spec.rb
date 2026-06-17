@@ -52,15 +52,27 @@ RSpec.describe 'Render API', type: :integration do
   end
 
   describe 'POST /api/render/carne' do
-    it 'gera PDF multi-boleto a partir de uma lista' do
+    it 'gera carnê 3-vias A4 (template padrão carne) em PDF' do
       post_json('/api/render/carne', {
                   bank: 'itau',
-                  boletos: [boleto_data.merge('nosso_numero' => '1'), boleto_data.merge('nosso_numero' => '2')]
+                  boletos: [boleto_data.merge('nosso_numero' => '1'),
+                            boleto_data.merge('nosso_numero' => '2'),
+                            boleto_data.merge('nosso_numero' => '3')]
                 })
 
       expect(last_response.status).to eq(201)
       body = JSON.parse(last_response.body)
       expect(Base64.decode64(body['pdf_base64'])).to start_with('%PDF')
+    end
+
+    it 'gera PDF multi-página com template prawn' do
+      post_json('/api/render/carne', {
+                  bank: 'itau', template: 'prawn',
+                  boletos: [boleto_data.merge('nosso_numero' => '1'), boleto_data.merge('nosso_numero' => '2')]
+                })
+
+      expect(last_response.status).to eq(201)
+      expect(Base64.decode64(JSON.parse(last_response.body)['pdf_base64'])).to start_with('%PDF')
     end
   end
 
