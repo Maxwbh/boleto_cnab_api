@@ -3,6 +3,12 @@
 > Documento de decisão/arquitetura (ADR de remodelamento).
 > Status: **proposta** · Data: 2026-06-17 · Autor: Maxwell da Silva Oliveira
 > Complementa e **revisa a topologia** do [spike de gateway bancário](./gateway-bancario-spike.md).
+>
+> **Correção (2026-06-17):** o `gestao-contrato` **não é greenfield** — já existe em
+> **Python/Django 4.2** ([`maxwbh/Gestao-Contrato`](https://github.com/Maxwbh/Gestao-Contrato))
+> e já consome o Boleto-API. A recomendação de stack abaixo (§3) fica **resolvida**: domínio
+> em Django (existente); o gateway **colapsa para dentro do Boleto-API** (Ruby) conforme a
+> [separação em 3 produtos](./separacao-3-produtos.md), que é o documento autoritativo de topologia.
 
 ---
 

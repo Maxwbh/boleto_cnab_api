@@ -20,7 +20,7 @@ A [remodelagem](./remodelagem-gateway-servicos.md) propôs um **Bank Gateway sep
 |---|---|---|---|---|
 | **BrCobrança** | Biblioteca de primitivas de boleto/CNAB (18 bancos) | [`maxwbh/brcobranca`](https://github.com/maxwbh/brcobranca) (**já separado**) | Ruby (gem) | Stateless, puro |
 | **Boleto-API** | API HTTP + **gateway bancário** (providers C6/Sicoob, PIX, webhook, conciliação, cofre) | [`maxwbh/boleto_cnab_api`](https://github.com/maxwbh/boleto_cnab_api) (**este repo**) | Ruby (Grape) | **Stateful** (cofre + scheduler) |
-| **Gestão-Contrato** | Produto de domínio: imobiliárias, contratos, cronograma, reajuste, carnê | **greenfield** (criar) | a definir (Python/Rails) | Stateful (domínio) |
+| **Gestão-Contrato** | Produto de domínio: imobiliárias, contratos, cronograma, reajuste, carnê | [`maxwbh/Gestao-Contrato`](https://github.com/Maxwbh/Gestao-Contrato) (**já existe**) | **Python/Django 4.2** (PostgreSQL, Gunicorn) | Stateful (domínio) |
 
 ---
 
@@ -65,9 +65,10 @@ Gestão-Contrato ──depende──► Boleto-API ──depende──► BrCobr
   POST   /api/remessa | /retorno  (CNAB — em depreciação)
   ```
 
-### Gestão-Contrato (domínio)
-- **Possui:** imobiliárias (tenants), contratos, parcelas, cronograma, **reajuste**, janela do carnê (12m), decide **quando/o que** emitir; consome eventos de pagamento para baixar parcelas.
-- **Não possui:** mTLS, scopes, nosso_número, txid, CNAB — nada de banco.
+### Gestão-Contrato (domínio) — Django 4.2
+- **Possui:** imobiliárias (tenants), contratos, parcelas, cronograma, **reajuste**, janela do carnê (12m), decide **quando/o que** emitir; consome eventos de pagamento para baixar parcelas. Apps `contratos` / `financeiro` / `notificacoes` / `portal_comprador`.
+- **Já integra o Boleto-API** via HTTP (self-hosted Docker), isolado em `financeiro/services/` — **ponto de troca limpo** para evoluir CNAB → API registrada.
+- **Não possui (nem deve):** mTLS, scopes, nosso_número, txid, CNAB — nada de banco.
 - **Superfície pública:** API própria do produto (web/app), **fora** do escopo destes 3 contratos.
 
 ---
@@ -78,9 +79,9 @@ Gestão-Contrato ──depende──► Boleto-API ──depende──► BrCobr
 |---|---|---|
 | **BrCobrança** | ✅ Já é repo/gem separado, consumido via Gemfile | Nada estrutural. Manter como dependência versionada |
 | **Boleto-API** | Repo este; tem `/render`/CNAB + **esqueleto de providers** commitado | Evoluir providers (C6/Sicoob), adicionar **cofre** + **conciliação**; deprecar CNAB do caminho principal |
-| **Gestão-Contrato** | ❌ Não existe | Criar repo greenfield; isolar consumo do Boleto-API numa camada de serviços (ponto de troca limpo) |
+| **Gestão-Contrato** | ✅ Existe (Django 4.2); já consome Boleto-API via HTTP, isolado em `financeiro/services/` | Migrar consumo CNAB → cobrança registrada/webhook; ajustar chave de conciliação (`nosso_numero` → `txid`) |
 
-> **A separação física já está 2/3 feita:** BrCobrança é gem externa; Boleto-API é repo próprio. Falta **criar o Gestão-Contrato** e **fechar o contrato HTTP** do Boleto-API como superfície estável.
+> **A separação física já está feita:** os **3 já são repos separados** (BrCobrança gem, Boleto-API este repo, Gestão-Contrato Django). O trabalho restante **não é separar** — é **evoluir o contrato** do Boleto-API (cobrança registrada + webhook) e **migrar o consumo** no `financeiro/services/` do Django, mantendo CNAB como fallback.
 
 ---
 
@@ -95,7 +96,6 @@ Gestão-Contrato ──depende──► Boleto-API ──depende──► BrCobr
 
 ## 6. Decisões em aberto
 
-- **Stack do Gestão-Contrato** (greenfield): Python/FastAPI ou Rails.
 - **Cofre** no Boleto-API: KMS/Vault vs criptografia envelope no DB.
 - **Boleto-API stateful**: introduzir DB + worker (scheduler de polling Sicoob) — define infra do repo.
 - **Entrega de eventos** Gestão-Contrato ← Boleto-API: pull (`GET /eventos`) vs push (webhook do Boleto-API para o Gestão-Contrato).
