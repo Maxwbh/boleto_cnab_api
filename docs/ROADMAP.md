@@ -1,23 +1,24 @@
 # Roadmap — Boleto CNAB API
 
-> Atualizado em 29/05/2026 | API v1.4.1 | brcobranca v12.10.2
+> Atualizado em 17/06/2026 | API v1.5.0 | brcobranca v12.10.3
 
 ## Estado Atual
 
 | Metrica | Valor |
 |---------|-------|
-| Versao da API | 1.4.1 |
-| brcobranca | 12.10.2 |
+| Versao da API | 1.5.0 |
+| brcobranca | 12.10.3 |
 | Bancos suportados | 18 |
-| Endpoints | 15 |
-| Testes | 217 Ruby + 44 Python = 261 |
-| Cobertura | 79.82% (SimpleCov) |
-| Templates PDF | RGhost + Prawn |
+| Endpoints | 18 |
+| Testes | 229 Ruby + 44 Python (client) = 273 |
+| Templates PDF | RGhost + Prawn + Carnê |
 
 ## Concluido
 
 | Feature | Versao |
 |---------|--------|
+| Endpoints `/api/render/{boleto,carne,remessa}` (corpo JSON; engine p/ o gateway Boleto-API Python) | v1.5.0 |
+| Carnê 3-vias A4 sem GhostScript (`template=carne`; fix do PrawnCarne no fork) | v1.5.0 |
 | 18 bancos (BB, Sicoob, Itau, Bradesco, Caixa, Santander, C6, Sicredi, Banrisul, Banestes, Nordeste, BRB, Unicred, Credisis, Safra, Citibank, HSBC, Ailos) | v1.0-v1.3 |
 | Parsing OFX com extracao de nosso_numero | v1.2.0 |
 | Banco C6 (336) CNAB 400 | v1.3.0 |
@@ -41,7 +42,7 @@
 
 | Feature | Upstream (akretion) | Fork (@maxwbh) |
 |---------|:-------------------:|:--------------:|
-| brcobranca | 12.0.0 | **12.10.2** |
+| brcobranca | 12.0.0 | **12.10.3** |
 | Bancos | 16 | **18** |
 | PIX hibrido | — | **8 bancos** |
 | Remessa PIX | — | **7 bancos** |
@@ -50,7 +51,7 @@
 | Swagger UI | — | **✅** |
 | `include_data` | — | **✅** |
 | `/api/bancos` | — | **✅** |
-| Testes | ~30 | **220** |
+| Testes | ~30 | **229** |
 
 ---
 

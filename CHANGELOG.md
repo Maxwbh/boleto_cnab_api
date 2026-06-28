@@ -5,6 +5,39 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.5.0] - 2026-06-17
+
+### Adicionado
+
+- 🧩 **Endpoints de renderização** `POST /api/render/boleto`, `/api/render/carne`
+  e `/api/render/remessa`: corpo JSON e resposta normalizada (boleto → dados +
+  PDF base64; carnê 3-vias A4 em PDF; remessa → conteúdo CNAB). São a superfície
+  consumida pelo gateway **Boleto-API (Python)** via proxy — o `boleto_cnab_api`
+  passa a atuar como **engine de renderização** (BrCobrança). Documentados no
+  `openapi.yaml` (tag `Render`) e no Swagger (`/api/docs`).
+
+### Modificado
+
+- 📦 **brcobranca atualizado**: `12.10.2` → `12.10.3` (revision `2613452` →
+  `e555745`). Corrige o template **PrawnCarne** (faltava o `autoload` de
+  `PrawnCarne`/`PrawnTema` e o método `PrawnTema.texto_logo_banco`), restaurando
+  o carnê 3-vias A4 sem GhostScript (`template=carne`).
+
+### Corrigido
+
+- 🛡️ **Robustez de campos (boleto e remessa)**:
+  - Campos com default (`aceite`, `especie_documento`, `especie`, `moeda`,
+    `local_pagamento`) enviados **em branco** agora caem no default do brcobrança
+    (antes falhavam com "não pode estar em branco").
+  - A remessa **ignora campos não suportados** pela classe do banco (ex.:
+    `variacao` no CNAB 240 do Sicoob) e campos extras dentro de cada `pagamento`
+    (ex.: `cedente`), em vez de gerar `500` (`NoMethodError`). Códigos de formato
+    do pagamento em branco também caem no default.
+  - **`bairro_sacado` ausente** não quebra mais a remessa. O brcobrança usa
+    `bairro_sacado.format_size` no detalhe (ex.: BB CNAB 400) sem validar
+    presença; sem o campo, dava `undefined method 'format_size' for nil` → `500`.
+    Agora o campo é normalizado para `''` quando ausente.
+
 ## [1.4.1] - 2026-06-14
 
 ### Modificado

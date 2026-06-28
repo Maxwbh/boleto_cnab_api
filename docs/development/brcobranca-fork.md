@@ -1,6 +1,6 @@
 # BRCobrança — Gem Utilizada
 
-> **Versão atual usada pelo projeto:** `12.10.2` (master @ `2613452`)
+> **Versão atual usada pelo projeto:** `12.10.3` (master @ `e555745`)
 > **Repositório:** [github.com/Maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca)
 
 Fork mantido por Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) do projeto original [kivanio/brcobranca](https://github.com/kivanio/brcobranca), com melhorias específicas para uso em APIs REST e suporte ampliado a bancos brasileiros.
@@ -15,6 +15,7 @@ gem 'brcobranca', git: 'https://github.com/maxwbh/brcobranca.git'
 
 | Versão | Data | Principais mudanças |
 |--------|------|---------------------|
+| **12.10.3** | 2026-06-17 | Corrige o template **PrawnCarne**: adiciona o `autoload` de `PrawnCarne`/`PrawnTema` em `lib/brcobranca.rb` e o método `PrawnTema.texto_logo_banco`, restaurando o carnê 3-vias A4 sem GhostScript (`template=carne`/`lote_carne`) |
 | **12.10.2** | 2026-06-14 | `Brcobranca::Bancos` com registro/remoção de bancos em runtime (`registrar`, `classe_boleto/remessa/pix`); bancos customizados em `todos`/`find`/`as_json`. Fix menor de gemspec |
 | **12.10.1** | 2026-06-12 | Template **PrawnCarne** (carnê 1 pág./3 vias A4), **PrawnTema** (logo/cor/rodapé), **marca d'água** antifraude e **fontes TTF** (UTF-8). Fixes de PIX/QR (sobreposição, nível M BACEN). Normalização de remessa também para BB CNAB 240/400 |
 | **12.9.0** | 2026-06-12 | Remessa Sicoob CNAB400: setters normalizam `carteira` (`rjust 2`) e `convenio` (`rjust 9`), corrigindo as validações que falhavam quando o boleto gerava mas a remessa não |
