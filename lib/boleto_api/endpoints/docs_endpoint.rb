@@ -8,14 +8,36 @@ module BoletoApi
     class DocsEndpoint < Grape::API
       SPEC_PATH = File.expand_path('../../../docs/openapi.yaml', __dir__).freeze
 
+      helpers do
+        # Spec mínima válida — fallback caso o openapi.yaml não esteja na imagem.
+        # Mantém /api/docs (Swagger) e /api/openapi.json funcionando (sem 500).
+        def fallback_spec
+          {
+            'openapi' => '3.0.3',
+            'info' => {
+              'title' => 'Boleto CNAB API',
+              'version' => BoletoApi::VERSION,
+              'description' => 'Spec OpenAPI completa indisponível nesta imagem. ' \
+                               'Os endpoints continuam funcionando; veja /api/metadata.'
+            },
+            'paths' => {}
+          }
+        end
+      end
+
       # OpenAPI spec em JSON (consumivel por Postman, Insomnia, geradores SDK)
       desc 'Especificacao OpenAPI 3.0 (JSON)'
       get '/openapi.json' do
         content_type 'application/json; charset=utf-8'
         env['api.format'] = :txt
-        YAML.safe_load_file(SPEC_PATH, permitted_classes: [Date, Time, Symbol], aliases: true).to_json
-      rescue StandardError => e
-        error!({ error: 'OpenAPI spec não encontrada', details: e.message }, 500)
+        spec = if File.exist?(SPEC_PATH)
+                 YAML.safe_load_file(SPEC_PATH, permitted_classes: [Date, Time, Symbol], aliases: true)
+               else
+                 fallback_spec
+               end
+        spec.to_json
+      rescue StandardError
+        fallback_spec.to_json
       end
 
       # OpenAPI spec em YAML (formato original)
@@ -23,9 +45,7 @@ module BoletoApi
       get '/openapi.yaml' do
         content_type 'application/yaml; charset=utf-8'
         env['api.format'] = :txt
-        File.read(SPEC_PATH)
-      rescue Errno::ENOENT => e
-        error!({ error: 'OpenAPI spec não encontrada', details: e.message }, 500)
+        File.exist?(SPEC_PATH) ? File.read(SPEC_PATH) : fallback_spec.to_yaml
       end
 
       # Swagger UI interativa (HTML)

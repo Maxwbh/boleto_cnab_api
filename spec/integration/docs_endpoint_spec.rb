@@ -52,4 +52,32 @@ RSpec.describe 'Docs endpoints (Swagger / OpenAPI)' do
       expect(last_response.body).to include(BoletoApi::VERSION)
     end
   end
+
+  # Regressão: na imagem de produção o docs/openapi.yaml pode não estar presente
+  # (era excluído pelo .dockerignore). O endpoint deve cair num fallback válido,
+  # nunca em 500.
+  describe 'fallback quando o openapi.yaml não está na imagem' do
+    let(:spec_path) { BoletoApi::Endpoints::DocsEndpoint::SPEC_PATH }
+
+    around do |example|
+      File.rename(spec_path, "#{spec_path}.bak")
+      example.run
+    ensure
+      File.rename("#{spec_path}.bak", spec_path)
+    end
+
+    it 'GET /api/openapi.json responde 200 com spec mínima (não 500)' do
+      get '/api/openapi.json'
+      expect(last_response.status).to eq(200)
+      spec = JSON.parse(last_response.body)
+      expect(spec['openapi']).to eq('3.0.3')
+      expect(spec['info']['version']).to eq(BoletoApi::VERSION)
+    end
+
+    it 'GET /api/openapi.yaml responde 200 (não 500)' do
+      get '/api/openapi.yaml'
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to include('openapi')
+    end
+  end
 end

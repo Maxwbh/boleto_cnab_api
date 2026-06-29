@@ -37,6 +37,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
     `bairro_sacado.format_size` no detalhe (ex.: BB CNAB 400) sem validar
     presença; sem o campo, dava `undefined method 'format_size' for nil` → `500`.
     Agora o campo é normalizado para `''` quando ausente.
+  - **Swagger/OpenAPI em produção**: o `docs/openapi.yaml` era excluído da imagem
+    pelo `.dockerignore`, então `/api/openapi.json` e `/api/docs` davam `500`.
+    Agora o arquivo é incluído na imagem (`!docs/openapi.yaml`) e o endpoint tem
+    fallback para uma spec mínima válida (nunca `500`).
 
 ## [1.4.1] - 2026-06-14
 
