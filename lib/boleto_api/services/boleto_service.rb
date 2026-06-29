@@ -53,12 +53,16 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          # Usa to_hash do brcobranca v12.5+ se disponível
+          # Tenta to_hash (v12.5+), com fallback seguro em caso de erro
+          # (ex: Sicredi pode lançar Brcobranca::BoletoInvalido em codigo_barras)
           if boleto.respond_to?(:to_hash)
-            hash = boleto.to_hash.merge(valid: true, bank: bank)
+            begin
+              hash = boleto.to_hash.merge(valid: true, bank: bank)
+            rescue StandardError
+              hash = build_boleto_hash(boleto, bank)
+            end
             normalize_public_contract(hash, boleto)
           else
-            # Fallback para versões anteriores
             build_boleto_hash(boleto, bank)
           end
         end
@@ -76,21 +80,22 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          # Monta response garantindo contrato público consistente da API.
-          # brcobranca v12.5+ usa 'nosso_numero_boleto' internamente, mas
-          # a API sempre retorna 'nosso_numero' para compatibilidade.
+          nn_formatado = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : boleto.nosso_numero.to_s
+
           base = {
             valid: true,
-            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: nn_formatado,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
             codigo_barras: boleto.codigo_barras,
             linha_digitavel: safe_call(boleto, :linha_digitavel),
             agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto)
           }
 
-          # Se disponível, inclui também os dados calculados adicionais (sem sobrescrever)
           if boleto.respond_to?(:dados_calculados)
-            boleto.dados_calculados.merge(base)
+            result = boleto.dados_calculados.merge(base)
+            result.delete(:nosso_numero_boleto)
+            result
           else
             base
           end
@@ -101,8 +106,9 @@ module BoletoApi
         # @param bank [String] Nome do banco
         # @param values [Hash] Dados do boleto
         # @param format [String] Formato de saída ('pdf', 'jpg', 'png', 'tif')
-        # @return [Hash] { valid: Boolean, content: String/nil, errors: Hash }
-        def generate(bank, values, format: 'pdf')
+        # @param template [String] 'rghost' (padrão) ou 'prawn' (sem GhostScript)
+        # @return [Hash] { valid:, content:, errors:, metadata: }
+        def generate(bank, values, format: 'pdf', template: ENV.fetch('BOLETO_TEMPLATE', 'rghost'))
           validate_output_format!(format)
           boleto = create(bank, values)
 
@@ -110,8 +116,17 @@ module BoletoApi
             return { valid: false, content: nil, errors: boleto.errors.messages }
           end
 
-          content = boleto.send("to_#{format}".to_sym)
-          { valid: true, content: content, errors: {} }
+          content = if template.to_s == 'prawn'
+                      generate_prawn(boleto, format)
+                    else
+                      boleto.send("to_#{format}".to_sym)
+                    end
+          {
+            valid: true,
+            content: content,
+            errors: {},
+            metadata: boleto_metadata(boleto, bank)
+          }
         end
 
         # Gera arquivo com múltiplos boletos
@@ -119,7 +134,7 @@ module BoletoApi
         # @param boletos_data [Array<Hash>] Lista de boletos (cada um com 'bank' e dados)
         # @param format [String] Formato de saída
         # @return [Hash] { valid: Boolean, content: String/nil, errors: Array }
-        def generate_multi(boletos_data, format: 'pdf')
+        def generate_multi(boletos_data, format: 'pdf', template: ENV.fetch('BOLETO_TEMPLATE', 'rghost'))
           validate_output_format!(format)
 
           if boletos_data.nil? || boletos_data.empty?
@@ -132,7 +147,7 @@ module BoletoApi
             }
           end
 
-          boletos = []
+          boletos_with_bank = []
           errors = []
 
           boletos_data.each_with_index do |boleto_values, index|
@@ -147,7 +162,7 @@ module BoletoApi
               boleto = create(bank, boleto_values)
 
               if boleto.valid?
-                boletos << boleto
+                boletos_with_bank << { bank: bank, boleto: boleto }
               else
                 errors << { index: index + 1, bank: bank, errors: boleto.errors.messages }
               end
@@ -161,13 +176,26 @@ module BoletoApi
               valid: false,
               content: nil,
               errors: errors,
-              valid_count: boletos.size,
+              valid_count: boletos_with_bank.size,
               invalid_count: errors.size
             }
           end
 
-          content = Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
-          { valid: true, content: content, errors: [], valid_count: boletos.size, invalid_count: 0 }
+          boletos = boletos_with_bank.map { |bb| bb[:boleto] }
+          content = if template.to_s == 'prawn'
+                      generate_prawn_lote(boletos)
+                    else
+                      Brcobranca::Boleto::Base.lote(boletos, formato: format.to_sym)
+                    end
+          metadata = boletos_with_bank.map { |bb| boleto_metadata(bb[:boleto], bb[:bank]) }
+          {
+            valid: true,
+            content: content,
+            errors: [],
+            valid_count: boletos.size,
+            invalid_count: 0,
+            metadata: metadata
+          }
         end
 
         private
@@ -176,6 +204,21 @@ module BoletoApi
           unless Config::Constants.bank_supported?(bank)
             raise ArgumentError, "Banco '#{bank}' não suportado. Bancos disponíveis: #{Config::Constants::SUPPORTED_BANKS.join(', ')}"
           end
+        end
+
+        # Gera PDF usando template PrawnBolepix (sem GhostScript)
+        def generate_prawn(boleto, format)
+          raise ArgumentError, "Template Prawn suporta apenas PDF (recebido: #{format})" unless format.to_s == 'pdf'
+
+          boleto.extend(Brcobranca::Boleto::Template::PrawnBolepix)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          boleto.to(:pdf)
+        end
+
+        # Gera PDF multi-página usando PrawnBolepix.lote
+        def generate_prawn_lote(boletos)
+          Prawn::Fonts::AFM.hide_m17n_warning = true
+          Brcobranca::Boleto::Template::PrawnBolepix.lote(boletos)
         end
 
         def validate_output_format!(format)
@@ -205,19 +248,15 @@ module BoletoApi
           values
         end
 
-        # Normaliza o hash para o contrato público da API:
-        # - documento_numero → numero_documento (alias público)
-        # - nosso_numero é setado para o valor formatado (nosso_numero_boleto)
-        #   quando disponível, mantendo compatibilidade
+        # Normaliza o hash para o contrato público da API.
         def normalize_public_contract(hash, boleto)
-          # Alias público: numero_documento
+          hash[:nosso_numero] = boleto.nosso_numero.to_s
+          hash[:nosso_numero_formatado] = boleto.respond_to?(:nosso_numero_boleto) ? boleto.nosso_numero_boleto.to_s : hash[:nosso_numero]
+          hash[:nosso_numero_dv] = safe_call(boleto, :nosso_numero_dv)
+          hash.delete(:nosso_numero_boleto)
+
           if hash.key?(:documento_numero) && !hash.key?(:numero_documento)
             hash[:numero_documento] = hash[:documento_numero]
-          end
-
-          # Garantir nosso_numero (já vem do to_hash, mas reforça com o formatado)
-          if boleto.respond_to?(:nosso_numero_boleto) && hash[:nosso_numero_boleto].nil?
-            hash[:nosso_numero_boleto] = boleto.nosso_numero_boleto rescue nil
           end
 
           hash
@@ -231,14 +270,33 @@ module BoletoApi
           nil
         end
 
+        # Extrai metadados do boleto para uso em headers HTTP ou response JSON.
+        # Usa safe_call para todos os campos calculados, pois algumas classes
+        # (ex: Sicredi) podem lançar Brcobranca::BoletoInvalido em codigo_barras
+        # mesmo quando o boleto passa na validação.
+        def boleto_metadata(boleto, bank)
+          nn_formatado = safe_call(boleto, :nosso_numero_boleto).to_s
+          nn_formatado = boleto.nosso_numero.to_s if nn_formatado.empty?
+          {
+            bank: bank,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: nn_formatado,
+            nosso_numero_dv: safe_call(boleto, :nosso_numero_dv).to_s,
+            codigo_barras: safe_call(boleto, :codigo_barras).to_s,
+            linha_digitavel: safe_call(boleto, :linha_digitavel).to_s
+          }
+        end
+
         # Fallback para versões anteriores do brcobranca (< v12.5)
+        # ou quando to_hash falha (safe_call em todos os campos calculados)
         def build_boleto_hash(boleto, bank)
           {
             valid: true,
             bank: bank,
-            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero: boleto.nosso_numero.to_s,
+            nosso_numero_formatado: safe_call(boleto, :nosso_numero_boleto).to_s,
             nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
-            codigo_barras: boleto.codigo_barras,
+            codigo_barras: safe_call(boleto, :codigo_barras),
             codigo_barras_segunda_parte: safe_call(boleto, :codigo_barras_segunda_parte),
             linha_digitavel: safe_call(boleto, :linha_digitavel),
             agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto),

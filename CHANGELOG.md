@@ -5,6 +5,80 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.3.1] - 2026-06-12
+
+### Otimizações de Docker / Render Free Tier (512MB RAM)
+
+#### Memória
+- ✅ **jemalloc** ativado via `LD_PRELOAD` no `Dockerfile` e `Dockerfile.prawn`.
+  Substitui o allocator padrão do musl (Alpine), que tem alta fragmentação sob
+  múltiplas threads — ganho real de RAM no free tier.
+- ❌ Removido `MALLOC_ARENA_MAX`: é um tunable **exclusivo do glibc** e não tinha
+  efeito algum em Alpine/musl (era um no-op).
+- ✅ `MALLOC_CONF` (jemalloc) e `RUBY_GC_MALLOC_LIMIT` / `RUBY_GC_OLDMALLOC_LIMIT`
+  ajustados para devolver memória ociosa ao SO de forma mais agressiva.
+
+#### Imagem mais enxuta
+- ✅ `bundle clean --force` + `deployment mode` no build stage.
+- ✅ `.dockerignore` exclui `python-client/`, `*.md`, `scripts/` e `Dockerfile.prawn`
+  → contexto de build reduzido para ~330KB.
+
+#### Robustez de deploy
+- ✅ `tini` como PID 1 (`ENTRYPOINT`) → propaga `SIGTERM` ao Puma, garantindo
+  shutdown gracioso durante deploys.
+- ✅ `PUMA_WORKER_TIMEOUT=60` → evita kill do worker durante o cold start
+  (wake-up do sleep no free tier).
+- ✅ `config/puma.rb`: `min_threads=1` (elimina latência na 1ª requisição) e
+  `preload_app!` apenas em cluster mode (workers ≥ 1).
+- ✅ `HEALTHCHECK` usa `${PORT}` em vez de porta fixa.
+
+#### render.yaml
+- ✅ Valores de env como strings (padrão exigido pelo Render).
+- ✅ `PORT` não é mais fixado — o Render injeta a porta e o Puma faz bind via
+  `ENV['PORT']`.
+- 📖 `DEPLOY.md` atualizado com as novas variáveis de ambiente e dicas de OOM.
+
+## [1.3.0] - 2026-04-10
+
+### Adicionado
+
+#### Banco C6 (336) — NOVO
+- ✅ `banco_c6` adicionado em `SUPPORTED_BANKS` e `CNAB400_BANKS`
+- ✅ Suporte completo a geração de boletos C6 (código 336)
+- ✅ Remessa e retorno CNAB 400 para Banco C6
+- ✅ PIX híbrido suportado (campo `emv`)
+- ✅ Fixture `banco_c6_valido` em `spec/fixtures/sample_data.json`
+- ✅ Testes no `all_banks_spec.rb` incluindo PDF generation
+
+#### PIX Híbrido documentado
+- 📄 `docs/api/pix.md` — Guia completo de PIX híbrido
+- 📄 Bancos com PIX: Banco do Brasil, Bradesco, Itaú, Sicoob, Caixa, Banco C6, Santander, Sicredi
+- 📄 Campos `emv` e `pix_label` adicionados no schema OpenAPI `BoletoData`
+- 📄 Objeto `pix` no schema `BoletoResponse`
+
+#### Documentação brcobranca-fork.md reescrita
+- 📄 Tabela completa de 18 bancos com colunas Boleto, CNAB 400, CNAB 240, PIX
+- 📄 Histórico de versões do fork (v12.0 → v12.6.1)
+- 📄 Métodos modernos da gem: `to_hash`, `dados_calculados`, `dados_entrada`, `dados_pix`, `valido?`, `to_hash_seguro`
+- 📄 Factory methods: `Brcobranca::Remessa.criar`, `Brcobranca::Retorno.parse`
+- 📄 Seção detalhada por banco com particularidades
+
+### Modificado
+- 📦 **brcobranca atualizado**: 12.6.0 → 12.6.1 (traz suporte nativo a Banco C6)
+- 📖 OpenAPI v1.2.0 → v1.3.0, schema `BankCode` inclui `banco_c6`
+- 📖 README.md, ARCHITECTURE.md, python-client/README.md atualizados para v1.3.0
+- 📖 `docs/fields/all-banks.md` inclui seção detalhada do Banco C6
+
+### Versão da Gem
+
+Este release atualiza brcobranca de 12.6.0 → 12.6.1, trazendo:
+- Banco C6 (336) com CNAB 400 completo
+- PIX expandido (6 bancos: Bradesco, Itaú, Banco C6, Sicoob, Caixa, Banco Brasil)
+- Sicoob: suporte a Carteira 9 e Layout 810
+- PrawnBolepix (alternativa ao Ghostscript para PIX)
+
+---
+
 ## [1.2.0] - 2026-04-09
 
 ### Adicionado

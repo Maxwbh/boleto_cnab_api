@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+  # Padrão: usa RGhost + GhostScript
   boleto_api:
     build:
       context: .
@@ -11,9 +10,7 @@ services:
       - RACK_ENV=production
       - PORT=9292
     volumes:
-      # Facilita desenvolvimento - remova em produção
       - ./lib:/usr/src/app/lib
-      - ./docs:/usr/src/app/docs
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9292/api/health"]
@@ -22,19 +19,39 @@ services:
       retries: 3
       start_period: 40s
 
-  # Serviço para rodar testes
-  # Uso: docker-compose --profile test run --rm test
+  # Variante Prawn: sem GhostScript, imagem menor, apenas PDF
+  # Uso: docker compose --profile prawn up boleto_api_prawn
+  boleto_api_prawn:
+    build:
+      context: .
+      dockerfile: Dockerfile.prawn
+    ports:
+      - "9292:9292"
+    environment:
+      - RACK_ENV=production
+      - PORT=9292
+      - BOLETO_TEMPLATE=prawn
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9292/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - prawn
+
+  # Testes: docker compose --profile test run --rm test
   test:
     build:
       context: .
       dockerfile: Dockerfile
-    command: sh -c "bundle install && bundle exec rspec --format documentation"
+    command: sh -c "gem install rspec rack-test --no-document && rspec --format documentation"
     volumes:
       - ./spec:/usr/src/app/spec
       - ./lib:/usr/src/app/lib
     environment:
       - RACK_ENV=test
-      # Desabilita o BUNDLE_WITHOUT do runtime para instalar gems de teste
-      - BUNDLE_WITHOUT=development
+      - BUNDLE_WITHOUT=
     profiles:
       - test

@@ -1,6 +1,6 @@
 # Arquitetura da API
 
-> **Versão:** 1.2.0
+> **Versão:** 1.3.1
 
 Este documento descreve a arquitetura modular da Boleto CNAB API.
 
@@ -26,9 +26,9 @@ A API é construída sobre o framework [Grape](https://github.com/ruby-grape/gra
          └──────────────────┘
 ```
 
-## Integração com brcobranca v12.5+
+## Integração com brcobranca v12.8.0
 
-Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca):
+Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.8.0):
 
 | Service | Método brcobranca | Fallback |
 |---------|------------------|----------|
@@ -36,13 +36,15 @@ Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca):
 | RemessaService | `Brcobranca::Remessa.criar` | Factory legado |
 | RetornoService | `Brcobranca::Retorno.parse` | Load_lines direto |
 
+Veja [development/brcobranca-fork.md](./development/brcobranca-fork.md) para detalhes da gem e histórico de versões.
+
 ## Estrutura de Diretórios
 
 ```
 lib/
 ├── boleto_api.rb              # Entry point principal
 └── boleto_api/
-    ├── version.rb             # Versão da API (1.2.0)
+    ├── version.rb             # Versão da API (1.3.1)
     ├── config/
     │   └── constants.rb       # Constantes centralizadas
     ├── services/
@@ -50,14 +52,16 @@ lib/
     │   ├── boleto_service.rb          # Lógica de boletos
     │   ├── remessa_service.rb         # Lógica de remessas CNAB
     │   ├── retorno_service.rb         # Lógica de retornos CNAB
-    │   ├── ofx_parser_service.rb      # Parsing de arquivos OFX (v1.2.0)
-    │   └── nosso_numero_extractor.rb  # Extração por banco (v1.2.0)
+    │   ├── ofx_parser_service.rb      # Parsing de arquivos OFX
+    │   ├── nosso_numero_extractor.rb  # Extração por banco
+    │   └── bank_info_service.rb       # Capacidades por banco (via Brcobranca::Bancos)
     ├── endpoints/
     │   ├── health_endpoint.rb  # GET /api/health, /api/info
     │   ├── boleto_endpoint.rb  # /api/boleto/*
     │   ├── remessa_endpoint.rb # POST /api/remessa
     │   ├── retorno_endpoint.rb # POST /api/retorno
-    │   └── ofx_endpoint.rb     # POST /api/ofx/parse (v1.2.0)
+    │   ├── ofx_endpoint.rb     # POST /api/ofx/parse
+    │   └── docs_endpoint.rb    # /api/docs, /api/openapi.*
     └── middleware/
         ├── error_handler.rb    # Tratamento centralizado de erros
         └── request_logger.rb   # Logging de requisições
@@ -125,7 +129,7 @@ result = BoletoApi::Services::RetornoService.parse('itau', 'cnab400', file)
 # => { valid: true, pagamentos: [...], errors: [] }
 ```
 
-#### OFXParserService (v1.2.0)
+#### OFXParserService (v1.3.0)
 
 Parsing de extratos bancários OFX usando a gem `ofx`:
 
@@ -140,7 +144,7 @@ result = BoletoApi::Services::OFXParserService.parse(file, somente_creditos: fal
 - Filtro opcional `somente_creditos`
 - Extração automática de `nosso_numero` do campo memo
 
-#### NossoNumeroExtractor (v1.2.0)
+#### NossoNumeroExtractor (v1.3.0)
 
 Extração de `nosso_numero` do campo memo OFX por banco:
 
@@ -158,22 +162,41 @@ BoletoApi::Services::NossoNumeroExtractor.extrair('COBRANCA SICOOB 0000012345', 
 | Caixa | 104 | `\d{14,17}` |
 | Genérico | (outros) | `\d{7,17}` |
 
+#### BankInfoService
+
+Retorna capacidades detalhadas de cada banco usando `Brcobranca::Bancos` (v12.7.0+):
+
+```ruby
+BoletoApi::Services::BankInfoService.all
+# => [{ banco: "banco_brasil", codigo: "001", nome: "Banco do Brasil",
+#        boleto: { suportado: true, pix: true, carteiras: ["18",...] },
+#        remessa: { formatos: ["cnab400","cnab240","cnab240_pix"] },
+#        retorno: { formatos: ["cnab400"] }, extras: {} }, ...]
+```
+
 ### Middleware
 
 #### ErrorHandler
 
-Tratamento centralizado de exceções:
+Tratamento centralizado de exceções. **Ordem importa** (Ruby captura a primeira cláusula que casar — como `NoMethodError < NameError`, `NoMethodError` deve vir antes).
 
-| Exceção | Status HTTP | Mensagem |
-|---------|-------------|----------|
-| `JSON::ParserError` | 400 | JSON inválido |
-| `Grape::Exceptions::ValidationErrors` | 400 | Parâmetro inválido |
-| `ArgumentError` | 400 | Parâmetro inválido |
-| `Brcobranca::BoletoInvalido` | 400 | Boleto inválido |
-| `Brcobranca::RemessaInvalida` | 400 | Remessa inválida |
-| `NameError` | 400 | Banco não encontrado |
-| `NoMethodError` | 500 | Erro ao acessar campo |
-| `StandardError` | 500 | Erro interno |
+| Ordem | Exceção | Status HTTP | Mensagem |
+|-------|---------|-------------|----------|
+| 1 | `JSON::ParserError` | 400 | JSON inválido |
+| 2 | `Grape::Exceptions::ValidationErrors` | 400 | Parâmetro inválido |
+| 3 | `ArgumentError` | 400 | Parâmetro inválido |
+| 4 | `TypeError` | 400 | Tipo de dado inválido |
+| 5 | `Brcobranca::BoletoInvalido` | 400 | Boleto inválido |
+| 6 | `Brcobranca::RemessaInvalida` | 400 | Remessa inválida |
+| 7 | `Brcobranca::NaoImplementado` | 400 | Operação não suportada |
+| 8 | `NoMethodError` | 500 | Erro ao acessar método |
+| 9 | `NameError` | 400 | Banco ou tipo não encontrado |
+| 10 | `StandardError` | 500 | Erro interno |
+
+**Recursos adicionais (v1.3.0):**
+- Logs incluem `origin` (primeiro frame do backtrace em `lib/boleto_api/`)
+- Backtrace completo (top 10) quando `LOG_BACKTRACE=true` (padrão)
+- Response body inclui `origin` em modo dev/staging (`API_DEBUG=true`)
 
 #### RequestLogger
 
@@ -191,7 +214,9 @@ Logging estruturado em JSON:
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/api/health` | Status da API |
-| GET | `/api/info` | Informações da API (versão, bancos suportados) |
+| GET | `/api/info` | Versao, bancos suportados, formatos |
+| GET | `/api/metadata` | Versao API + gem brcobranca, lista de endpoints |
+| GET | `/api/bancos` | 18 bancos com capacidades detalhadas (via Brcobranca::Bancos) |
 
 #### BoletoEndpoint
 
@@ -200,8 +225,8 @@ Logging estruturado em JSON:
 | GET | `/api/boleto/validate` | Valida dados do boleto |
 | GET | `/api/boleto/data` | Retorna dados completos |
 | GET | `/api/boleto/nosso_numero` | Gera nosso_numero |
-| GET | `/api/boleto` | Gera boleto (PDF/JPG/PNG/TIF) |
-| POST | `/api/boleto/multi` | Gera múltiplos boletos |
+| GET | `/api/boleto` | Gera boleto (PDF/JPG/PNG/TIF). Com `include_data=true` retorna JSON + base64 |
+| POST | `/api/boleto/multi` | Gera multiplos boletos. Com `include_data=true` retorna JSON + base64 |
 
 #### RemessaEndpoint
 
@@ -215,7 +240,7 @@ Logging estruturado em JSON:
 |--------|------|-----------|
 | POST | `/api/retorno` | Processa arquivo de retorno |
 
-#### OFXEndpoint (v1.2.0)
+#### OFXEndpoint (v1.3.0)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -306,7 +331,7 @@ bundle exec rspec spec/unit/services/ofx_parser_service_spec.rb
 bundle exec rspec spec/integration/ofx_endpoint_spec.rb
 ```
 
-**Cobertura atual (v1.2.0):**
+**Cobertura atual (v1.3.0):**
 
 | Módulo | Testes |
 |--------|--------|
@@ -347,13 +372,15 @@ puts result[:linha_digitavel]
 
 ## Métricas
 
-| Métrica | v1.0.0 | v1.1.0 | v1.2.0 |
-|---------|--------|--------|--------|
-| Linhas em boleto_api.rb | 444 | 53 | 55 |
-| Arquivos na lib/boleto_api/ | 1 | 12 | 14 |
-| Serviços | 0 | 4 | 6 |
-| Endpoints | 1 | 4 | 5 |
-| Testes totais | ~30 | ~60 | ~92 |
+| Métrica | v1.0.0 | v1.1.0 | v1.2.0 | v1.3.0 |
+|---------|--------|--------|--------|--------|
+| Linhas em boleto_api.rb | 444 | 53 | 55 | 60 |
+| Arquivos na lib/boleto_api/ | 1 | 12 | 14 | 14 |
+| Serviços | 0 | 4 | 6 | 6 |
+| Endpoints | 1 | 4 | 5 | 5 |
+| Bancos suportados | 10 | 17 | 17 | **18** (+Banco C6) |
+| Testes Ruby | ~30 | ~60 | 158 | **165** |
+| Testes Python | 0 | ~20 | 44 | **44** |
 
 ## Repositórios
 

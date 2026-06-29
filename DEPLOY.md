@@ -34,7 +34,7 @@ ls Dockerfile render.yaml Gemfile
 # Se estiver tudo ok, fazer push
 git add .
 git commit -m "Deploy para Render"
-git push origin main
+git push origin master
 ```
 
 ### 2. Criar Serviço no Render
@@ -120,7 +120,7 @@ curl https://boleto-cnab-api.onrender.com/api/health
 O `render.yaml` já está configurado com `autoDeploy: true`.
 
 **Isso significa:**
-- ✅ Push para `main` → Deploy automático
+- ✅ Push para `master` → Deploy automático
 - ✅ Pull Request merged → Deploy automático
 - ✅ Não precisa fazer nada manual
 
@@ -177,12 +177,25 @@ O Render fornece automaticamente:
 ### Já Configuradas no `render.yaml`:
 
 ```yaml
-- PORT=9292
 - RACK_ENV=production
 - PUMA_WORKERS=1
+- PUMA_MIN_THREADS=1
 - PUMA_MAX_THREADS=5
-- MALLOC_ARENA_MAX=2
+- PUMA_WORKER_TIMEOUT=60
+- MALLOC_CONF=background_thread:true,narenas:2,dirty_decay_ms:1000,muzzy_decay_ms:0
+- RUBY_GC_HEAP_GROWTH_FACTOR=1.1
+- RUBY_GC_MALLOC_LIMIT=16777216
+- RUBY_GC_OLDMALLOC_LIMIT=16777216
 ```
+
+> **`PORT`** não é fixado: o Render injeta a porta automaticamente e o Puma
+> faz bind via `ENV['PORT']`.
+>
+> **jemalloc** já vem ativado na imagem (via `LD_PRELOAD` no Dockerfile). Ele
+> substitui o allocator padrão do musl/Alpine, reduzindo bastante a
+> fragmentação de memória — o que faz diferença real no free tier de 512MB.
+> (O antigo `MALLOC_ARENA_MAX` é exclusivo do glibc e **não tinha efeito** em
+> Alpine; por isso foi removido.)
 
 ### Adicionar Novas:
 
@@ -236,8 +249,9 @@ curl https://sua-url.onrender.com/api/health
 # Se estourar, otimize:
 
 1. Reduzir PUMA_MAX_THREADS (render.yaml)
-2. Usar MALLOC_ARENA_MAX=2 (já configurado)
-3. Considerar upgrade para Starter ($7/mês, 2GB RAM)
+2. jemalloc já está ativo (LD_PRELOAD na imagem) — reduz fragmentação
+3. Ajustar MALLOC_CONF (ex.: dirty_decay_ms:0 devolve memória mais agressivo)
+4. Considerar upgrade para Starter ($7/mês, 2GB RAM)
 ```
 
 ---
@@ -299,7 +313,7 @@ Antes de fazer deploy, verifique:
 - [ ] `Dockerfile` presente e testado localmente
 - [ ] `render.yaml` com configurações corretas
 - [ ] `Gemfile` atualizado
-- [ ] Código commitado e pushed para `main`
+- [ ] Código commitado e pushed para `master`
 - [ ] Testes passando (`bundle exec rspec`)
 - [ ] Health check funcionando (`/api/health`)
 

@@ -2,7 +2,7 @@
 
 module BoletoApi
   module Endpoints
-    # Endpoint de health check
+    # Endpoints de health check, informacoes e metadados
     class HealthEndpoint < Grape::API
       format :json
 
@@ -11,7 +11,7 @@ module BoletoApi
         { status: 'OK', timestamp: Time.now.iso8601 }
       end
 
-      desc 'Informações da API'
+      desc 'Informacoes da API'
       get '/info' do
         {
           name: 'Boleto CNAB API',
@@ -20,6 +20,48 @@ module BoletoApi
           supported_formats: Config::Constants::OUTPUT_TYPES,
           cnab_types: Config::Constants::CNAB_TYPES
         }
+      end
+
+      desc 'Metadados da API e gem brcobranca'
+      get '/metadata' do
+        brcobranca_version = Gem.loaded_specs['brcobranca']&.version&.to_s rescue 'unknown'
+
+        {
+          api: {
+            name: 'Boleto CNAB API',
+            version: BoletoApi::VERSION,
+            ruby_version: RUBY_VERSION,
+            rack_env: ENV.fetch('RACK_ENV', 'development')
+          },
+          brcobranca: {
+            version: brcobranca_version,
+            repository: 'https://github.com/Maxwbh/brcobranca'
+          },
+          endpoints: {
+            health: 'GET /api/health',
+            info: 'GET /api/info',
+            metadata: 'GET /api/metadata',
+            bancos: 'GET /api/bancos',
+            boleto_validate: 'GET /api/boleto/validate',
+            boleto_data: 'GET /api/boleto/data',
+            boleto_nosso_numero: 'GET /api/boleto/nosso_numero',
+            boleto_generate: 'GET /api/boleto',
+            boleto_multi: 'POST /api/boleto/multi',
+            remessa: 'POST /api/remessa',
+            retorno: 'POST /api/retorno',
+            ofx_parse: 'POST /api/ofx/parse'
+          },
+          documentation: {
+            swagger_ui: 'GET /api/docs',
+            openapi_json: 'GET /api/openapi.json',
+            openapi_yaml: 'GET /api/openapi.yaml'
+          }
+        }
+      end
+
+      desc 'Lista bancos suportados com capacidades detalhadas'
+      get '/bancos' do
+        Services::BankInfoService.all
       end
     end
   end

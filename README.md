@@ -1,411 +1,272 @@
-# Boleto CNAB API
-
-Este projeto é um FORK atualizado de https://github.com/akretion/boleto_cnab_api
-
-> API REST para geração de Boletos, processamento de Remessas/Retornos CNAB e parsing de extratos OFX usando [BRCobranca](https://github.com/Maxwbh/brcobranca)
-
-**Mantido por:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) - M&S do Brasil Ltda
-
-[![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
-[![Python Package](https://img.shields.io/badge/python-3.7%2B-blue)](python-client/)
-[![Version](https://img.shields.io/badge/version-1.2.0-green)](VERSION)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-
-## 🚀 Quick Start
-
-```bash
-# 1. Clone o repositório
-git clone https://github.com/Maxwbh/boleto_cnab_api.git
-cd boleto_cnab_api
-
-# 2. Com Docker (recomendado)
-docker build -t boleto_cnab_api .
-docker run -p 9292:9292 boleto_cnab_api
-
-# 3. Sem Docker
-bundle install
-rackup -p 9292
-
-# 4. Testar
-curl http://localhost:9292/api/health
-```
-
-## 🐍 Cliente Python (Recomendado)
-
-Instale o cliente Python oficial para uma integração mais fácil:
-
-```bash
-# Instalar via pip (quando publicado)
-pip install boleto-cnab-client
-
-# Ou instalar do repositório
-cd python-client
-pip install -e .
-```
-
-### Exemplo de Uso
-
-```python
-from boleto_cnab_client import BoletoClient
-
-# Conectar à API
-client = BoletoClient('http://localhost:9292')
-
-# Dados do boleto
-dados = {
-    "cedente": "Minha Empresa LTDA",
-    "documento_cedente": "12345678000100",
-    "sacado": "João da Silva",
-    "sacado_documento": "12345678900",
-    "agencia": "3073",
-    "conta_corrente": "12345678",
-    "convenio": "01234567",
-    "carteira": "18",
-    "nosso_numero": "123",
-    "valor": 150.00,
-    "data_vencimento": "2025/12/31"
-}
-
-# Gerar boleto
-pdf_bytes = client.generate_boleto('banco_brasil', dados)
-with open('boleto.pdf', 'wb') as f:
-    f.write(pdf_bytes)
-```
-
-**📖 Documentação completa:** [python-client/README.md](python-client/README.md)
-
-**💡 Exemplos práticos:** [examples/python/](examples/python/)
-
-## 📚 Documentação
-
-### API Endpoints
-
-| Endpoint | Método | Descrição |
-|----------|--------|-----------|
-| `/api/health` | GET | Health check |
-| `/api/boleto/validate` | GET | Validar dados do boleto |
-| `/api/boleto/data` | GET | Obter dados completos (sem gerar PDF) |
-| `/api/boleto/nosso_numero` | GET | Obter nosso_numero e códigos |
-| `/api/boleto` | GET | Gerar boleto (PDF/JPG/PNG/TIF) |
-| `/api/boleto/multi` | POST | Gerar múltiplos boletos |
-| `/api/remessa` | POST | Gerar arquivo de remessa CNAB |
-| `/api/retorno` | POST | Processar arquivo de retorno CNAB |
-| `/api/ofx/parse` | POST | Parsear arquivo OFX (extrato bancário) |
-
-### Guias Completos
-
-📖 **[Documentação de Campos](./docs/fields/README.md)** - Todos os campos aceitos por banco (BB, Sicoob, etc.)
-
-💡 **[Exemplos Práticos](./docs/fields/examples.md)** - Exemplos de código Python/Ruby com máximo de campos
-
-🔧 **[Troubleshooting](./docs/api/troubleshooting.md)** - Solução de problemas comuns
-
-⚙️ **[Detalhes Técnicos](./docs/development/brcobranca-fork.md)** - Informações sobre a gem BRCobranca
-
-## 💡 Exemplo Rápido
-
-### Gerar Boleto do Banco do Brasil
-
-```python
-import requests
-import json
-
-boleto_data = {
-    "agencia": "3073",
-    "conta_corrente": "12345678",
-    "convenio": "01234567",
-    "carteira": "18",
-    "nosso_numero": "123",
-    "numero_documento": "NF-2025-001",
-    "cedente": "Minha Empresa LTDA",
-    "documento_cedente": "12345678000100",
-    "sacado": "João da Silva",
-    "sacado_documento": "12345678900",
-    "valor": 1500.00,
-    "data_vencimento": "2025/12/31",
-    "aceite": "N",
-    "especie_documento": "DM",
-    "instrucao1": "Não receber após o vencimento"
-}
-
-# Obter dados do boleto (sem gerar PDF)
-response = requests.get(
-    "http://localhost:9292/api/boleto/data",
-    params={
-        "bank": "banco_brasil",
-        "data": json.dumps(boleto_data)
-    }
-)
-
-data = response.json()
-print(f"Linha Digitável: {data['linha_digitavel']}")
-print(f"Código de Barras: {data['codigo_barras']}")
-print(f"Nosso Número: {data['nosso_numero']}")
-
-# Gerar PDF
-response = requests.get(
-    "http://localhost:9292/api/boleto",
-    params={
-        "bank": "banco_brasil",
-        "type": "pdf",
-        "data": json.dumps(boleto_data)
-    }
-)
-
-with open("boleto.pdf", "wb") as f:
-    f.write(response.content)
-```
-
-Ver mais exemplos em [`examples/python/`](./examples/python/)
-
-## 🏦 Bancos Suportados
-
-- ✅ Banco do Brasil (001)
-- ✅ Sicoob (756)
-- ✅ Sicredi
-- ✅ Santander
-- ✅ Bradesco
-- ✅ Itaú
-- ✅ Caixa Econômica Federal
-- ✅ E mais 9 bancos!
-
-Ver documentação completa de campos em [`docs/fields/README.md`](./docs/fields/README.md)
-
-## 📄 Parsing de Extrato OFX
-
-O endpoint `POST /api/ofx/parse` permite parsear arquivos OFX (extrato bancário) e obter transações em JSON.
-
-```bash
-# Enviar arquivo OFX
-curl -X POST http://localhost:9292/api/ofx/parse \
-  -F "file=@extrato.ofx"
-
-# Filtrar apenas créditos
-curl -X POST http://localhost:9292/api/ofx/parse \
-  -F "file=@extrato.ofx" \
-  -F "somente_creditos=true"
-```
-
-**Recursos:**
-- Suporta OFX v1 (SGML) e v2 (XML)
-- Conversão automática de encoding Latin-1 para UTF-8
-- Extração automática de `nosso_numero` do campo memo por banco (Sicoob, Itaú, BB, Bradesco, Caixa)
-- Resumo com totais de créditos/débitos
-
-## 🧪 Testes
-
-```bash
-# Rodar testes automatizados
-bundle exec rspec
-
-# Rodar testes específicos
-bundle exec rspec spec/boleto_spec.rb
-
-# Rodar com coverage
-bundle exec rspec --format documentation
-```
-
-## 📁 Estrutura do Projeto
-
-```
-boleto_cnab_api/
-├── lib/
-│   ├── boleto_api.rb                     # Entry point principal
-│   └── boleto_api/                       # Módulos da API (v1.2.0)
-│       ├── version.rb                    # Versão da API
-│       ├── config/
-│       │   └── constants.rb              # Constantes centralizadas
-│       ├── services/
-│       │   ├── field_mapper.rb           # Mapeamento de campos
-│       │   ├── boleto_service.rb         # Lógica de boletos
-│       │   ├── remessa_service.rb        # Lógica de remessas
-│       │   ├── retorno_service.rb        # Lógica de retornos
-│       │   ├── ofx_parser_service.rb     # Parsing de arquivos OFX
-│       │   └── nosso_numero_extractor.rb # Extração de nosso_numero
-│       ├── endpoints/
-│       │   ├── health_endpoint.rb        # GET /api/health
-│       │   ├── boleto_endpoint.rb        # /api/boleto/*
-│       │   ├── remessa_endpoint.rb       # POST /api/remessa
-│       │   ├── retorno_endpoint.rb       # POST /api/retorno
-│       │   └── ofx_endpoint.rb           # POST /api/ofx/parse
-│       └── middleware/
-│           ├── error_handler.rb          # Tratamento de erros
-│           └── request_logger.rb         # Logs estruturados
-├── config/
-│   └── puma.rb                           # Configuração Puma
-├── spec/                                 # Testes automatizados
-│   ├── boleto_spec.rb
-│   ├── all_banks_spec.rb
-│   ├── spec_helper.rb
-│   ├── fixtures/
-│   │   └── sample_data.json
-│   └── unit/                             # Testes unitários
-│       ├── config/
-│       └── services/
-├── docs/                                 # Documentação
-│   ├── ARCHITECTURE.md                   # Arquitetura da API
-│   ├── DEPLOY.md                         # Guia de deploy
-│   ├── TODO_INTEGRACAO.md                # Roadmap de integração
-│   ├── api/
-│   │   └── troubleshooting.md
-│   ├── fields/
-│   │   ├── README.md
-│   │   ├── all-banks.md
-│   │   └── examples.md
-│   └── development/
-│       └── brcobranca-fork.md
-├── examples/                             # Exemplos de uso
-│   └── python/
-├── python-client/                        # Cliente Python oficial
-├── scripts/                              # Scripts de automação
-├── VERSION                               # Versão atual (1.2.0)
-├── CHANGELOG.md                          # Histórico de versões
-├── Dockerfile                            # Multi-stage build otimizado
-├── docker-compose.yml                    # Orquestração Docker
-├── render.yaml                           # Config Render Free Tier
-├── Gemfile                               # Dependências Ruby
-└── config.ru                             # Configuração Rack
-```
-
-## 🐳 Deploy
-
-### Desenvolvimento Local
-
-```bash
-# Opção 1: Docker Compose (Mais Fácil)
-docker-compose up
-
-# Opção 2: Script Helper
-./start.sh
-
-# Opção 3: Docker Direto
-docker build -t boleto_cnab_api .
-docker run -p 9292:9292 boleto_cnab_api
-
-# Opção 4: Local (sem Docker)
-bundle install
-bundle exec rackup -p 9292
-```
-
-### Render.com (Free Tier) - RECOMENDADO
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
-
-**Ou siga o guia completo:** 📖 **[DEPLOY.md](./DEPLOY.md)**
-
-**Resumo:**
-1. Fork este repositório
-2. Conecte no [Render.com](https://render.com)
-3. New → Web Service → Seu repositório
-4. Ambiente: Docker
-5. Deploy! 🚀
-
-**Recursos do Free Tier:**
-- ✅ 512 MB RAM
-- ✅ 100 GB bandwidth/mês
-- ✅ Auto-deploy do `main`
-- ⚠️ Sleep após 15min inatividade
-
-### Railway / Fly.io
-
-O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plataformas.
-
-## 🎯 Características
-
-### ✅ Recursos Implementados
-
-- 🏦 **Geração de boletos** - 18+ bancos brasileiros suportados
-- 📤 **Remessa CNAB** - Geração de arquivos CNAB240/400 para todos os bancos compatíveis
-- 📥 **Retorno CNAB** - Parsing de arquivos de retorno com detecção automática
-- 📄 **Parsing OFX** - Extrato bancário → JSON com extração de nosso_numero por banco
-- 🐍 **Cliente Python oficial** - Interface Pythonic com retry automático e type hints
-- 📦 **Instalação via pip** - Pacote Python distribuível e fácil de instalar
-- 🔢 **Versionamento semântico** - Sistema MAJOR.MINOR.PATCH com script automático
-- 📋 **CHANGELOG completo** - Histórico de todas as versões e mudanças
-- 🔄 Mapeamento automático `numero_documento` ↔ `documento_numero`
-- 📊 Endpoint `/api/boleto/data` para obter dados sem gerar PDF
-- 📝 Documentação completa de campos por banco
-- ⏱️ Logs estruturados com timestamps e tempo de processamento
-- 🧪 Testes automatizados com RSpec (cobertura completa)
-- 💡 Exemplos práticos Python com tratamento de erros
-- 🗂️ Estrutura de projeto moderna e organizada
-- 🔍 Tratamento robusto de erros com hints
-- 🐳 Docker Compose para desenvolvimento local
-- 🚀 Otimizado para Render Free Tier (512MB RAM)
-- 🛡️ Acesso seguro a métodos com `respond_to?` e `rescue`
-
-## 🔧 Tecnologias
-
-**Backend:**
-- **Ruby** - Linguagem principal
-- **Grape** - Framework para API REST
-- **BRCobranca** - Geração de boletos ([maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca))
-- **RSpec** - Framework de testes
-- **Docker** - Containerização
-- **Alpine Linux** - Imagem base otimizada
-
-**Cliente Python:**
-- **Python 3.7+** - Compatibilidade moderna
-- **Requests** - Cliente HTTP com retry
-- **Type Hints** - Tipagem estática
-- **Dataclasses** - Modelos de dados estruturados
-
-## 🔢 Versionamento
-
-Este projeto segue [Versionamento Semântico](https://semver.org/) (MAJOR.MINOR.PATCH).
-
-**Versão atual:** `1.2.0` (veja [VERSION](VERSION))
-
-**Histórico:** Veja [CHANGELOG.md](CHANGELOG.md) para todas as mudanças.
-
-### Como incrementar versão
-
-```bash
-# Correção de bugs (1.0.0 -> 1.0.1)
-./scripts/bump-version.sh patch
-
-# Nova funcionalidade (1.0.1 -> 1.1.0)
-./scripts/bump-version.sh minor
-
-# Breaking change (1.1.0 -> 2.0.0)
-./scripts/bump-version.sh major
-```
-
-Veja [scripts/README.md](scripts/README.md) para mais detalhes.
-
-## 📄 Licença
-
-MIT License - Ver [LICENSE](./LICENSE)
-
-## 🤝 Contribuições
-
-Contribuições são bem-vindas! Sinta-se livre para abrir issues ou pull requests.
-
-## 💬 Suporte
-
-- 📖 [Documentação Completa](./docs/)
-- 🐛 [Reportar Bug](https://github.com/Maxwbh/boleto_cnab_api/issues)
-- 💡 [Sugerir Melhoria](https://github.com/Maxwbh/boleto_cnab_api/issues)
-
-## 🔗 Links Úteis
-
-**Documentação:**
-- [Cliente Python - README](./python-client/README.md)
-- [Exemplos Python](./examples/python/README.md)
-- [Documentação de Campos por Banco](./docs/fields/README.md)
-- [Compatibilidade de Todos os Bancos](./docs/fields/all-banks.md)
-- [Guia de Deploy](./DEPLOY.md)
-- [Scripts de Versionamento](./scripts/README.md)
-- [Troubleshooting](./docs/api/troubleshooting.md)
-
-**Gem BRCobranca:**
-- [Repositório GitHub](https://github.com/Maxwbh/brcobranca)
-- [Detalhes Técnicos](./docs/development/brcobranca-fork.md)
-
-**Changelog e Versões:**
-- [CHANGELOG.md](./CHANGELOG.md)
-- [VERSION](./VERSION)
+<p align="center">
+  <img src="https://img.shields.io/badge/🏦_Boleto_CNAB_API-v1.3.1-blue?style=for-the-badge" alt="Boleto CNAB API" />
+</p>
+
+<h3 align="center">
+  API REST open-source para boletos bancários brasileiros, CNAB e PIX
+</h3>
+
+<p align="center">
+  Gere boletos, remessas CNAB e processe extratos OFX para <strong>18 bancos brasileiros</strong> com uma única API.
+  <br />
+  Integre em qualquer linguagem — Python, Node.js, PHP, Java, Go — via HTTP.
+  <br /><br />
+  <a href="https://boleto-cnab-api.onrender.com/api/docs"><strong>🔗 Documentação Interativa (Swagger) →</strong></a>
+  <br /><br />
+  <a href="https://boleto-cnab-api.onrender.com/api/docs">Demo ao Vivo</a>
+  ·
+  <a href="#quick-start">Quick Start</a>
+  ·
+  <a href="./docs/ROADMAP.md">Roadmap</a>
+  ·
+  <a href="https://github.com/Maxwbh/boleto_cnab_api/issues">Reportar Bug</a>
+</p>
+
+<p align="center">
+  <a href="https://render.com/deploy"><img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" /></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.3.1-green" alt="Version" />
+  <img src="https://img.shields.io/badge/bancos-18-blue" alt="Bancos" />
+  <img src="https://img.shields.io/badge/testes-172_passando-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
+  <img src="https://img.shields.io/badge/ruby-3.3-red" alt="Ruby" />
+  <img src="https://img.shields.io/badge/brcobranca-12.8.0-orange" alt="brcobranca" />
+  <img src="https://img.shields.io/badge/PIX-8_bancos-blueviolet" alt="PIX" />
+</p>
 
 ---
 
-**Desenvolvido por Maxwell da Silva Oliveira - M&S do Brasil Ltda**
+## Por que usar?
+
+Se você precisa **gerar boletos**, **processar arquivos CNAB** ou **conciliar pagamentos via OFX** no Brasil, esta API resolve tudo via HTTP — sem precisar instalar gems Ruby no seu sistema.
+
+| Problema | Solução |
+|----------|---------|
+| "Preciso gerar boletos em Python/Node/PHP" | API REST — chame de qualquer linguagem |
+| "Preciso de CNAB 240/400 para enviar ao banco" | `POST /api/remessa` gera o arquivo pronto |
+| "Preciso processar o retorno do banco" | `POST /api/retorno` parseia e retorna JSON |
+| "Preciso conciliar pagamentos com extrato" | `POST /api/ofx/parse` extrai nosso_numero do OFX |
+| "Preciso de boleto com QR Code PIX" | Campo `emv` no payload + `pix=true` na remessa |
+| "Não quero instalar GhostScript" | `template=prawn` gera PDF em Ruby puro |
+| "Preciso saber quais bancos/formatos são suportados" | `GET /api/bancos` retorna tudo dinamicamente |
+
+### Diferenciais
+
+- **18 bancos** — Incluindo Banco C6 (336), o mais completo do mercado open-source
+- **PIX nativo** — Boleto híbrido com QR Code + remessa CNAB com segmento PIX
+- **2 templates PDF** — RGhost (completo) ou Prawn (sem GhostScript, 92% menor)
+- **Swagger UI** — Documentação interativa em `/api/docs`, teste no browser
+- **OpenAPI 3.0** — Importe no Postman/Insomnia em 1 clique
+- **include_data** — PDF + dados do boleto em 1 chamada (base64)
+- **Docker ready** — Deploy em 1 minuto no Render, Railway ou qualquer cloud
+- **217 testes** — Cobertura real com todos os bancos validados
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/Maxwbh/boleto_cnab_api.git && cd boleto_cnab_api
+
+# Docker
+docker build -t boleto-api . && docker run -p 9292:9292 boleto-api
+
+# Swagger UI
+open http://localhost:9292/api/docs
+```
+
+### Gerar boleto (1 chamada = PDF + dados)
+
+```bash
+curl "http://localhost:9292/api/boleto?bank=banco_brasil&type=pdf&include_data=true&data=$(python3 -c "
+import json; print(json.dumps({
+    'agencia': '3073', 'conta_corrente': '12345678', 'convenio': '01234567',
+    'carteira': '18', 'nosso_numero': '123', 'cedente': 'Empresa LTDA',
+    'documento_cedente': '12345678000100', 'sacado': 'Joao da Silva',
+    'sacado_documento': '12345678900', 'valor': 1500.0,
+    'data_vencimento': '2026/12/31', 'aceite': 'N'
+}))"
+)" | python3 -c "
+import sys, json, base64
+data = json.load(sys.stdin)
+print(f'Nosso Numero: {data[\"nosso_numero\"]}')
+print(f'Formatado:    {data[\"nosso_numero_formatado\"]}')
+print(f'Cod. Barras:  {data[\"codigo_barras\"]}')
+with open('boleto.pdf', 'wb') as f:
+    f.write(base64.b64decode(data['content_base64']))
+print('PDF salvo: boleto.pdf')
+"
+```
+
+---
+
+## Endpoints
+
+| Endpoint | Método | O que faz |
+|----------|:------:|-----------|
+| **`/api/docs`** | GET | Swagger UI interativa |
+| **`/api/bancos`** | GET | 18 bancos com capacidades (boleto, CNAB, PIX, carteiras) |
+| `/api/boleto/data` | GET | Dados calculados: nosso_numero, código barras, linha digitável |
+| `/api/boleto` | GET | Gerar PDF/JPG/PNG/TIF. `include_data=true` → JSON + base64 |
+| `/api/boleto/multi` | POST | Múltiplos boletos em 1 arquivo |
+| `/api/remessa` | POST | Remessa CNAB 240/400. `pix=true` → com segmento PIX |
+| `/api/retorno` | POST | Processar retorno CNAB → JSON |
+| `/api/ofx/parse` | POST | Extrato OFX → JSON com nosso_numero extraído |
+
+<details>
+<summary>Ver todos os 15 endpoints</summary>
+
+| Endpoint | Método | Descrição |
+|----------|:------:|-----------|
+| `/api/health` | GET | Health check |
+| `/api/info` | GET | Versão e configuração |
+| `/api/metadata` | GET | Metadados da API e gem |
+| `/api/bancos` | GET | Capacidades por banco |
+| `/api/boleto/validate` | GET | Validar dados do boleto |
+| `/api/boleto/data` | GET | Dados calculados |
+| `/api/boleto/nosso_numero` | GET | Apenas nosso_numero |
+| `/api/boleto` | GET | Gerar boleto (PDF/JPG/PNG/TIF) |
+| `/api/boleto/multi` | POST | Múltiplos boletos |
+| `/api/remessa` | POST | Remessa CNAB |
+| `/api/retorno` | POST | Retorno CNAB |
+| `/api/ofx/parse` | POST | Parsing OFX |
+| `/api/docs` | GET | Swagger UI |
+| `/api/openapi.json` | GET | Spec OpenAPI (JSON) |
+| `/api/openapi.yaml` | GET | Spec OpenAPI (YAML) |
+
+</details>
+
+---
+
+## Bancos Suportados
+
+| Banco | Cód | Boleto | Remessa | Retorno | PIX |
+|-------|:---:|:------:|:-------:|:-------:|:---:|
+| Banco do Brasil | 001 | ✅ | 400 + 240 | 400 | ✅ |
+| Santander | 033 | ✅ | 400 + 240 | 400 + 240 | ✅ |
+| Caixa | 104 | ✅ | 240 | 240 | ✅ |
+| Bradesco | 237 | ✅ | 400 | 400 | ✅ |
+| **Banco C6** | **336** | ✅ | 400 | 400 | ✅ |
+| Itaú | 341 | ✅ | 400 + 444 | 400 | ✅ |
+| Sicredi | 748 | ✅ | 240 | 240 | ✅ |
+| Sicoob | 756 | ✅ | 400 + 240 | 240 | ✅ |
+| Banrisul | 041 | ✅ | 400 | 400 | — |
+| Unicred | 136 | ✅ | 400 + 240 | 400 | — |
+| + 8 bancos | — | ✅ | — | — | — |
+
+> Use `GET /api/bancos` para capacidades completas em tempo real, incluindo carteiras aceitas e formatos PIX.
+
+---
+
+## Exemplo: Python
+
+```python
+import requests, json, base64
+
+API = "http://localhost:9292"
+
+# 1. Gerar boleto com dados + PDF
+response = requests.get(f"{API}/api/boleto", params={
+    "bank": "sicoob", "type": "pdf", "include_data": "true",
+    "data": json.dumps({
+        "agencia": "4327", "conta_corrente": "417270",
+        "convenio": "229385", "carteira": "1", "variacao": "01",
+        "nosso_numero": "7890", "cedente": "Empresa LTDA",
+        "documento_cedente": "12345678000100",
+        "sacado": "João da Silva", "sacado_documento": "12345678900",
+        "valor": 2500.00, "data_vencimento": "2026/12/31", "aceite": "N"
+    })
+})
+data = response.json()
+with open("boleto.pdf", "wb") as f:
+    f.write(base64.b64decode(data["content_base64"]))
+
+# 2. Parsear extrato OFX
+with open("extrato.ofx", "rb") as f:
+    ofx = requests.post(f"{API}/api/ofx/parse", files={"file": f}).json()
+for tx in ofx["transacoes"]:
+    if tx["nosso_numero_extraido"]:
+        print(f"{tx['data']} R$ {tx['valor']} nn={tx['nosso_numero_extraido']}")
+```
+
+---
+
+## Deploy
+
+| Opção | Comando |
+|-------|---------|
+| **Docker** | `docker build -t boleto-api . && docker run -p 9292:9292 boleto-api` |
+| **Docker (sem GhostScript)** | `docker build -f Dockerfile.prawn -t boleto-api .` |
+| **Docker Compose** | `docker compose up` |
+| **Render.com** | [![Deploy](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy) |
+| **Local** | `bundle install && bundle exec rackup -p 9292` |
+
+> 🐳 **Imagem otimizada para o Render Free Tier (512MB):** jemalloc (`LD_PRELOAD`)
+> para baixa fragmentação de memória em Alpine/musl, `tini` para shutdown
+> gracioso e tuning de GC do Ruby. Detalhes em [DEPLOY.md](./DEPLOY.md).
+
+---
+
+## Stack
+
+| Componente | Tecnologia |
+|-----------|-----------|
+| API | Ruby 3.3 · Grape · Puma |
+| Boletos | [brcobranca v12.8.0](https://github.com/Maxwbh/brcobranca) (fork com C6, PIX, Prawn) |
+| PDF | RGhost ou Prawn (sem GhostScript) |
+| OFX | gem `ofx` |
+| Testes | RSpec · 217 testes |
+| Docs | OpenAPI 3.0 · Swagger UI |
+| Container | Docker · Alpine Linux |
+
+---
+
+## Documentação
+
+| O que | Onde |
+|-------|------|
+| **Testar a API agora** | [Swagger UI (demo ao vivo)](https://boleto-cnab-api.onrender.com/api/docs) |
+| Importar no Postman | [`/api/openapi.json`](https://boleto-cnab-api.onrender.com/api/openapi.json) |
+| Campos por banco | [docs/fields/all-banks.md](./docs/fields/all-banks.md) |
+| Nosso número (entrada/saída/conciliação) | [docs/fields/nosso-numero.md](./docs/fields/nosso-numero.md) |
+| PIX híbrido + Remessa PIX | [docs/api/pix.md](./docs/api/pix.md) |
+| Parsing OFX | [docs/api/ofx-parsing.md](./docs/api/ofx-parsing.md) |
+| Troubleshooting | [docs/api/troubleshooting.md](./docs/api/troubleshooting.md) |
+| Arquitetura | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
+| Roadmap v1.4 | [docs/ROADMAP.md](./docs/ROADMAP.md) |
+| Cliente Python | [python-client/README.md](./python-client/README.md) |
+| Deploy | [DEPLOY.md](./DEPLOY.md) |
+
+---
+
+## Contribuindo
+
+Contribuições são bem-vindas! Veja o [guia de contribuição](./CONTRIBUTING.md).
+
+```bash
+# Setup
+git clone https://github.com/Maxwbh/boleto_cnab_api.git && cd boleto_cnab_api
+bundle install
+
+# Testes
+bundle exec rspec
+
+# Servidor local
+bundle exec rackup -p 9292
+```
+
+## Licença
+
+[MIT](./LICENSE) — use livremente em projetos comerciais e open-source.
+
+---
+
+<p align="center">
+  Desenvolvido por <strong><a href="https://github.com/maxwbh">Maxwell da Silva Oliveira</a></strong>
+  <br />
+  <a href="https://github.com/maxwbh">@maxwbh</a> · M&S do Brasil LTDA
+  <br /><br />
+  ⭐ Se este projeto foi útil, considere dar uma estrela!
+</p>

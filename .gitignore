@@ -112,3 +112,4 @@ CHANGELOG.md.bak
 
 # Node modules (se houver frontend)
 node_modules/
+coverage/
