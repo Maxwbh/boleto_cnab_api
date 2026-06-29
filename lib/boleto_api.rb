@@ -5,6 +5,12 @@ require 'grape'
 require 'logger'
 require 'json'
 
+# CRÍTICO: força flush imediato de stdout/stderr.
+# Sem isso, em ambientes containerizados (Render, Docker) o Ruby bufferiza
+# saídas em blocos e os logs só aparecem quando o buffer enche.
+$stdout.sync = true
+$stderr.sync = true
+
 # Módulos internos
 require_relative 'boleto_api/version'
 require_relative 'boleto_api/config/constants'
@@ -25,11 +31,15 @@ require_relative 'boleto_api/endpoints/ofx_endpoint'
 module BoletoApi
   class << self
     # Logger da aplicação
+    # Escreve em STDOUT com flush imediato (essencial para containers)
     def logger
-      @logger ||= Logger.new($stdout).tap do |log|
+      @logger ||= begin
+        log = Logger.new($stdout)
+        log.level = ENV.fetch('LOG_LEVEL', 'info').upcase
         log.formatter = proc do |severity, datetime, _progname, msg|
           "#{datetime.strftime('%Y-%m-%dT%H:%M:%S.%3N%z')} [#{severity}] #{msg}\n"
         end
+        log
       end
     end
 

@@ -1,12 +1,14 @@
 # Boleto CNAB API
-Este projeto é um FORK  atualizado de https://github.com/akretion/boleto_cnab_api
-> API REST para geração de Boletos, Remessas e processamento de Retornos bancários usando [BRCobranca](https://github.com/Maxwbh/brcobranca)
+
+Este projeto é um FORK atualizado de https://github.com/akretion/boleto_cnab_api
+
+> API REST para geração de Boletos, processamento de Remessas/Retornos CNAB e parsing de extratos OFX usando [BRCobranca](https://github.com/Maxwbh/brcobranca)
 
 **Mantido por:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) - M&S do Brasil Ltda
 
 [![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 [![Python Package](https://img.shields.io/badge/python-3.7%2B-blue)](python-client/)
-[![Version](https://img.shields.io/badge/version-1.1.0-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-1.2.0-green)](VERSION)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ## 🚀 Quick Start
@@ -209,7 +211,7 @@ bundle exec rspec --format documentation
 boleto_cnab_api/
 ├── lib/
 │   ├── boleto_api.rb                     # Entry point principal
-│   └── boleto_api/                       # Módulos da API (v1.1.0)
+│   └── boleto_api/                       # Módulos da API (v1.2.0)
 │       ├── version.rb                    # Versão da API
 │       ├── config/
 │       │   └── constants.rb              # Constantes centralizadas
@@ -256,7 +258,7 @@ boleto_cnab_api/
 │   └── python/
 ├── python-client/                        # Cliente Python oficial
 ├── scripts/                              # Scripts de automação
-├── VERSION                               # Versão atual (1.1.0)
+├── VERSION                               # Versão atual (1.2.0)
 ├── CHANGELOG.md                          # Histórico de versões
 ├── Dockerfile                            # Multi-stage build otimizado
 ├── docker-compose.yml                    # Orquestração Docker
@@ -312,13 +314,17 @@ O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plata
 
 ### ✅ Recursos Implementados
 
+- 🏦 **Geração de boletos** - 18+ bancos brasileiros suportados
+- 📤 **Remessa CNAB** - Geração de arquivos CNAB240/400 para todos os bancos compatíveis
+- 📥 **Retorno CNAB** - Parsing de arquivos de retorno com detecção automática
+- 📄 **Parsing OFX** - Extrato bancário → JSON com extração de nosso_numero por banco
 - 🐍 **Cliente Python oficial** - Interface Pythonic com retry automático e type hints
 - 📦 **Instalação via pip** - Pacote Python distribuível e fácil de instalar
 - 🔢 **Versionamento semântico** - Sistema MAJOR.MINOR.PATCH com script automático
 - 📋 **CHANGELOG completo** - Histórico de todas as versões e mudanças
 - 🔄 Mapeamento automático `numero_documento` ↔ `documento_numero`
 - 📊 Endpoint `/api/boleto/data` para obter dados sem gerar PDF
-- 📝 Documentação completa de campos por banco (6+ bancos)
+- 📝 Documentação completa de campos por banco
 - ⏱️ Logs estruturados com timestamps e tempo de processamento
 - 🧪 Testes automatizados com RSpec (cobertura completa)
 - 💡 Exemplos práticos Python com tratamento de erros
@@ -348,7 +354,7 @@ O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plata
 
 Este projeto segue [Versionamento Semântico](https://semver.org/) (MAJOR.MINOR.PATCH).
 
-**Versão atual:** `1.1.0` (veja [VERSION](VERSION))
+**Versão atual:** `1.2.0` (veja [VERSION](VERSION))
 
 **Histórico:** Veja [CHANGELOG.md](CHANGELOG.md) para todas as mudanças.
 

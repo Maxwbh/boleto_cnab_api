@@ -18,6 +18,7 @@ module BoletoApi
           result = Services::RetornoService.parse(params[:bank], params[:type], file)
 
           if result[:valid]
+            status 200
             result[:pagamentos]
           else
             error!({

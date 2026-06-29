@@ -18,6 +18,7 @@ module BoletoApi
           result = Services::RemessaService.generate(params[:bank], params[:type], values)
 
           if result[:valid]
+            status 200
             content_type 'text/plain'
             header['Content-Disposition'] = "attachment; filename=remessa-#{params[:bank]}-#{params[:type]}.rem"
             env['api.format'] = :binary

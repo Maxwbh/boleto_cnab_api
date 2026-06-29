@@ -5,6 +5,7 @@ module BoletoApi
     # Constantes centralizadas da API
     module Constants
       # Bancos suportados para geração de boletos
+      # Ordem: principais bancos brasileiros (código bancário)
       SUPPORTED_BANKS = %w[
         banco_brasil
         itau
@@ -17,6 +18,7 @@ module BoletoApi
         banestes
         banco_nordeste
         banco_brasilia
+        banco_c6
         unicred
         credisis
         safra
@@ -36,6 +38,7 @@ module BoletoApi
         sicoob
         banco_nordeste
         banco_brasilia
+        banco_c6
         unicred
         credisis
       ].freeze

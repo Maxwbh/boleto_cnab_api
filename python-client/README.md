@@ -1,26 +1,26 @@
 # Boleto CNAB Client - Python
 
-> **Versão:** 1.1.0 | **Python:** 3.8+
+> **Versão:** 1.2.0 | **Python:** 3.8+
 
 Cliente Python oficial para a API de geração de Boletos Bancários Brasileiros.
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1.0-green)](../VERSION)
+[![Version](https://img.shields.io/badge/version-1.2.0-green)](../VERSION)
 
 ## 📋 Características
 
 - ✅ Interface Pythonic simples e intuitiva
 - ✅ Suporte para 18 bancos brasileiros
 - ✅ Retry automático com backoff exponencial
-- ✅ **TypedDict** para tipagem estática (v1.1.0)
+- ✅ **TypedDict** para tipagem estática
 - ✅ Type hints completos
 - ✅ Tratamento de erros robusto
 - ✅ Validação de dados antes da geração
 - ✅ Geração de PDF e imagens
 - ✅ Logging configurável
 - ✅ Sessão HTTP reutilizável
-- ✅ Testes pytest completos (v1.1.0)
+- ✅ Testes pytest completos (44 testes)
 
 ## 🏦 Bancos Suportados
 
@@ -435,10 +435,42 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](../L
 
 Este cliente utiliza a API Boleto CNAB, que por sua vez usa a gem [BRCobranca](https://github.com/Maxwbh/brcobranca) para geração de boletos bancários brasileiros.
 
+## 📄 Parsing de Extratos OFX (v1.2.0)
+
+O endpoint `POST /api/ofx/parse` permite parsear extratos bancários OFX.
+O cliente Python ainda não possui um método helper dedicado, mas pode ser usado via `requests`:
+
+```python
+import requests
+
+with open('extrato.ofx', 'rb') as f:
+    response = requests.post(
+        'http://localhost:9292/api/ofx/parse',
+        files={'file': f},
+        data={'somente_creditos': 'true'}  # opcional
+    )
+
+data = response.json()
+print(f"Banco: {data['banco']['org']}")
+print(f"Total de créditos: {data['resumo']['soma_creditos']}")
+
+for tx in data['transacoes']:
+    nn = tx.get('nosso_numero_extraido')
+    if nn:
+        print(f"  {tx['data']} R$ {tx['valor']:.2f} nosso_numero={nn}")
+```
+
+Veja [docs/api/ofx-parsing.md](../docs/api/ofx-parsing.md) para detalhes do endpoint e [docs/openapi.yaml](../docs/openapi.yaml) para o schema completo.
+
 ---
 
-**Versão:** 1.1.0
-**Última atualização:** 2026-01-06
+**Versão:** 1.2.0
+
+### Novidades v1.2.0
+
+- Endpoint `POST /api/ofx/parse` para parsing de extratos OFX
+- Extração automática de `nosso_numero` por banco
+- Fix: `RetryError` tratado como `BoletoAPIError` no client
 
 ### Novidades v1.1.0
 

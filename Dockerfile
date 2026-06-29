@@ -27,7 +27,7 @@ FROM alpine:3.19
 # Labels do mantenedor
 LABEL org.opencontainers.image.title="Boleto CNAB API"
 LABEL org.opencontainers.image.description="API REST para geração de Boletos, Remessas e Retornos Bancários"
-LABEL org.opencontainers.image.version="1.1.0"
+LABEL org.opencontainers.image.version="1.2.0"
 LABEL org.opencontainers.image.authors="Maxwell Oliveira <maxwbh@gmail.com>"
 LABEL org.opencontainers.image.url="https://github.com/Maxwbh/boleto_cnab_api"
 LABEL org.opencontainers.image.source="https://github.com/Maxwbh/boleto_cnab_api"
@@ -62,6 +62,7 @@ ENV RACK_ENV=production \
     MALLOC_ARENA_MAX=2 \
     RUBY_GC_HEAP_GROWTH_FACTOR=1.1 \
     BUNDLE_PATH=/usr/local/bundle \
+    BUNDLE_WITHOUT=development:test \
     GEM_HOME=/usr/local/bundle \
     PATH="/usr/local/bundle/bin:$PATH"
 

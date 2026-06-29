@@ -17,7 +17,12 @@ module BoletoApi
         def create(bank, values)
           validate_bank!(bank)
           mapped_values = FieldMapper.map_boleto(values)
-          boleto_class(bank).new(mapped_values)
+
+          # Filtra campos não suportados pela classe de boleto do banco
+          # (ex: digito_conta não existe em Bradesco)
+          klass = boleto_class(bank)
+          filtered_values = filter_supported_attributes(klass, mapped_values)
+          klass.new(filtered_values)
         end
 
         # Valida os dados do boleto
@@ -50,7 +55,8 @@ module BoletoApi
 
           # Usa to_hash do brcobranca v12.5+ se disponível
           if boleto.respond_to?(:to_hash)
-            boleto.to_hash.merge(valid: true, bank: bank)
+            hash = boleto.to_hash.merge(valid: true, bank: bank)
+            normalize_public_contract(hash, boleto)
           else
             # Fallback para versões anteriores
             build_boleto_hash(boleto, bank)
@@ -70,19 +76,23 @@ module BoletoApi
             return { valid: false, errors: boleto.errors.messages }
           end
 
-          # Usa dados_calculados do brcobranca v12.5+ se disponível
+          # Monta response garantindo contrato público consistente da API.
+          # brcobranca v12.5+ usa 'nosso_numero_boleto' internamente, mas
+          # a API sempre retorna 'nosso_numero' para compatibilidade.
+          base = {
+            valid: true,
+            nosso_numero: boleto.nosso_numero_boleto,
+            nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
+            codigo_barras: boleto.codigo_barras,
+            linha_digitavel: safe_call(boleto, :linha_digitavel),
+            agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto)
+          }
+
+          # Se disponível, inclui também os dados calculados adicionais (sem sobrescrever)
           if boleto.respond_to?(:dados_calculados)
-            boleto.dados_calculados.merge(valid: true)
+            boleto.dados_calculados.merge(base)
           else
-            # Fallback para versões anteriores
-            {
-              valid: true,
-              nosso_numero: boleto.nosso_numero_boleto,
-              nosso_numero_dv: safe_call(boleto, :nosso_numero_dv),
-              codigo_barras: boleto.codigo_barras,
-              linha_digitavel: safe_call(boleto, :linha_digitavel),
-              agencia_conta_boleto: safe_call(boleto, :agencia_conta_boleto)
-            }
+            base
           end
         end
 
@@ -111,6 +121,16 @@ module BoletoApi
         # @return [Hash] { valid: Boolean, content: String/nil, errors: Array }
         def generate_multi(boletos_data, format: 'pdf')
           validate_output_format!(format)
+
+          if boletos_data.nil? || boletos_data.empty?
+            return {
+              valid: false,
+              content: nil,
+              errors: [{ error: 'Lista de boletos não pode estar vazia' }],
+              valid_count: 0,
+              invalid_count: 0
+            }
+          end
 
           boletos = []
           errors = []
@@ -169,6 +189,38 @@ module BoletoApi
           Object.const_get("Brcobranca::Boleto::#{class_name}")
         rescue NameError
           raise ArgumentError, "Classe de boleto não encontrada para banco '#{bank}'"
+        end
+
+        # Filtra hash mantendo apenas atributos com setters na classe alvo
+        # Evita NoMethodError quando um campo não é suportado pelo banco
+        # (ex: digito_conta existe em Caixa/Santander mas não em Bradesco)
+        def filter_supported_attributes(klass, values)
+          instance = klass.new
+          values.each_with_object({}) do |(key, value), hash|
+            setter = "#{key}="
+            hash[key] = value if instance.respond_to?(setter)
+          end
+        rescue StandardError
+          # Se a instanciação vazia falhar, passa tudo (comportamento original)
+          values
+        end
+
+        # Normaliza o hash para o contrato público da API:
+        # - documento_numero → numero_documento (alias público)
+        # - nosso_numero é setado para o valor formatado (nosso_numero_boleto)
+        #   quando disponível, mantendo compatibilidade
+        def normalize_public_contract(hash, boleto)
+          # Alias público: numero_documento
+          if hash.key?(:documento_numero) && !hash.key?(:numero_documento)
+            hash[:numero_documento] = hash[:documento_numero]
+          end
+
+          # Garantir nosso_numero (já vem do to_hash, mas reforça com o formatado)
+          if boleto.respond_to?(:nosso_numero_boleto) && hash[:nosso_numero_boleto].nil?
+            hash[:nosso_numero_boleto] = boleto.nosso_numero_boleto rescue nil
+          end
+
+          hash
         end
 
         def safe_call(object, method)

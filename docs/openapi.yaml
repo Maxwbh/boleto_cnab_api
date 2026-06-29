@@ -2,16 +2,17 @@ openapi: 3.0.3
 info:
   title: Boleto CNAB API
   description: |
-    API REST para geração de boletos bancários brasileiros e arquivos CNAB.
+    API REST para geração de boletos bancários brasileiros, arquivos CNAB e parsing de extratos OFX.
 
-    Esta API expõe as funcionalidades da gem [brcobranca](https://github.com/kivanio/brcobranca)
+    Esta API expõe as funcionalidades da gem [brcobranca](https://github.com/Maxwbh/brcobranca)
     como um microsserviço HTTP, permitindo integração com qualquer linguagem de programação.
 
     ## Funcionalidades
 
-    - **Boletos**: Geração de boletos em PDF, JPG, PNG ou TIF
+    - **Boletos**: Geração de boletos em PDF, JPG, PNG ou TIF (18+ bancos)
     - **Remessa**: Geração de arquivos CNAB 240 e 400
-    - **Retorno**: Parsing de arquivos de retorno CNAB
+    - **Retorno**: Parsing de arquivos de retorno CNAB 240 e 400
+    - **OFX**: Parsing de extratos bancários OFX v1 (SGML) e v2 (XML) com extração automática de nosso_numero
 
     ## Bancos Suportados
 
@@ -28,9 +29,9 @@ info:
     | Unicred | 136 | ✅ | ✅ | ✅ |
     | Ailos | 085 | ✅ | ✅ | ❌ |
 
-  version: 1.1.0
+  version: 1.2.0
   contact:
-    name: Maxwell Oliveira
+    name: Maxwell da Silva Oliveira
     email: maxwbh@gmail.com
     url: https://www.msbrasil.inf.br
   license:
@@ -52,6 +53,8 @@ tags:
     description: Geração de arquivos de remessa CNAB
   - name: Retorno
     description: Parsing de arquivos de retorno CNAB
+  - name: OFX
+    description: Parsing de extratos bancários OFX
 
 paths:
   /api/health:
@@ -273,25 +276,30 @@ paths:
       summary: Gerar arquivo de remessa
       description: Gera arquivo de remessa CNAB 240 ou 400
       operationId: generateRemessa
+      parameters:
+        - name: bank
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/BankCode'
+        - name: type
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CnabType'
       requestBody:
         required: true
         content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemessaRequest'
           multipart/form-data:
             schema:
               type: object
               required:
-                - type
                 - data
               properties:
-                type:
-                  $ref: '#/components/schemas/CnabType'
                 data:
                   type: string
                   format: binary
-                  description: Arquivo JSON com dados da remessa
+                  description: Arquivo JSON com dados da remessa e pagamentos
       responses:
         '200':
           description: Arquivo de remessa gerado
@@ -314,6 +322,17 @@ paths:
       summary: Processar arquivo de retorno
       description: Faz parsing de arquivo de retorno CNAB 240 ou 400
       operationId: processRetorno
+      parameters:
+        - name: bank
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/BankCode'
+        - name: type
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CnabType'
       requestBody:
         required: true
         content:
@@ -321,14 +340,8 @@ paths:
             schema:
               type: object
               required:
-                - bank
-                - type
                 - data
               properties:
-                bank:
-                  $ref: '#/components/schemas/BankCode'
-                type:
-                  $ref: '#/components/schemas/CnabType'
                 data:
                   type: string
                   format: binary
@@ -346,6 +359,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /api/ofx/parse:
+    post:
+      tags:
+        - OFX
+      summary: Parsear arquivo OFX (extrato bancário)
+      description: |
+        Parseia arquivo OFX e retorna JSON estruturado com:
+        - Dados do banco (ORG, FID)
+        - Dados da conta (agência, número, tipo)
+        - Período do extrato
+        - Saldo
+        - Lista de transações classificadas (crédito/débito)
+        - Extração automática de `nosso_numero` do campo memo por banco
+        - Resumo com totais de créditos e débitos
+
+        **Recursos:**
+        - Suporta OFX v1 (SGML) e v2 (XML)
+        - Conversão automática de encoding Latin-1 → UTF-8
+        - Extração por regex para Sicoob, Itaú, Banco do Brasil, Bradesco e Caixa
+        - Fallback genérico para outros bancos
+
+        **Filtros opcionais:**
+        - `somente_creditos=true`: retorna apenas transações de crédito
+      operationId: parseOfx
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Arquivo OFX (extrato bancário)
+                somente_creditos:
+                  type: string
+                  enum: ['true', 'false']
+                  default: 'false'
+                  description: Se 'true', retorna apenas transações de crédito
+      responses:
+        '201':
+          description: Arquivo OFX parseado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfxResponse'
+        '400':
+          description: Arquivo OFX inválido ou ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfxError'
 
 components:
   schemas:
@@ -383,8 +452,8 @@ components:
     CnabType:
       type: string
       enum:
-        - '240'
-        - '400'
+        - cnab240
+        - cnab400
       description: Tipo de arquivo CNAB
 
     HealthResponse:
@@ -558,18 +627,12 @@ components:
     RemessaRequest:
       type: object
       required:
-        - bank
-        - type
         - empresa_mae
         - documento_cedente
         - agencia
         - conta_corrente
         - pagamentos
       properties:
-        bank:
-          $ref: '#/components/schemas/BankCode'
-        type:
-          $ref: '#/components/schemas/CnabType'
         empresa_mae:
           type: string
           description: Nome da empresa
@@ -592,6 +655,10 @@ components:
         carteira:
           type: string
           example: '18'
+        variacao:
+          type: string
+          description: Variação da carteira (requerido para alguns bancos como Sicoob)
+          example: '019'
         sequencial_remessa:
           type: integer
           example: 1
@@ -672,6 +739,138 @@ components:
           type: string
           description: Descrição da ocorrência
 
+    OfxResponse:
+      type: object
+      properties:
+        banco:
+          type: object
+          description: Identificação do banco do extrato
+          properties:
+            org:
+              type: string
+              description: Organização (ORG do OFX)
+              example: SICOOB
+            fid:
+              type: string
+              description: ID do banco (FID do OFX)
+              example: '756'
+        conta:
+          type: object
+          description: Dados da conta bancária
+          properties:
+            agencia:
+              type: string
+              description: Agência (bank_id do OFX)
+              example: '756'
+            numero:
+              type: string
+              description: Número da conta
+              example: '12345-6'
+            tipo:
+              type: string
+              description: Tipo da conta (CHECKING, SAVINGS, etc)
+              example: CHECKING
+        periodo:
+          type: object
+          description: Período coberto pelo extrato
+          properties:
+            inicio:
+              type: string
+              format: date
+              example: '2025-01-01'
+            fim:
+              type: string
+              format: date
+              example: '2025-01-31'
+        saldo:
+          type: object
+          properties:
+            valor:
+              type: number
+              format: float
+              example: 15420.50
+            data:
+              type: string
+              format: date
+              example: '2025-01-31'
+        transacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfxTransacao'
+        resumo:
+          type: object
+          properties:
+            total_transacoes:
+              type: integer
+              example: 45
+            total_creditos:
+              type: integer
+              example: 28
+            total_debitos:
+              type: integer
+              example: 17
+            soma_creditos:
+              type: number
+              format: float
+              example: 85000.00
+            soma_debitos:
+              type: number
+              format: float
+              example: 69579.50
+
+    OfxTransacao:
+      type: object
+      properties:
+        fitid:
+          type: string
+          description: ID único da transação no OFX
+          example: '202501150001'
+        tipo:
+          type: string
+          enum: [CREDIT, DEBIT]
+          description: Crédito ou débito
+          example: CREDIT
+        data:
+          type: string
+          format: date
+          example: '2025-01-15'
+        valor:
+          type: number
+          format: float
+          description: Valor absoluto (sempre positivo)
+          example: 1250.00
+        memo:
+          type: string
+          description: Descrição da transação
+          example: COBRANCA SICOOB 0000012345
+        name:
+          type: string
+          description: Nome do beneficiário/pagador
+        checknum:
+          type: string
+          description: Número do cheque (quando aplicável)
+        refnum:
+          type: string
+          description: Número de referência
+        nosso_numero_extraido:
+          type: string
+          nullable: true
+          description: Nosso número extraído do memo via regex específica do banco
+          example: '0000012345'
+
+    OfxError:
+      type: object
+      required:
+        - erro
+      properties:
+        erro:
+          type: string
+          description: Mensagem de erro
+          examples:
+            - Arquivo OFX inválido ou não reconhecido
+            - Nenhum arquivo enviado
+            - Nenhuma conta encontrada no arquivo
+
     Error:
       type: object
       required:
@@ -687,3 +886,9 @@ components:
             type: array
             items:
               type: string
+        details:
+          type: string
+          description: Detalhes do erro
+        type:
+          type: string
+          description: Tipo do erro (ex ArgumentError, ValidationError)

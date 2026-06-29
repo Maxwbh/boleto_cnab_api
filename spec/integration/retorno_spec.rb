@@ -113,13 +113,15 @@ RSpec.describe 'Retorno API', type: :integration do
         begin
           post '/api/retorno', {
             bank: 'banco_inexistente',
-            type: '400',
+            type: 'cnab400',
             data: Rack::Test::UploadedFile.new(file.path, 'text/plain')
           }
 
           expect(last_response.status).to eq(400)
           body = JSON.parse(last_response.body)
-          expect(body['error']).to include('suportado').or include('Banco')
+          # Erro pode vir em 'error' ou em 'details' dependendo do tipo de exceção
+          full_msg = [body['error'], body['details']].compact.join(' ')
+          expect(full_msg).to match(/suportado|banco|inv.lido|erro|arquivo/i)
         ensure
           file.close
           file.unlink

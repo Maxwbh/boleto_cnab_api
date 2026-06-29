@@ -13,8 +13,18 @@ RSpec.describe BoletoApi::Config::Constants do
       expect(described_class::SUPPORTED_BANKS).to include('sicoob')
     end
 
+    it 'includes Banco C6 (336) since v1.3.0 / brcobranca v12.6.1+' do
+      expect(described_class::SUPPORTED_BANKS).to include('banco_c6')
+    end
+
     it 'is frozen' do
       expect(described_class::SUPPORTED_BANKS).to be_frozen
+    end
+  end
+
+  describe '::CNAB400_BANKS' do
+    it 'includes Banco C6 (via nativo brcobranca v12.6.1+)' do
+      expect(described_class::CNAB400_BANKS).to include('banco_c6')
     end
   end
 
