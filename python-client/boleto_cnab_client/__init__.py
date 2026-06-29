@@ -15,7 +15,7 @@ Uso básico:
 """
 
 __title__ = 'boleto-cnab-client'
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 __author__ = 'Maxwell da Silva Oliveira'
 __author_email__ = 'maxwbh@gmail.com'
 __license__ = 'MIT'
@@ -29,13 +29,37 @@ from .exceptions import (
     BoletoTimeoutError
 )
 from .models import BoletoData, BoletoResponse
+from .types import (
+    BoletoDataDict,
+    BoletoResponseDict,
+    ValidationResultDict,
+    HealthCheckDict,
+    NossoNumeroDict,
+    RemessaPagamentoDict,
+    RemessaRequestDict,
+    RetornoItemDict,
+    RetornoResponseDict
+)
 
 __all__ = [
+    # Cliente
     'BoletoClient',
+    # Exceções
     'BoletoAPIError',
     'BoletoValidationError',
     'BoletoConnectionError',
     'BoletoTimeoutError',
+    # Modelos (dataclass)
     'BoletoData',
-    'BoletoResponse'
+    'BoletoResponse',
+    # Tipos TypedDict
+    'BoletoDataDict',
+    'BoletoResponseDict',
+    'ValidationResultDict',
+    'HealthCheckDict',
+    'NossoNumeroDict',
+    'RemessaPagamentoDict',
+    'RemessaRequestDict',
+    'RetornoItemDict',
+    'RetornoResponseDict'
 ]

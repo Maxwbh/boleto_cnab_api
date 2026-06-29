@@ -1,21 +1,26 @@
 # Boleto CNAB Client - Python
 
+> **Versão:** 1.1.0 | **Python:** 3.8+
+
 Cliente Python oficial para a API de geração de Boletos Bancários Brasileiros.
 
-[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
+[![Version](https://img.shields.io/badge/version-1.1.0-green)](../VERSION)
 
 ## 📋 Características
 
 - ✅ Interface Pythonic simples e intuitiva
-- ✅ Suporte para 6+ bancos brasileiros
+- ✅ Suporte para 18 bancos brasileiros
 - ✅ Retry automático com backoff exponencial
+- ✅ **TypedDict** para tipagem estática (v1.1.0)
 - ✅ Type hints completos
 - ✅ Tratamento de erros robusto
 - ✅ Validação de dados antes da geração
 - ✅ Geração de PDF e imagens
 - ✅ Logging configurável
 - ✅ Sessão HTTP reutilizável
+- ✅ Testes pytest completos (v1.1.0)
 
 ## 🏦 Bancos Suportados
 
@@ -432,5 +437,12 @@ Este cliente utiliza a API Boleto CNAB, que por sua vez usa a gem [BRCobranca](h
 
 ---
 
-**Versão:** 1.0.0
-**Última atualização:** 2025-11-27
+**Versão:** 1.1.0
+**Última atualização:** 2026-01-06
+
+### Novidades v1.1.0
+
+- TypedDict para tipagem estática (`BoletoDataDict`, `BoletoResponseDict`)
+- Testes pytest completos
+- `pyproject.toml` (PEP 517/518)
+- Compatibilidade com Python 3.8+ via `typing_extensions`

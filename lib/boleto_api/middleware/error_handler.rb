@@ -9,6 +9,8 @@ module BoletoApi
         @app.call(env)
       rescue JSON::ParserError => e
         error_response(400, 'JSON inválido', e.message, 'JSON::ParserError')
+      rescue Grape::Exceptions::ValidationErrors => e
+        error_response(400, 'Parâmetro inválido', e.message, 'ValidationError')
       rescue ArgumentError => e
         error_response(400, 'Parâmetro inválido', e.message, 'ArgumentError')
       rescue Brcobranca::BoletoInvalido => e

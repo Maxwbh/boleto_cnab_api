@@ -12,12 +12,15 @@ require_relative 'boleto_api/services/field_mapper'
 require_relative 'boleto_api/services/boleto_service'
 require_relative 'boleto_api/services/remessa_service'
 require_relative 'boleto_api/services/retorno_service'
+require_relative 'boleto_api/services/nosso_numero_extractor'
+require_relative 'boleto_api/services/ofx_parser_service'
 require_relative 'boleto_api/middleware/error_handler'
 require_relative 'boleto_api/middleware/request_logger'
 require_relative 'boleto_api/endpoints/health_endpoint'
 require_relative 'boleto_api/endpoints/boleto_endpoint'
 require_relative 'boleto_api/endpoints/remessa_endpoint'
 require_relative 'boleto_api/endpoints/retorno_endpoint'
+require_relative 'boleto_api/endpoints/ofx_endpoint'
 
 module BoletoApi
   class << self
@@ -49,5 +52,6 @@ module BoletoApi
     mount Endpoints::BoletoEndpoint
     mount Endpoints::RemessaEndpoint
     mount Endpoints::RetornoEndpoint
+    mount Endpoints::OFXEndpoint
   end
 end

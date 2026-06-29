@@ -12,14 +12,14 @@ RUN apk add --no-cache \
 # Copiar apenas arquivos necessários para bundle
 COPY Gemfile Gemfile.lock* ./
 
-# Instalar gems
+# Instalar gems no path padrão do sistema
 RUN gem install bundler:2.5.11 --no-document && \
-    bundle config set --local deployment 'true' && \
     bundle config set --local without 'development test' && \
+    bundle config set --local path '/usr/local/bundle' && \
     bundle install --jobs 4 && \
     rm -rf /usr/local/bundle/cache/*.gem && \
-    find /usr/local/bundle/gems/ -name "*.c" -delete && \
-    find /usr/local/bundle/gems/ -name "*.o" -delete
+    find /usr/local/bundle/gems/ -name "*.c" -delete 2>/dev/null || true && \
+    find /usr/local/bundle/gems/ -name "*.o" -delete 2>/dev/null || true
 
 # Runtime stage
 FROM alpine:3.19
@@ -39,6 +39,7 @@ RUN apk add --no-cache \
     ruby \
     ghostscript \
     ghostscript-fonts \
+    && gem install bundler:2.5.11 --no-document \
     && rm -rf /var/cache/apk/*
 
 # Criar usuário não-root
@@ -59,7 +60,10 @@ RUN mkdir -p tmp log && chown -R app:app tmp log
 ENV RACK_ENV=production \
     PORT=9292 \
     MALLOC_ARENA_MAX=2 \
-    RUBY_GC_HEAP_GROWTH_FACTOR=1.1
+    RUBY_GC_HEAP_GROWTH_FACTOR=1.1 \
+    BUNDLE_PATH=/usr/local/bundle \
+    GEM_HOME=/usr/local/bundle \
+    PATH="/usr/local/bundle/bin:$PATH"
 
 # Expor porta
 EXPOSE 9292

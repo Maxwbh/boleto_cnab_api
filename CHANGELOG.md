@@ -5,6 +5,74 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.2.0] - 2026-04-08
+
+### Adicionado
+
+#### Endpoint OFX (Extrato Bancário)
+- ✅ `POST /api/ofx/parse` - Parsing de arquivos OFX com retorno JSON estruturado
+- ✅ Suporte a OFX v1 (SGML) e v2 (XML)
+- ✅ Conversão automática de encoding Latin-1 para UTF-8
+- ✅ Filtro `somente_creditos=true` para retornar apenas créditos
+- ✅ Extração automática de `nosso_numero` do campo memo por banco
+
+#### Módulo NossoNumeroExtractor
+- ✅ Extração por regex para Sicoob (756), Itaú (341), BB (001), Bradesco (237), Caixa (104)
+- ✅ Fallback genérico para bancos não mapeados
+
+#### Testes
+- ✅ 20 testes unitários para NossoNumeroExtractor
+- ✅ 14 testes unitários para OFXParserService
+- ✅ 7 testes de integração para endpoint OFX
+- ✅ Fixtures OFX para Sicoob e Itaú
+
+### Modificado
+- 📦 Gemfile: adicionada gem `ofx` para parsing de extratos bancários
+- 📦 Gemfile: adicionadas gems `rspec` e `rack-test` no grupo de teste
+- 🔧 ErrorHandler: tratamento de `Grape::Exceptions::ValidationErrors` como HTTP 400
+
+---
+
+## [1.1.0] - 2026-01-06
+
+### Adicionado
+
+#### Arquitetura Modular (Fase 1)
+- ✅ Refatoração completa: de 444 linhas em 1 arquivo para 12 arquivos modulares
+- ✅ `lib/boleto_api/config/constants.rb` - Constantes centralizadas
+- ✅ `lib/boleto_api/services/` - Camada de serviços (BoletoService, RemessaService, RetornoService)
+- ✅ `lib/boleto_api/endpoints/` - Endpoints separados por domínio
+- ✅ `lib/boleto_api/middleware/` - Error handler e request logger
+
+#### Cliente Python (Fase 3)
+- ✅ `pyproject.toml` - Configuração moderna PEP 517/518
+- ✅ `types.py` - TypedDict para tipagem estática (BoletoDataDict, BoletoResponseDict, etc.)
+- ✅ Suite de testes pytest completa (test_client.py, test_models.py, test_exceptions.py, test_types.py)
+- ✅ Compatibilidade com Python 3.8+ via typing_extensions
+
+#### Infraestrutura (Fase 4)
+- ✅ Testes de integração: `spec/integration/` (remessa, retorno, multi_boleto)
+- ✅ Documentação OpenAPI 3.0: `docs/openapi.yaml`
+- ✅ Interface Swagger UI: `docs/swagger.html`
+- ✅ Docker multi-stage build otimizado (~150MB)
+
+#### Integração brcobranca v12.5+ (Fase 5)
+- ✅ BoletoService usa `boleto.to_hash` e `dados_calculados`
+- ✅ RemessaService usa `Brcobranca::Remessa.criar` factory method
+- ✅ RetornoService usa `Brcobranca::Retorno.parse` com detecção automática
+- ✅ Fallback mantido para versões anteriores da gem
+
+### Modificado
+- 📦 Gemfile atualizado para usar fork @maxwbh do brcobranca
+- 📝 TODO_INTEGRACAO.md - Todas as 5 fases concluídas
+- 🔧 Services refatorados para usar novos métodos da gem
+
+### Repositórios
+- brcobranca: https://github.com/Maxwbh/brcobranca (v12.5.0)
+- boleto_cnab_api: https://github.com/Maxwbh/boleto_cnab_api (v1.1.0)
+
+---
+
 ## [1.0.0] - 2025-11-27
 
 ### Adicionado
@@ -76,10 +144,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### Em Desenvolvimento
-- 🔄 Cliente Python oficial instalável via pip
-- 🔄 Versionamento semântico automatizado
+- 🔄 Publicação do cliente Python no PyPI
 - 🔄 GitHub Actions para CI/CD
 - 🔄 Badges de status e qualidade
+- 🔄 Suporte a PIX (QR Code)
 
 ---
 

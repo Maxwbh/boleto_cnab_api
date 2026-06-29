@@ -88,6 +88,7 @@ with open('boleto.pdf', 'wb') as f:
 | `/api/boleto/multi` | POST | Gerar múltiplos boletos |
 | `/api/remessa` | POST | Gerar arquivo de remessa CNAB |
 | `/api/retorno` | POST | Processar arquivo de retorno CNAB |
+| `/api/ofx/parse` | POST | Parsear arquivo OFX (extrato bancário) |
 
 ### Guias Completos
 
@@ -168,6 +169,27 @@ Ver mais exemplos em [`examples/python/`](./examples/python/)
 
 Ver documentação completa de campos em [`docs/fields/README.md`](./docs/fields/README.md)
 
+## 📄 Parsing de Extrato OFX
+
+O endpoint `POST /api/ofx/parse` permite parsear arquivos OFX (extrato bancário) e obter transações em JSON.
+
+```bash
+# Enviar arquivo OFX
+curl -X POST http://localhost:9292/api/ofx/parse \
+  -F "file=@extrato.ofx"
+
+# Filtrar apenas créditos
+curl -X POST http://localhost:9292/api/ofx/parse \
+  -F "file=@extrato.ofx" \
+  -F "somente_creditos=true"
+```
+
+**Recursos:**
+- Suporta OFX v1 (SGML) e v2 (XML)
+- Conversão automática de encoding Latin-1 para UTF-8
+- Extração automática de `nosso_numero` do campo memo por banco (Sicoob, Itaú, BB, Bradesco, Caixa)
+- Resumo com totais de créditos/débitos
+
 ## 🧪 Testes
 
 ```bash
@@ -195,12 +217,15 @@ boleto_cnab_api/
 │       │   ├── field_mapper.rb           # Mapeamento de campos
 │       │   ├── boleto_service.rb         # Lógica de boletos
 │       │   ├── remessa_service.rb        # Lógica de remessas
-│       │   └── retorno_service.rb        # Lógica de retornos
+│       │   ├── retorno_service.rb        # Lógica de retornos
+│       │   ├── ofx_parser_service.rb     # Parsing de arquivos OFX
+│       │   └── nosso_numero_extractor.rb # Extração de nosso_numero
 │       ├── endpoints/
 │       │   ├── health_endpoint.rb        # GET /api/health
 │       │   ├── boleto_endpoint.rb        # /api/boleto/*
 │       │   ├── remessa_endpoint.rb       # POST /api/remessa
-│       │   └── retorno_endpoint.rb       # POST /api/retorno
+│       │   ├── retorno_endpoint.rb       # POST /api/retorno
+│       │   └── ofx_endpoint.rb           # POST /api/ofx/parse
 │       └── middleware/
 │           ├── error_handler.rb          # Tratamento de erros
 │           └── request_logger.rb         # Logs estruturados

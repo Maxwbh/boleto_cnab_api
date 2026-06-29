@@ -8,7 +8,7 @@ import time
 
 
 def test_run():
-    cmd = ["docker", "build", "-t", "akretion/boleto_cnab_api", "."]
+    cmd = ["docker", "build", "-t", "maxwbh/boleto_cnab_api", "."]
     result = subprocess.run(
         cmd, check=False, capture_output=True, text=True, cwd=Path(__file__).parent
     )
@@ -21,7 +21,7 @@ def test_run():
         "-p",
         "9292:9292",
         "--name=boleto_cnab_api",
-        "akretion/boleto_cnab_api",
+        "maxwbh/boleto_cnab_api",
     ]
     result = subprocess.run(cmd, check=False, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr + "\n" + result.stdout

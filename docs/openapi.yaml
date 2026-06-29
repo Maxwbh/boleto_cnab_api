@@ -1,0 +1,689 @@
+openapi: 3.0.3
+info:
+  title: Boleto CNAB API
+  description: |
+    API REST para geração de boletos bancários brasileiros e arquivos CNAB.
+
+    Esta API expõe as funcionalidades da gem [brcobranca](https://github.com/kivanio/brcobranca)
+    como um microsserviço HTTP, permitindo integração com qualquer linguagem de programação.
+
+    ## Funcionalidades
+
+    - **Boletos**: Geração de boletos em PDF, JPG, PNG ou TIF
+    - **Remessa**: Geração de arquivos CNAB 240 e 400
+    - **Retorno**: Parsing de arquivos de retorno CNAB
+
+    ## Bancos Suportados
+
+    | Banco | Código | Boleto | CNAB 240 | CNAB 400 |
+    |-------|--------|--------|----------|----------|
+    | Banco do Brasil | 001 | ✅ | ✅ | ✅ |
+    | Itaú | 341 | ✅ | ❌ | ✅ |
+    | Bradesco | 237 | ✅ | ❌ | ✅ |
+    | Caixa | 104 | ✅ | ✅ | ❌ |
+    | Santander | 033 | ✅ | ✅ | ✅ |
+    | Sicoob | 756 | ✅ | ✅ | ✅ |
+    | Sicredi | 748 | ✅ | ✅ | ❌ |
+    | Banrisul | 041 | ✅ | ❌ | ✅ |
+    | Unicred | 136 | ✅ | ✅ | ✅ |
+    | Ailos | 085 | ✅ | ✅ | ❌ |
+
+  version: 1.1.0
+  contact:
+    name: Maxwell Oliveira
+    email: maxwbh@gmail.com
+    url: https://www.msbrasil.inf.br
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://boleto-cnab-api.onrender.com
+    description: Production (Render.com)
+  - url: http://localhost:9292
+    description: Local development
+
+tags:
+  - name: Health
+    description: Verificação de saúde da API
+  - name: Boleto
+    description: Operações com boletos bancários
+  - name: Remessa
+    description: Geração de arquivos de remessa CNAB
+  - name: Retorno
+    description: Parsing de arquivos de retorno CNAB
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Verificar status da API
+      description: Endpoint para health check da API
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API funcionando normalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: OK
+
+  /api/boleto/validate:
+    get:
+      tags:
+        - Boleto
+      summary: Validar dados do boleto
+      description: Valida os dados do boleto sem gerar o arquivo
+      operationId: validateBoleto
+      parameters:
+        - name: bank
+          in: query
+          required: true
+          description: Código do banco
+          schema:
+            $ref: '#/components/schemas/BankCode'
+        - name: data
+          in: query
+          required: true
+          description: Dados do boleto em JSON
+          schema:
+            type: string
+            format: json
+      responses:
+        '200':
+          description: Dados válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationSuccess'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /api/boleto/data:
+    get:
+      tags:
+        - Boleto
+      summary: Obter dados calculados do boleto
+      description: |
+        Retorna todos os dados calculados do boleto sem gerar o arquivo,
+        incluindo código de barras, linha digitável e nosso número formatado.
+      operationId: getBoletoData
+      parameters:
+        - name: bank
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/BankCode'
+        - name: data
+          in: query
+          required: true
+          description: Dados do boleto em JSON
+          schema:
+            type: string
+            format: json
+      responses:
+        '200':
+          description: Dados do boleto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoResponse'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/boleto/nosso_numero:
+    get:
+      tags:
+        - Boleto
+      summary: Gerar nosso número
+      description: Gera apenas o nosso número e campos relacionados
+      operationId: getNossoNumero
+      parameters:
+        - name: bank
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/BankCode'
+        - name: data
+          in: query
+          required: true
+          schema:
+            type: string
+            format: json
+      responses:
+        '200':
+          description: Nosso número gerado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NossoNumeroResponse'
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/boleto:
+    get:
+      tags:
+        - Boleto
+      summary: Gerar boleto
+      description: Gera boleto em PDF ou imagem
+      operationId: generateBoleto
+      parameters:
+        - name: bank
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/BankCode'
+        - name: type
+          in: query
+          required: true
+          description: Formato de saída
+          schema:
+            $ref: '#/components/schemas/OutputType'
+        - name: data
+          in: query
+          required: true
+          description: Dados do boleto em JSON
+          schema:
+            type: string
+            format: json
+      responses:
+        '200':
+          description: Arquivo gerado
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/tiff:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/boleto/multi:
+    post:
+      tags:
+        - Boleto
+      summary: Gerar múltiplos boletos
+      description: Gera múltiplos boletos em um único arquivo
+      operationId: generateMultipleBoletos
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - type
+                - data
+              properties:
+                type:
+                  $ref: '#/components/schemas/OutputType'
+                data:
+                  type: string
+                  format: binary
+                  description: Arquivo JSON com array de boletos
+      responses:
+        '200':
+          description: Arquivo gerado com múltiplos boletos
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/remessa:
+    post:
+      tags:
+        - Remessa
+      summary: Gerar arquivo de remessa
+      description: Gera arquivo de remessa CNAB 240 ou 400
+      operationId: generateRemessa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemessaRequest'
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - type
+                - data
+              properties:
+                type:
+                  $ref: '#/components/schemas/CnabType'
+                data:
+                  type: string
+                  format: binary
+                  description: Arquivo JSON com dados da remessa
+      responses:
+        '200':
+          description: Arquivo de remessa gerado
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Conteúdo do arquivo CNAB
+        '400':
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/retorno:
+    post:
+      tags:
+        - Retorno
+      summary: Processar arquivo de retorno
+      description: Faz parsing de arquivo de retorno CNAB 240 ou 400
+      operationId: processRetorno
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - bank
+                - type
+                - data
+              properties:
+                bank:
+                  $ref: '#/components/schemas/BankCode'
+                type:
+                  $ref: '#/components/schemas/CnabType'
+                data:
+                  type: string
+                  format: binary
+                  description: Arquivo de retorno CNAB
+      responses:
+        '200':
+          description: Retorno processado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoResponse'
+        '400':
+          description: Erro de processamento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    BankCode:
+      type: string
+      enum:
+        - banco_brasil
+        - itau
+        - bradesco
+        - caixa
+        - santander
+        - sicoob
+        - sicredi
+        - banrisul
+        - banestes
+        - banco_nordeste
+        - banco_brasilia
+        - unicred
+        - credisis
+        - safra
+        - citibank
+        - hsbc
+        - ailos
+      description: Código do banco suportado
+
+    OutputType:
+      type: string
+      enum:
+        - pdf
+        - jpg
+        - png
+        - tif
+      description: Formato de saída do boleto
+
+    CnabType:
+      type: string
+      enum:
+        - '240'
+        - '400'
+      description: Tipo de arquivo CNAB
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: OK
+
+    BoletoData:
+      type: object
+      required:
+        - agencia
+        - conta_corrente
+        - nosso_numero
+        - valor
+        - cedente
+        - documento_cedente
+        - sacado
+        - sacado_documento
+      properties:
+        agencia:
+          type: string
+          description: Número da agência (sem dígito)
+          example: '3073'
+        conta_corrente:
+          type: string
+          description: Número da conta corrente
+          example: '12345678'
+        nosso_numero:
+          type: string
+          description: Nosso número do boleto
+          example: '123456789'
+        valor:
+          type: number
+          format: float
+          description: Valor do boleto em reais
+          example: 1500.00
+        cedente:
+          type: string
+          description: Nome do cedente (beneficiário)
+          example: Empresa LTDA
+        documento_cedente:
+          type: string
+          description: CNPJ/CPF do cedente
+          example: '12345678000100'
+        sacado:
+          type: string
+          description: Nome do sacado (pagador)
+          example: João da Silva
+        sacado_documento:
+          type: string
+          description: CNPJ/CPF do sacado
+          example: '12345678900'
+        convenio:
+          type: string
+          description: Número do convênio (quando aplicável)
+          example: '01234567'
+        carteira:
+          type: string
+          description: Código da carteira
+          example: '18'
+        data_vencimento:
+          type: string
+          description: Data de vencimento (YYYY/MM/DD)
+          example: '2025/12/31'
+        numero_documento:
+          type: string
+          description: Número do documento
+          example: 'NF-2025-001'
+        sacado_endereco:
+          type: string
+          description: Endereço completo do sacado
+          example: 'Rua Teste, 100, Centro, São Paulo, SP'
+        instrucao1:
+          type: string
+          description: Primeira linha de instrução
+          example: Não receber após o vencimento
+        instrucao2:
+          type: string
+          description: Segunda linha de instrução
+        instrucao3:
+          type: string
+        instrucao4:
+          type: string
+        instrucao5:
+          type: string
+        instrucao6:
+          type: string
+
+    BoletoResponse:
+      type: object
+      properties:
+        bank:
+          type: string
+          example: banco_brasil
+        nosso_numero:
+          type: string
+          description: Nosso número formatado
+          example: '00000123456-X'
+        nosso_numero_dv:
+          type: string
+          description: Dígito verificador do nosso número
+          example: 'X'
+        codigo_barras:
+          type: string
+          description: Código de barras (44 dígitos)
+          example: '00191234567890123456789012345678901234567890'
+        linha_digitavel:
+          type: string
+          description: Linha digitável formatada
+          example: '00191.23456 78901.234567 89012.345678 9 01234567890123'
+        agencia_conta_boleto:
+          type: string
+          description: Agência/conta formatados para impressão
+          example: '3073 / 12345678-0'
+        numero_documento:
+          type: string
+        valor_documento:
+          type: number
+          format: float
+        data_vencimento:
+          type: string
+        cedente:
+          type: string
+        sacado:
+          type: string
+
+    NossoNumeroResponse:
+      type: object
+      properties:
+        nosso_numero:
+          type: string
+        nosso_numero_dv:
+          type: string
+        codigo_barras:
+          type: string
+        linha_digitavel:
+          type: string
+        agencia_conta_boleto:
+          type: string
+
+    ValidationSuccess:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Dados válidos
+
+    ValidationError:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          example: false
+        validation_errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            nosso_numero:
+              - não pode ficar em branco
+
+    RemessaRequest:
+      type: object
+      required:
+        - bank
+        - type
+        - empresa_mae
+        - documento_cedente
+        - agencia
+        - conta_corrente
+        - pagamentos
+      properties:
+        bank:
+          $ref: '#/components/schemas/BankCode'
+        type:
+          $ref: '#/components/schemas/CnabType'
+        empresa_mae:
+          type: string
+          description: Nome da empresa
+          example: Empresa LTDA
+        documento_cedente:
+          type: string
+          example: '12345678000100'
+        agencia:
+          type: string
+          example: '3073'
+        conta_corrente:
+          type: string
+          example: '12345678'
+        digito_conta:
+          type: string
+          example: '0'
+        convenio:
+          type: string
+          example: '01234567'
+        carteira:
+          type: string
+          example: '18'
+        sequencial_remessa:
+          type: integer
+          example: 1
+        pagamentos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pagamento'
+
+    Pagamento:
+      type: object
+      required:
+        - nosso_numero
+        - data_vencimento
+        - valor
+        - sacado
+        - sacado_documento
+      properties:
+        nosso_numero:
+          type: string
+          example: '123456789'
+        numero_documento:
+          type: string
+          example: 'NF-2025-001'
+        data_vencimento:
+          type: string
+          example: '2025/12/31'
+        valor:
+          type: number
+          format: float
+          example: 1500.00
+        sacado:
+          type: string
+          example: João da Silva
+        sacado_documento:
+          type: string
+          example: '12345678900'
+        sacado_endereco:
+          type: string
+        sacado_cidade:
+          type: string
+        sacado_uf:
+          type: string
+        sacado_cep:
+          type: string
+
+    RetornoResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/RetornoItem'
+
+    RetornoItem:
+      type: object
+      properties:
+        nosso_numero:
+          type: string
+          description: Nosso número do título
+        numero_documento:
+          type: string
+        data_credito:
+          type: string
+          description: Data do crédito (YYYY-MM-DD)
+        data_ocorrencia:
+          type: string
+          description: Data da ocorrência
+        valor_titulo:
+          type: number
+          format: float
+        valor_pago:
+          type: number
+          format: float
+        valor_tarifa:
+          type: number
+          format: float
+        codigo_ocorrencia:
+          type: string
+          description: Código da ocorrência bancária
+        motivo_ocorrencia:
+          type: string
+          description: Descrição da ocorrência
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Mensagem de erro
+          example: Dados inválidos
+        validation_errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
