@@ -384,4 +384,4 @@ MIT License - veja [LICENSE](../../LICENSE)
 ---
 
 **Última atualização:** 2026-04-10
-**Versão:** 1.3.1
+**Versão:** 1.3.2
