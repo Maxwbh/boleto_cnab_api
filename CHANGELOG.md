@@ -5,6 +5,32 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.3.3] - 2026-06-12
+
+### Modificado
+
+- 📦 **brcobranca atualizado**: `12.9.0` → `12.10.1` (revision `fa43157` → `cca5f1a`).
+
+### Adicionado (disponível via gem)
+
+A v12.10.0/12.10.1 do brcobranca traz novos recursos no motor de geração
+(ainda não expostos como parâmetros nos endpoints desta API, mas já presentes
+na imagem):
+
+- 🧾 **PrawnCarne** — template de carnê (1 página ou 3 vias por folha A4) com QR PIX
+  e código de barras I2/5, sem dependência de GhostScript.
+- 🎨 **PrawnTema** — tema visual customizável (logo, cor da marca com contraste
+  automático, rodapé de contato). Retrocompatível.
+- 💧 **Marca d'água** antifraude (`marca_dagua`) e suporte a **fontes TTF**
+  (`fonte_ttf`) com UTF-8 completo no Prawn.
+
+### Corrigido (herdado do brcobranca)
+
+- 🐛 **PIX/QR Code**: correção de sobreposição QR × código de barras no Bolepix
+  (Prawn e RGhost) e nível de correção de erro do QR ajustado para M (padrão BACEN).
+- 🐛 **Normalização de remessa**: além do Sicoob CNAB400 (`carteira`/`convenio`),
+  agora também Banco do Brasil CNAB 240/400 recebe padding automático de campos.
+
 ## [1.3.2] - 2026-06-12
 
 ### Modificado

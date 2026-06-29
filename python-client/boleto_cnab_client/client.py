@@ -1,5 +1,5 @@
 """
-Cliente principal para a API Boleto CNAB v1.3.2
+Cliente principal para a API Boleto CNAB v1.3.3
 """
 import base64
 import json
