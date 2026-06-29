@@ -1,8 +1,25 @@
 # Arquitetura da API
 
-> **Versão:** 1.4.1
+> **Versão:** 1.5.0
 
 Este documento descreve a arquitetura modular da Boleto CNAB API.
+
+## Papel no ecossistema (3 produtos)
+
+Este repositório é o **engine de renderização (BrCobrança)** — um dos 3 produtos:
+
+```
+Consumidores (ex.: Gestão-Contrato) ──► Boleto-API (gateway, Python) ──► ESTE repo (engine, Ruby)
+                                          providers C6/Sicoob, cofre        render boleto/CNAB/OFX/PIX-QR
+```
+
+- **Este engine (Ruby)** só **renderiza**: não fala com API de banco, não guarda
+  segredo, não conhece tenant. Expõe `/api/render/*` (corpo JSON) além das rotas
+  clássicas de boleto/CNAB/OFX.
+- O **gateway Boleto-API (Python)** orquestra cobrança registrada (C6/Sicoob) e
+  chama este engine via `brcobranca_proxy`.
+
+Decisão de topologia: [development/separacao-3-produtos.md](./development/separacao-3-produtos.md) (autoritativo).
 
 ## Visão Geral
 
@@ -26,9 +43,9 @@ A API é construída sobre o framework [Grape](https://github.com/ruby-grape/gra
          └──────────────────┘
 ```
 
-## Integração com brcobranca v12.10.2
+## Integração com brcobranca v12.10.3
 
-Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.10.2):
+Usa o fork [@maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) (v12.10.3):
 
 | Service | Método brcobranca | Fallback |
 |---------|------------------|----------|
@@ -44,7 +61,7 @@ Veja [development/brcobranca-fork.md](./development/brcobranca-fork.md) para det
 lib/
 ├── boleto_api.rb              # Entry point principal
 └── boleto_api/
-    ├── version.rb             # Versão da API (1.4.1)
+    ├── version.rb             # Versão da API (1.5.0)
     ├── config/
     │   └── constants.rb       # Constantes centralizadas
     ├── services/
@@ -61,6 +78,7 @@ lib/
     │   ├── remessa_endpoint.rb # POST /api/remessa
     │   ├── retorno_endpoint.rb # POST /api/retorno
     │   ├── ofx_endpoint.rb     # POST /api/ofx/parse
+    │   ├── render_endpoint.rb  # POST /api/render/{boleto,carne,remessa} (corpo JSON)
     │   └── docs_endpoint.rb    # /api/docs, /api/openapi.*
     └── middleware/
         ├── error_handler.rb    # Tratamento centralizado de erros
@@ -246,6 +264,17 @@ Logging estruturado em JSON:
 |--------|------|-----------|
 | POST | `/api/ofx/parse` | Parseia arquivo OFX e retorna JSON |
 
+#### RenderEndpoint (v1.5.0)
+
+Corpo JSON e resposta normalizada — superfície consumida pelo gateway Boleto-API
+(Python) via `brcobranca_proxy`. Reaproveita `BoletoService`/`RemessaService`.
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/render/boleto` | Dados (linha digitável/código de barras) + PDF base64 |
+| POST | `/api/render/carne` | Carnê 3-vias A4 em PDF base64 (template `carne`) |
+| POST | `/api/render/remessa` | Conteúdo do arquivo CNAB |
+
 ## Fluxo de Requisição
 
 ```
@@ -372,15 +401,19 @@ puts result[:linha_digitavel]
 
 ## Métricas
 
-| Métrica | v1.0.0 | v1.1.0 | v1.2.0 | v1.3.0 |
-|---------|--------|--------|--------|--------|
-| Linhas em boleto_api.rb | 444 | 53 | 55 | 60 |
-| Arquivos na lib/boleto_api/ | 1 | 12 | 14 | 14 |
-| Serviços | 0 | 4 | 6 | 6 |
-| Endpoints | 1 | 4 | 5 | 5 |
-| Bancos suportados | 10 | 17 | 17 | **18** (+Banco C6) |
-| Testes Ruby | ~30 | ~60 | 158 | **165** |
-| Testes Python | 0 | ~20 | 44 | **44** |
+| Métrica | v1.0.0 | v1.1.0 | v1.2.0 | v1.3.0 | v1.5.0 |
+|---------|--------|--------|--------|--------|--------|
+| Linhas em boleto_api.rb | 444 | 53 | 55 | 60 | 72 |
+| Arquivos na lib/boleto_api/ | 1 | 12 | 14 | 14 | 18 |
+| Serviços | 0 | 4 | 6 | 6 | 6 |
+| Endpoints (funcionais) | 1 | 4 | 5 | 5 | **6** (+render) |
+| Bancos suportados | 10 | 17 | 17 | 18 | 18 |
+| Testes Ruby | ~30 | ~60 | 158 | 165 | **229** |
+| Testes Python (client) | 0 | ~20 | 44 | 44 | 44 |
+| Testes Gateway Python | — | — | — | — | **34** |
+
+> Os números de "Testes Ruby" incluem ~20 specs de geração de PDF que exigem
+> GhostScript (passam em ambiente com `gs` instalado).
 
 ## Repositórios
 

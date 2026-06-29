@@ -1,0 +1,814 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Boleto-API (Python)",
+    "description": "Gateway de cobrança multi-banco (C6/Sicoob) + proxy ao engine brcobrança (Ruby).\n\n**Produto standalone** consumido por múltiplos sistemas; escopo por `tenant_id`.\n\n**Push de eventos (saída, não é um path desta API):** ao receber o webhook do banco, o gateway envia o evento normalizado (`WebhookEvent`) por `POST` ao consumidor dono do tenant, assinado em `X-Signature: sha256=<hmac_sha256(secret, raw_body)>`. Destino por tenant via `SUB__<tenant>__URL/SECRET`, com fallback global `EVENT_WEBHOOK_URL/SECRET`.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/cobranca": {
+      "post": {
+        "tags": [
+          "cobranca"
+        ],
+        "summary": "Registrar",
+        "operationId": "registrar_cobranca_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CobrancaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CobrancaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cobranca/{cobranca_id}": {
+      "get": {
+        "tags": [
+          "cobranca"
+        ],
+        "summary": "Consultar",
+        "operationId": "consultar_cobranca__cobranca_id__get",
+        "parameters": [
+          {
+            "name": "cobranca_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cobranca Id"
+            }
+          },
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Provider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CobrancaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "cobranca"
+        ],
+        "summary": "Baixar",
+        "operationId": "baixar_cobranca__cobranca_id__delete",
+        "parameters": [
+          {
+            "name": "cobranca_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cobranca Id"
+            }
+          },
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Provider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CobrancaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carne": {
+      "post": {
+        "tags": [
+          "carne"
+        ],
+        "summary": "Gerar Carne",
+        "description": "Registra N parcelas no provider e monta o carnê (3-vias A4) no engine.\n\nBancos registram cobranças individuais; o PDF de carnê é montado pelo\nBrCobrança (template 'carne'). Quando o banco devolve um nosso_numero\nregistrado, ele é repassado ao render para o carnê bater com a cobrança.",
+        "operationId": "gerar_carne_carne_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CarneIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarneOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/{banco}": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Receber",
+        "description": "Webhook global (consumidor único / destino default).",
+        "operationId": "receber_webhooks__banco__post",
+        "parameters": [
+          {
+            "name": "banco",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Banco"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEvent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/{banco}/{tenant_id}": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Receber Por Tenant",
+        "description": "Webhook por tenant (multi-sistema). O banco aponta o callback de cada conta\npara esta URL; o tenant vem do path e roteia para o consumidor dono.",
+        "operationId": "receber_por_tenant_webhooks__banco___tenant_id__post",
+        "parameters": [
+          {
+            "name": "banco",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Banco"
+            }
+          },
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEvent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CarneIn": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Identificador do tenant",
+            "examples": [
+              "imob_123"
+            ]
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider"
+          },
+          "account_config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Account Config",
+            "description": "Blob por provider (ver CobrancaIn)"
+          },
+          "bank": {
+            "type": "string",
+            "title": "Bank",
+            "description": "Nome brcobrança para renderizar o carnê",
+            "examples": [
+              "banco_c6"
+            ]
+          },
+          "parcelas": {
+            "items": {
+              "$ref": "#/components/schemas/Cobranca"
+            },
+            "type": "array",
+            "title": "Parcelas",
+            "description": "Parcelas do carnê (registradas individualmente)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "provider",
+          "bank",
+          "parcelas"
+        ],
+        "title": "CarneIn"
+      },
+      "CarneOut": {
+        "properties": {
+          "carne_pdf_base64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carne Pdf Base64",
+            "description": "PDF do carnê 3-vias em base64"
+          },
+          "cobrancas": {
+            "items": {
+              "$ref": "#/components/schemas/CobrancaOut"
+            },
+            "type": "array",
+            "title": "Cobrancas",
+            "description": "Cobranças registradas (uma por parcela)"
+          }
+        },
+        "type": "object",
+        "title": "CarneOut"
+      },
+      "Cobranca": {
+        "properties": {
+          "valor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Valor",
+            "description": "Valor da cobrança",
+            "examples": [
+              "1000.00"
+            ]
+          },
+          "vencimento": {
+            "type": "string",
+            "format": "date",
+            "title": "Vencimento",
+            "description": "Data de vencimento (ISO)",
+            "examples": [
+              "2026-07-10"
+            ]
+          },
+          "nosso_numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nosso Numero",
+            "description": "Nosso número (opcional; o banco pode atribuir)"
+          },
+          "seu_numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seu Numero",
+            "description": "Seu número / identificador do emissor (opcional)"
+          },
+          "pagador": {
+            "$ref": "#/components/schemas/Pagador"
+          },
+          "multa": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Multa",
+            "description": "Regras de multa (opcional)"
+          },
+          "juros": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Juros",
+            "description": "Regras de juros (opcional)"
+          },
+          "desconto": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desconto",
+            "description": "Regras de desconto (opcional)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valor",
+          "vencimento",
+          "pagador"
+        ],
+        "title": "Cobranca"
+      },
+      "CobrancaIn": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Identificador do tenant (resolve credenciais no cofre)",
+            "examples": [
+              "imob_123"
+            ]
+          },
+          "provider": {
+            "$ref": "#/components/schemas/Provider"
+          },
+          "account_config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Account Config",
+            "description": "Blob por provider (não unificado de propósito). c6: {agencia, conta, convenio}; sicoob: {cooperativa, conta, numeroCliente, codigoModalidade}."
+          },
+          "cobranca": {
+            "$ref": "#/components/schemas/Cobranca"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "provider",
+          "cobranca"
+        ],
+        "title": "CobrancaIn"
+      },
+      "CobrancaOut": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Id da cobrança no banco (nosso número/txid)"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "linha_digitavel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linha Digitavel"
+          },
+          "codigo_barras": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codigo Barras"
+          },
+          "pix_copia_cola": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pix Copia Cola",
+            "description": "PIX copia-e-cola (EMV), quando híbrido"
+          },
+          "pdf_base64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Base64",
+            "description": "PDF do boleto em base64, quando disponível"
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw",
+            "description": "Resposta crua do banco (debug)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "CobrancaOut",
+        "description": "Resposta normalizada — mesmo shape para qualquer provider."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Pagador": {
+        "properties": {
+          "nome": {
+            "type": "string",
+            "title": "Nome",
+            "description": "Nome do pagador",
+            "examples": [
+              "Fulano de Tal"
+            ]
+          },
+          "documento": {
+            "type": "string",
+            "title": "Documento",
+            "description": "CPF ou CNPJ (só dígitos)",
+            "examples": [
+              "12345678901"
+            ]
+          },
+          "endereco": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endereco",
+            "description": "Endereço do pagador (opcional)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nome",
+          "documento"
+        ],
+        "title": "Pagador"
+      },
+      "Provider": {
+        "type": "string",
+        "enum": [
+          "brcobranca",
+          "c6",
+          "sicoob"
+        ],
+        "title": "Provider",
+        "description": "Provider de cobrança. `brcobranca` = offline/CNAB (engine Ruby)."
+      },
+      "Status": {
+        "type": "string",
+        "enum": [
+          "registrado",
+          "pendente",
+          "liquidado",
+          "baixado",
+          "erro"
+        ],
+        "title": "Status",
+        "description": "Status normalizado da cobrança (igual para qualquer banco)."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WebhookEvent": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "title": "Event",
+            "description": "Tipo do evento",
+            "examples": [
+              "cobranca.atualizada",
+              "pix.recebido"
+            ]
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Id da cobrança / txid"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Status"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At",
+            "description": "Data/hora do pagamento, se liquidado"
+          },
+          "valor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor",
+            "description": "Valor pago, se aplicável"
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event"
+        ],
+        "title": "WebhookEvent",
+        "description": "Evento normalizado de pagamento — também o corpo do push aos consumidores."
+      }
+    }
+  }
+}

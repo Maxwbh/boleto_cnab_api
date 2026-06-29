@@ -1,6 +1,7 @@
 # Guia de Campos para Boletos - BRCobranca
 
 > 📚 Documentação completa dos campos aceitos por cada banco
+> 🕒 Última atualização: 2025-05-20
 
 ## 📋 Índice
 
@@ -87,11 +88,38 @@ O tamanho máximo depende do convênio:
 
 ### Campos Aceitos ✅
 
-O Banco do Brasil **aceita TODOS** os campos da classe Base sem restrições especiais.
-
 - ✅ `documento_numero` - **SEM LIMITE DE TAMANHO**
 - ✅ `aceite` - Aceita 'S' ou 'N'
 - ✅ `especie_documento` - Aceita qualquer valor válido
+
+### Remessa CNAB (Banco do Brasil)
+
+```json
+// POST /api/remessa?bank=banco_brasil&type=cnab400
+{
+  "empresa_mae": "Empresa Teste LTDA",
+  "documento_cedente": "12345678000100",
+  "agencia": "3073",
+  "conta_corrente": "12345678",
+  "convenio": "01234567",
+  "carteira": "18",
+  "variacao_carteira": "017",
+  "pagamentos": [
+    {
+      "nosso_numero": "123456789",
+      "data_vencimento": "2026/12/31",
+      "valor": 1500.00,
+      "nome_sacado": "Joao da Silva",
+      "documento_sacado": "12345678900",
+      "endereco_sacado": "Rua Teste, 100",
+      "bairro_sacado": "Centro",
+      "cep_sacado": "01000000",
+      "cidade_sacado": "Sao Paulo",
+      "uf_sacado": "SP"
+    }
+  ]
+}
+```
 
 ### Exemplo Completo
 
@@ -194,6 +222,85 @@ boleto_sicoob = {
 
 ---
 
+### Remessa CNAB 240 (Sicoob)
+
+> ⚠️ **O campo `variacao` é obrigatório no boleto, mas NÃO existe na classe de remessa CNAB 240 do Sicoob.** Enviar `variacao` na remessa causará `NoMethodError`.
+
+```json
+// POST /api/remessa?bank=sicoob&type=cnab240
+{
+  "empresa_mae": "Cooperativa Teste",
+  "documento_cedente": "98765432000100",
+  "agencia": "4327",
+  "conta_corrente": "417270",
+  "convenio": "229385",
+  "carteira": "1",
+  "pagamentos": [
+    {
+      "nosso_numero": "7890",
+      "data_vencimento": "2026/12/31",
+      "valor": 2500.00,
+      "nome_sacado": "Maria Santos",
+      "documento_sacado": "98765432100",
+      "endereco_sacado": "Av. Principal, 50",
+      "bairro_sacado": "Centro",
+      "cep_sacado": "20000000",
+      "cidade_sacado": "Rio de Janeiro",
+      "uf_sacado": "RJ"
+    }
+  ]
+}
+```
+
+---
+
+## Banco C6 (336)
+
+### Boleto (GET /api/boleto)
+
+```json
+{
+  "agencia": "0001",
+  "conta_corrente": "1234567",
+  "carteira": "10",
+  "convenio": "100",
+  "nosso_numero": "12345678"
+}
+```
+
+### Remessa CNAB 400 (POST /api/remessa)
+
+> ⚠️ **`convenio` não existe na classe de remessa do C6!** Enviar esse campo causará erro. Use `codigo_beneficiario` em vez disso.
+
+```json
+// POST /api/remessa?bank=banco_c6&type=cnab400
+{
+  "empresa_mae": "Empresa C6 LTDA",
+  "documento_cedente": "33445566000177",
+  "agencia": "0001",
+  "conta_corrente": "1234567",
+  "digito_conta": "0",
+  "carteira": "10",
+  "codigo_beneficiario": "0012345678",
+  "pagamentos": [
+    {
+      "nosso_numero": "12345678",
+      "data_vencimento": "2026/12/31",
+      "valor": 1500.00,
+      "nome_sacado": "Joao da Silva",
+      "documento_sacado": "12345678900",
+      "endereco_sacado": "Rua Teste, 100",
+      "bairro_sacado": "Centro",
+      "cep_sacado": "01000000",
+      "cidade_sacado": "Sao Paulo",
+      "uf_sacado": "SP"
+    }
+  ]
+}
+```
+
+---
+
 ## Diferenças Importantes
 
 ### `nosso_numero` vs `documento_numero`
@@ -252,4 +359,4 @@ boleto_sicoob = {
 
 **Última atualização:** 2026-04-10
 **Gem:** [maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca) v12.7.1
-**Versão da API:** 1.4.1
+**Versão da API:** 1.5.0

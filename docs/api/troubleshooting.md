@@ -1,6 +1,6 @@
 # Troubleshooting — Boleto CNAB API
 
-> **Versão:** 1.4.1
+> **Versão:** 1.5.0
 
 Este guia ajuda a resolver problemas comuns ao usar a API.
 
@@ -73,7 +73,7 @@ ERROR ... Erro BRCobranca: 429 - Too Many Requests  (480ms depois)
 | Opção | Custo | Descrição |
 |-------|-------|-----------|
 | **1. Retry com backoff no cliente** | Grátis | Implementar retry exponencial (1s, 2s, 4s, 8s) até 4 tentativas |
-| **2. Ping service (manter acordado)** | Grátis | Usar [cron-job.org](https://cron-job.org) ou [UptimeRobot](https://uptimerobot.com) para pingar `/api/health` a cada 10-14 minutos |
+| **2. Ping service (manter acordado)** | Grátis | Usar [cron-job.org](https://cron-job.org) ou [UptimeRobot](https://uptimerobot.com) para pingar `/api/health` a cada **10 minutos** (14 min fica no limite do sleep de 15 min). Há também o workflow `.github/workflows/keepalive.yml` |
 | **3. Upgrade para Starter ($7/mês)** | Pago | Elimina sleep mode e aumenta RAM para 2GB |
 
 **Exemplo de retry em Python (no cliente):**
@@ -184,6 +184,14 @@ validate = requests.get(
 print(validate.json())
 ```
 
+### 6. `aceite` / `especie_documento` em branco
+
+**Comportamento:** campos com valor padrão (`aceite`, `especie_documento`,
+`especie`, `moeda`, `local_pagamento`) enviados **em branco** (`""`) caem
+automaticamente no default do brcobrança (`aceite='S'`, `especie_documento='DM'`,
+`especie='R$'`, `moeda='9'`). Não é mais necessário omitir o campo — vazio e
+ausente têm o mesmo efeito. Para usar outro valor, basta enviá-lo preenchido.
+
 ## Erros Comuns — Remessa CNAB
 
 ### 1. `wrong number of arguments`
@@ -220,7 +228,7 @@ Alguns bancos exigem campos específicos:
 
 | Banco | Campo obrigatório |
 |-------|-------------------|
-| Sicoob | `variacao` (3 dígitos) |
+| Sicoob (CNAB 240) | `convenio`, `modalidade_carteira` (o `variacao` é do boleto e é ignorado na remessa) |
 | Banco do Brasil | `convenio` (4-7 dígitos) |
 | Itaú | `carteira` |
 
@@ -244,6 +252,16 @@ Para usar o layout alternativo onde o cliente calcula o DV, envie no payload da 
 ```
 
 O valor padrão é `"081"`. O campo passa direto para a gem sem necessidade de configuração adicional na API.
+
+### 7. Campos não suportados pela classe de remessa são ignorados
+
+**Comportamento:** um campo que existe no **boleto** mas **não** na classe de
+remessa do banco é **ignorado** (não gera erro). Exemplo: `variacao` é usado no
+boleto Sicoob, mas não existe na remessa **CNAB 240** do Sicoob — enviar `variacao`
+no payload CNAB 240 não quebra a geração. O mesmo vale para campos extras dentro
+de cada `pagamento` (ex.: `cedente` vazado do nível de remessa): são descartados
+em vez de causar `500`. Campos **obrigatórios** ausentes continuam retornando erro
+de validação normalmente.
 
 ## Erros Comuns — Retorno CNAB
 

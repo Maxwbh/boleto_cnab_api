@@ -37,9 +37,11 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           load: true
       - name: Install test pre-requisites
-        run: pip install -e "./python-client[dev]"
+        run: |
+          pip install -e "./python-client[dev]"
+          pip install -r boleto-api-python/requirements.txt -r boleto-api-python/requirements-dev.txt
       - name: Test
-        run: pytest -v
+        run: PYTHONPATH=boleto-api-python pytest -v
       - name: Push image
         uses: docker/build-push-action@v5
         with:

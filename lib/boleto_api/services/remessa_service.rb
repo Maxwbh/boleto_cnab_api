@@ -33,13 +33,10 @@ module BoletoApi
         # @return [Brcobranca::Remessa::Pagamento] Objeto pagamento
         def create_pagamento(values)
           mapped_values = FieldMapper.map_pagamento(values)
-
-          # Usa to_hash do Pagamento se disponível (v12.4+)
-          if Brcobranca::Remessa::Pagamento.respond_to?(:new)
-            Brcobranca::Remessa::Pagamento.new(mapped_values)
-          else
-            Brcobranca::Remessa::Pagamento.new(mapped_values)
-          end
+          # Ignora campos que o Pagamento não suporta (ex: `cedente`/`carteira`
+          # vazados de nível de remessa/boleto) em vez de gerar NoMethodError/500.
+          filtered = filter_supported_attributes(Brcobranca::Remessa::Pagamento, mapped_values)
+          Brcobranca::Remessa::Pagamento.new(filtered)
         end
 
         private
@@ -54,23 +51,26 @@ module BoletoApi
           values_copy = values.dup
           pagamentos_data = values_copy.delete('pagamentos') || values_copy.delete(:pagamentos) || []
 
-          # Converte hashes de pagamento em objetos Brcobranca::Remessa::Pagamento
-          pagamentos = pagamentos_data.map { |p| create_pagamento(p) }
-
-          # Prepara dados para o factory - symbolizar chaves pois vêm do JSON.parse (strings)
-          # e Ruby 3.0+ exige symbols para keyword arguments
-          factory_params = values_copy.transform_keys(&:to_sym).merge(
-            banco: bank,
-            formato: cnab_type.to_s,
-            pagamentos: pagamentos
-          )
+          # Symboliza chaves (vêm do JSON.parse como strings; Ruby 3.0+ exige
+          # symbols para keyword arguments)
+          attrs = values_copy.transform_keys(&:to_sym)
 
           begin
-            if pix
-              remessa = create_remessa_pix(bank, cnab_type, factory_params)
-            else
-              remessa = Brcobranca::Remessa.criar(**factory_params)
-            end
+            # Converte hashes de pagamento em objetos (dentro do begin para que
+            # qualquer erro vire resposta de validação em vez de 500).
+            pagamentos = pagamentos_data.map { |p| create_pagamento(p) }
+
+            # Resolve a classe de remessa do banco e IGNORA campos que ela não
+            # suporta (ex: `variacao` existe no boleto Sicoob mas não na remessa
+            # CNAB 240) — em vez de gerar erro.
+            klass = pix ? remessa_pix_class(bank, cnab_type) : remessa_class(bank, cnab_type)
+            attrs = filter_supported_attributes(klass, attrs)
+
+            remessa = if pix
+                        klass.new(attrs.merge(pagamentos: pagamentos))
+                      else
+                        Brcobranca::Remessa.criar(**attrs.merge(banco: bank, formato: cnab_type.to_s, pagamentos: pagamentos))
+                      end
 
             if remessa.valid?
               content = remessa.gera_arquivo
@@ -85,13 +85,13 @@ module BoletoApi
           end
         end
 
-        # Cria remessa PIX usando a classe Pix do banco
-        def create_remessa_pix(bank, cnab_type, params)
-          pix_class = remessa_pix_class(bank, cnab_type)
-          params_without_factory = params.dup
-          params_without_factory.delete(:banco)
-          params_without_factory.delete(:formato)
-          pix_class.new(params_without_factory)
+        # Mantém apenas atributos que a classe de remessa aceita (tem setter).
+        # Evita erro quando um campo do boleto não existe na classe de remessa.
+        def filter_supported_attributes(klass, attrs)
+          instance = klass.new
+          attrs.select { |key, _| instance.respond_to?("#{key}=") }
+        rescue StandardError
+          attrs
         end
 
         # Resolve a classe PIX para o banco e tipo CNAB
