@@ -4,15 +4,15 @@
 
 ## 📋 Bancos Testados e Validados
 
-| Banco | Código | Status | Método Seguro | PDF | Data | Observações |
-|-------|--------|--------|---------------|-----|------|-------------|
-| **Banco do Brasil** | 001 | ✅ | ✅ | ✅ | ✅ | Todos os métodos disponíveis |
-| **Sicoob** | 756 | ✅ | ✅ | ✅ | ⚠️ | `linha_digitavel` pode ser `null` |
-| **Bradesco** | 237 | ✅ | ✅ | ✅ | ✅ | Requer `digito_conta` |
-| **Itaú** | 341 | ✅ | ✅ | ✅ | ✅ | Suporta múltiplas carteiras |
-| **Caixa Econômica** | 104 | ✅ | ✅ | ✅ | ✅ | Convenio obrigatório |
-| **Santander** | 033 | ✅ | ✅ | ✅ | ✅ | `nosso_numero` até 7 dígitos |
-| **Banco C6** | 336 | ✅ | ✅ | ✅ | ✅ | Carteira deve ser `'10'` ou `'20'` — desde v1.3.0 |
+| Banco | Código | Status | Método Seguro | PDF | Remessa | Observações |
+|-------|--------|--------|---------------|-----|---------|-------------|
+| **Banco do Brasil** | 001 | ✅ | ✅ | ✅ | CNAB400 + CNAB240 | Todos os métodos disponíveis |
+| **Sicoob** | 756 | ✅ | ✅ | ✅ | CNAB240 | `linha_digitavel` pode ser `null` via `/data`; `variacao` **não** vai na remessa |
+| **Bradesco** | 237 | ✅ | ✅ | ✅ | CNAB400 | Requer `digito_conta` |
+| **Itaú** | 341 | ✅ | ✅ | ✅ | CNAB400 + CNAB444 | Suporta múltiplas carteiras |
+| **Caixa Econômica** | 104 | ✅ | ✅ | ✅ | CNAB240 | Convenio obrigatório |
+| **Santander** | 033 | ✅ | ✅ | ✅ | CNAB400 + CNAB240 | `nosso_numero` até 7 dígitos |
+| **Banco C6** | 336 | ✅ | ✅ | ✅ | CNAB400 | Carteira `'10'` ou `'20'`; remessa exige `codigo_beneficiario` |
 
 ### Outros Bancos Suportados
 
@@ -187,9 +187,11 @@
 
 ---
 
-### 7. Banco C6 (336) — NOVO na v1.3.0
+### 7. Banco C6 (336) — desde v1.3.0
 
 **Status:** ✅ Totalmente suportado (brcobranca v12.7.0+)
+
+#### 7.1 Boleto (GET /api/boleto)
 
 **Campos Específicos:**
 ```json
@@ -203,14 +205,14 @@
 ```
 
 **Particularidades:**
-- ✅ Todos os métodos disponíveis
-- ✅ PIX híbrido suportado (campo `emv`)
-- ✅ CNAB 400 para remessa e retorno
+- ✅ Todos os métodos disponíveis (código de barras, linha digitável, nosso_numero formatado)
+- ✅ PIX híbrido suportado (campo `emv` + `pix_label`)
+- ✅ Templates suportados: `prawn`, `carne`
 - ❌ CNAB 240 **NÃO** suportado
 - ⚠️ Campo `digito_conta` é **filtrado automaticamente** pela API (gem não aceita)
-- ⚠️ Carteira deve ser exatamente `'10'` ou `'20'` — outros valores são rejeitados
+- ⚠️ Carteira deve ser exatamente `'10'` ou `'20'` — outros valores retornam HTTP 400
 
-**Exemplo completo:**
+**Exemplo completo de boleto:**
 ```python
 dados_c6 = {
     "cedente": "Empresa C6 LTDA",
@@ -230,10 +232,46 @@ dados_c6 = {
 }
 
 requests.get(f"{API_URL}/api/boleto", params={
-    "bank": "banco_c6",
-    "type": "pdf",
-    "data": json.dumps(dados_c6)
+    "bank": "banco_c6", "type": "pdf", "data": json.dumps(dados_c6)
 })
+```
+
+#### 7.2 Remessa CNAB 400 (POST /api/remessa)
+
+> **Atenção:** O payload de remessa usa campos **diferentes** dos de boleto.
+
+**Campos específicos da remessa C6:**
+```json
+{
+  "empresa_mae": "Empresa C6 LTDA",
+  "documento_cedente": "33445566000177",
+  "agencia": "0001",
+  "conta_corrente": "1234567",
+  "digito_conta": "0",
+  "carteira": "10",
+  "codigo_beneficiario": "0012345678",   // ⚠️ OBRIGATÓRIO na remessa
+  "pagamentos": [...]
+}
+```
+
+- ✅ `codigo_beneficiario` — código do cedente fornecido pelo C6 (até 10 dígitos)
+- ❌ `convenio` — **NÃO** deve ser enviado na remessa (campo não existe na classe de remessa)
+- ❌ CNAB 240 — não suportado para C6
+
+**Campos do pagamento (remessa C6):**
+```json
+{
+  "nosso_numero": "12345678",
+  "data_vencimento": "2026/12/31",
+  "valor": 1500.00,
+  "nome_sacado": "Joao da Silva",        // ⚠️ nome_sacado (não sacado)
+  "documento_sacado": "12345678900",    // ⚠️ documento_sacado (não sacado_documento)
+  "endereco_sacado": "Rua Teste, 100",
+  "bairro_sacado": "Centro",
+  "cep_sacado": "01000000",
+  "cidade_sacado": "Sao Paulo",
+  "uf_sacado": "SP"
+}
 ```
 
 ---
@@ -295,7 +333,7 @@ Os testes validam:
 O método `linha_digitavel` pode não estar disponível diretamente no Sicoob quando usando `/api/boleto/data`. Isso **NÃO é um bug**, mas uma limitação da implementação da gem.
 
 **Soluções:**
-- ✅ Usar `/api/boleto` (PDF) - linha digitável aparece no PDF
+- ✅ Usar `/api/boleto` (PDF) — linha digitável aparece no PDF
 - ✅ Aceitar `null` no response de `/api/boleto/data`
 - ✅ Usar `codigo_barras` que está sempre disponível
 
@@ -313,14 +351,25 @@ A API faz **mapeamento automático**:
 boleto.documento_numero  // ✅
 ```
 
-### 3. Campos Específicos por Banco
+### 3. Campos de Boleto ≠ Campos de Remessa
 
-Sempre consulte a documentação oficial de cada banco para campos específicos:
-- Banco do Brasil: `convenio`
-- Sicoob: `variacao`, `modalidade`
-- Bradesco: `digito_conta`
-- Caixa: `convenio`, `digito_conta`
-- Santander: `digito_conta`
+> **Atenção:** Os campos do payload de **boleto** e de **remessa** são diferentes!
+
+| Contexto | Campo do sacado | Campo do documento |
+|----------|-----------------|--------------------|
+| **Boleto** (`GET /api/boleto`) | `sacado` | `sacado_documento` |
+| **Remessa** (`POST /api/remessa`) | `nome_sacado` | `documento_sacado` |
+
+### 4. Campos Específicos por Banco — Remessa
+
+| Banco | Formato | Campos obrigatórios extras | Campos que NÃO vão na remessa |
+|-------|---------|---------------------------|-------------------------------|
+| Banco do Brasil | CNAB400 + CNAB240 | `convenio`, `carteira`, `variacao_carteira` | — |
+| Sicoob | CNAB240 | `convenio`, `carteira` | `variacao` |
+| Bradesco | CNAB400 | `carteira`, `digito_conta` | — |
+| Caixa | CNAB240 | `convenio`, `digito_conta` | — |
+| Santander | CNAB400 + CNAB240 | `digito_conta` | — |
+| **Banco C6** | **CNAB400** | `carteira`, `codigo_beneficiario` | `convenio` |
 
 ---
 
@@ -349,6 +398,6 @@ Sempre consulte a documentação oficial de cada banco para campos específicos:
 
 ---
 
-**Última atualização:** 2025-11-27
-**Testes:** ✅ Todos os bancos validados
+**Última atualização:** 2026-06-28
+**Testes:** ✅ Validado na prática com Docker local — boletos PDF e remessas CNAB gerados com sucesso
 **API:** Compatível com tratamento seguro de métodos
