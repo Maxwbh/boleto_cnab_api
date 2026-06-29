@@ -151,6 +151,14 @@ module BoletoApi
           TEMPLATES.include?(template.to_s.downcase)
         end
 
+        # Template padrão da instância, definido via ENV BOLETO_TEMPLATE.
+        # A imagem Docker principal (Prawn) define BOLETO_TEMPLATE=prawn; a
+        # variante rghost não define, caindo no fallback 'rghost'.
+        def default_template
+          candidate = ENV.fetch('BOLETO_TEMPLATE', 'rghost').to_s.downcase
+          template_supported?(candidate) ? candidate : 'rghost'
+        end
+
         def pdf_only_template?(template)
           PDF_ONLY_TEMPLATES.include?(template.to_s.downcase)
         end

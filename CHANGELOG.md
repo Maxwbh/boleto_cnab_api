@@ -5,6 +5,17 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.4.1] - 2026-06-14
+
+### Modificado
+
+- 📦 **brcobranca atualizado**: `12.10.1` → `12.10.2` (revision `cca5f1a` → `2613452`).
+  O módulo `Brcobranca::Bancos` passa a permitir **registro/remoção de bancos em
+  runtime** (`Bancos.registrar`, `Bancos.classe_boleto/classe_remessa/classe_pix`),
+  com bancos customizados aparecendo em `todos`/`find`/`as_json` sem afetar os 18
+  bancos nativos. Inclui correção menor de metadados na gemspec. Sem mudanças no
+  contrato público desta API (o `/api/bancos` continua funcionando como antes).
+
 ## [1.4.0] - 2026-06-12
 
 ### Adicionado
@@ -32,6 +43,15 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 - 📦 **brcobranca atualizado**: `12.9.0` → `12.10.1` (revision `fa43157` → `cca5f1a`),
   que traz PrawnCarne, PrawnTema, marca d'água, fontes TTF e fixes de PIX/QR.
+- 🐳 **Docker focado em Prawn**: a imagem principal (`Dockerfile`) passa a ser a
+  variante **sem GhostScript** (PDF-only, mais leve e com menor uso de memória —
+  ideal para o Render Free Tier). A antiga imagem com GhostScript foi movida para
+  **`Dockerfile.rghost`** (use-a para gerar JPG/PNG/TIF). O `render.yaml` e o
+  `docker-compose` (serviço padrão) usam a imagem Prawn; a variante rghost fica no
+  profile `rghost`.
+- ⚙️ **Template padrão por ambiente**: o default de `template` em `/api/boleto` e
+  `/api/boleto/multi` agora vem de `BOLETO_TEMPLATE` (helper `Constants.default_template`).
+  Na imagem principal o padrão é `prawn`; na `Dockerfile.rghost`, `rghost`.
 
 ### Corrigido (herdado do brcobranca)
 

@@ -45,7 +45,7 @@ Thumbs.db
 
 # Arquivos Docker / infra (não precisam ir para dentro da imagem)
 Dockerfile
-Dockerfile.prawn
+Dockerfile.rghost
 .dockerignore
 docker-compose.yml
 render.yaml
