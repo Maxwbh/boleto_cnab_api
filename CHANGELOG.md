@@ -5,24 +5,33 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
-## [1.3.3] - 2026-06-12
+## [1.4.0] - 2026-06-12
+
+### Adicionado
+
+- 🧾 **Template de carnê** no `/api/boleto` e `/api/boleto/multi` via
+  `template=carne`: gera carnê em PDF (1 via por página; no `/multi`, 3 vias por
+  folha A4) usando `Brcobranca::Boleto::Template::PrawnCarne` (sem GhostScript).
+- 🎨 **Tema visual** nos templates Prawn (`prawn` e `carne`) — novos campos
+  **opcionais** aceitos em `data`, passados direto ao boleto (attr_accessor na
+  Base do brcobranca v12.10):
+  - `logo_empresa` — logo da empresa (path PNG/JPG)
+  - `cor_marca` — cor da marca em hex `RRGGBB` (contraste automático)
+  - `marca_dagua` — texto da marca d'água diagonal antifraude
+  - `rodape_contato` — rodapé com contato da empresa
+  - `fonte_ttf` — fonte TTF (UTF-8 completo)
+  - `parcela_atual` / `total_parcelas` — selo "PARCELA n/N"
+- 🧱 Constantes `TEMPLATES`, `PDF_ONLY_TEMPLATES` e `THEME_FIELDS` +
+  helpers `template_supported?` / `pdf_only_template?` em `Config::Constants`.
+- 🧪 Specs de integração `spec/integration/carne_boleto_spec.rb` (carnê single,
+  carnê em lote e tema no template prawn).
+- 📖 OpenAPI: parâmetro `template` documentado (`rghost`/`prawn`/`carne`) e
+  campos de tema adicionados ao schema `BoletoData`.
 
 ### Modificado
 
-- 📦 **brcobranca atualizado**: `12.9.0` → `12.10.1` (revision `fa43157` → `cca5f1a`).
-
-### Adicionado (disponível via gem)
-
-A v12.10.0/12.10.1 do brcobranca traz novos recursos no motor de geração
-(ainda não expostos como parâmetros nos endpoints desta API, mas já presentes
-na imagem):
-
-- 🧾 **PrawnCarne** — template de carnê (1 página ou 3 vias por folha A4) com QR PIX
-  e código de barras I2/5, sem dependência de GhostScript.
-- 🎨 **PrawnTema** — tema visual customizável (logo, cor da marca com contraste
-  automático, rodapé de contato). Retrocompatível.
-- 💧 **Marca d'água** antifraude (`marca_dagua`) e suporte a **fontes TTF**
-  (`fonte_ttf`) com UTF-8 completo no Prawn.
+- 📦 **brcobranca atualizado**: `12.9.0` → `12.10.1` (revision `fa43157` → `cca5f1a`),
+  que traz PrawnCarne, PrawnTema, marca d'água, fontes TTF e fixes de PIX/QR.
 
 ### Corrigido (herdado do brcobranca)
 

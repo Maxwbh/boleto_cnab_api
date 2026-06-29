@@ -1,6 +1,6 @@
 # Arquitetura da API
 
-> **Versão:** 1.3.3
+> **Versão:** 1.4.0
 
 Este documento descreve a arquitetura modular da Boleto CNAB API.
 
@@ -44,7 +44,7 @@ Veja [development/brcobranca-fork.md](./development/brcobranca-fork.md) para det
 lib/
 ├── boleto_api.rb              # Entry point principal
 └── boleto_api/
-    ├── version.rb             # Versão da API (1.3.3)
+    ├── version.rb             # Versão da API (1.4.0)
     ├── config/
     │   └── constants.rb       # Constantes centralizadas
     ├── services/

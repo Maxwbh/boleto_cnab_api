@@ -15,7 +15,7 @@ Uso básico:
 """
 
 __title__ = 'boleto-cnab-client'
-__version__ = '1.3.3'
+__version__ = '1.4.0'
 __author__ = 'Maxwell da Silva Oliveira'
 __author_email__ = 'maxwbh@gmail.com'
 __license__ = 'MIT'
