@@ -1,179 +1,250 @@
-# Sobre o projeto boleto_cnab_api
+# Boleto CNAB API
 
-O projeto de gestão de Boletos, Remessas e Retornos Bancários https://github.com/kivanio/brcobranca é muito bem feito, bem testado e mantido.
+> API REST para geração de Boletos, Remessas e processamento de Retornos bancários usando [BRCobranca](https://github.com/Maxwbh/brcobranca)
 
-É interessante poder usar o projeto BRCobranca (escrito em Ruby) a partir de outras linguagens na forma de um micro-serviço REST.
-Mais especificamente, a [Akretion](http://www.akretion.com) que é a empresa que lidera a localização do Odoo no Brasil desde 2009 https://github.com/OCA/l10n-brazil e co-criou a fundação [OCA](https://odoo-community.org/) usa esse projeto para gerenciar Boletos, Remessas e Retornos a partir do ERP Odoo (feito em Python, módulo específico https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca).
+**Mantido por:** Maxwell da Silva Oliveira ([@maxwbh](https://github.com/maxwbh)) - M&S do Brasil Ltda
 
-A imagem usada no projeto é do OS [Alpine](https://hub.docker.com/_/alpine), o motivo é que por ser um Micro-Serviço quanto menor a imagem melhor e apesar de existir dentro das imagens [Ruby](https://hub.docker.com/_/ruby) tanto a opção Debian quanto Alpine a imagem criada a partir da versão "pura" acaba sendo menor( Ruby-Debian 746MB | Ruby-Alpine 565MB | Alpine 523MB ), existem diferenças entre o [Debian](https://pt.wikipedia.org/wiki/Debian) e o [Alpine](https://pt.wikipedia.org/wiki/Alpine_Linux) basicamente "na superfície" são alguns nomes de pacote e o instalador de pacotes, no Debian apt-get e no Alpine apk, outros comandos Linux são iguais, em caso de algum erro complexo o Debian pode acabar sendo usado.
+[![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 
-# Funcionalidades
-
-Imprime **Boletos**, gera arquivos de **Remessa** e lê os arquivos de **Retorno** nos formatos CNAB 240, CNAB 400 para os 16 principais bancos do Brasil (Banco do Brasil, Banco do Nordeste, Banestes, Santander, Banrisul, Banco de Brasília, Caixa, Bradesco, Itaú, HSBC, Sicredi, Sicoob, AILOS, Unicred, CREDISIS e Citibank). Mas o grande barato desse projeto é que fazemos isso com menos de 200 linhas de código! Já comparou quantas linhas de de código você tem que manter sozinho ou quase se for re-fazer na linguagem que você quer tudo que o BRCobranca já faz? Seriam dezenas de milhares de linhas e você nunca teria uma qualidade tão boa...
-
-# API
-
-```ruby
-# Validar os dados de um Boleto:
-GET /boleto/validate
-        requires :bank, type: String, desc: 'Bank'
-        requires :data, type: String, desc: 'Boleto data as a stringified json'
-
-# Obter o nosso_numero de um Boleto:
-GET /boleto/nosso_numero
-        requires :bank, type: String, desc: 'Bank'
-        requires :data, type: String, desc: 'Boleto data as a stringified json'
-
-# Imprimir um Boleto apenas:
-GET /boleto/get
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
-        requires :data, type: String, desc: 'Boleto data as a stringified json'
-
-# Imprimir uma lista de Boletos:
-POST /boleto/multi
-        requires :type, type: String, desc: 'Type: pdf|jpg|png|tif'
-        requires :data, type: File, desc: 'json of the list of boletos, including the "bank" key'
-
-# Gerir um arquivo de Remessa CNAB 240 ou CNAB 400:
-POST /remessa
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: cnab400|cnab240'
-        requires :data, type: File, desc: 'json of the list of pagamentos'
-
-# Transformar um arquivo de Retorno CNAB 240 ou CNAB 400 em JSON:
-POST /retorno
-        requires :bank, type: String, desc: 'Bank'
-        requires :type, type: String, desc: 'Type: cnab400|cnab240'
-        requires :data, type: File, desc: 'txt of the retorno file'
-```
-
-Nota: os campos datas devem estar no formato YYYY/MM/DD
-
-O API está documentado com mais detalhes no código aqui: https://github.com/akretion/boleto_cnab_api/blob/master/lib/boleto_api.rb
-
-# Como rodar o micro-serviço
+## 🚀 Quick Start
 
 ```bash
-docker run -p 9292:9292 ghcr.io/akretion/boleto_cnab_api
+# 1. Clone o repositório
+git clone https://github.com/Maxwbh/boleto_cnab_api.git
+cd boleto_cnab_api
+
+# 2. Com Docker (recomendado)
+docker build -t boleto_cnab_api .
+docker run -p 9292:9292 boleto_cnab_api
+
+# 3. Sem Docker
+bundle install
+rackup -p 9292
+
+# 4. Testar
+curl http://localhost:9292/api/health
 ```
 
-# Exemplos de como consumir o serviço usando sua linguagem preferida:
+## 📚 Documentação
 
-## Bash
+### API Endpoints
 
-Por exemplo, para imprimir uma lista de Boletos é preciso criar um arquivo temporario com os Boletos em formato JSON e depois fazer um POST do arquivo:
+| Endpoint | Método | Descrição |
+|----------|--------|-----------|
+| `/api/health` | GET | Health check |
+| `/api/boleto/validate` | GET | Validar dados do boleto |
+| `/api/boleto/data` | GET | Obter dados completos (sem gerar PDF) |
+| `/api/boleto/nosso_numero` | GET | Obter nosso_numero e códigos |
+| `/api/boleto` | GET | Gerar boleto (PDF/JPG/PNG/TIF) |
+| `/api/boleto/multi` | POST | Gerar múltiplos boletos |
+| `/api/remessa` | POST | Gerar arquivo de remessa CNAB |
+| `/api/retorno` | POST | Processar arquivo de retorno CNAB |
+
+### Guias Completos
+
+📖 **[Documentação de Campos](./docs/fields/README.md)** - Todos os campos aceitos por banco (BB, Sicoob, etc.)
+
+💡 **[Exemplos Práticos](./docs/fields/examples.md)** - Exemplos de código Python/Ruby com máximo de campos
+
+🔧 **[Troubleshooting](./docs/api/troubleshooting.md)** - Solução de problemas comuns
+
+⚙️ **[Detalhes Técnicos](./docs/development/brcobranca-fork.md)** - Informações sobre a gem BRCobranca
+
+## 💡 Exemplo Rápido
+
+### Gerar Boleto do Banco do Brasil
+
+```python
+import requests
+import json
+
+boleto_data = {
+    "agencia": "3073",
+    "conta_corrente": "12345678",
+    "convenio": "01234567",
+    "carteira": "18",
+    "nosso_numero": "123",
+    "numero_documento": "NF-2025-001",
+    "cedente": "Minha Empresa LTDA",
+    "documento_cedente": "12345678000100",
+    "sacado": "João da Silva",
+    "sacado_documento": "12345678900",
+    "valor": 1500.00,
+    "data_vencimento": "2025/12/31",
+    "aceite": "N",
+    "especie_documento": "DM",
+    "instrucao1": "Não receber após o vencimento"
+}
+
+# Obter dados do boleto (sem gerar PDF)
+response = requests.get(
+    "http://localhost:9292/api/boleto/data",
+    params={
+        "bank": "banco_brasil",
+        "data": json.dumps(boleto_data)
+    }
+)
+
+data = response.json()
+print(f"Linha Digitável: {data['linha_digitavel']}")
+print(f"Código de Barras: {data['codigo_barras']}")
+print(f"Nosso Número: {data['nosso_numero']}")
+
+# Gerar PDF
+response = requests.get(
+    "http://localhost:9292/api/boleto",
+    params={
+        "bank": "banco_brasil",
+        "type": "pdf",
+        "data": json.dumps(boleto_data)
+    }
+)
+
+with open("boleto.pdf", "wb") as f:
+    f.write(response.content)
+```
+
+Ver mais exemplos em [`examples/python/`](./examples/python/)
+
+## 🏦 Bancos Suportados
+
+- ✅ Banco do Brasil (001)
+- ✅ Sicoob (756)
+- ✅ Sicredi
+- ✅ Santander
+- ✅ Bradesco
+- ✅ Itaú
+- ✅ Caixa Econômica Federal
+- ✅ E mais 9 bancos!
+
+Ver documentação completa de campos em [`docs/fields/README.md`](./docs/fields/README.md)
+
+## 🧪 Testes
+
 ```bash
-echo '[{"valor":5.0,"cedente":"Kivanio Barbosa","documento_cedente":"12345678912","sacado":"Claudio Pozzebom",
-"sacado_documento":"12345678900","agencia":"0810","conta_corrente":"53678","convenio":12387,"nosso_numero":"12345678","bank":"itau"},
-{"valor": 10.00,"cedente": "PREFEITURA MUNICIPAL DE VILHENA","documento_cedente": "04092706000181","sacado": "João Paulo Barbosa",
-"sacado_documento": "77777777777","agencia": "1825","conta_corrente": "0000528","convenio": "245274","nosso_numero": "000000000000001","bank":"caixa"}]'\
-> /tmp/boletos_data.json
-curl -X POST -F type=pdf -F 'data=@/tmp/boletos_data.json' localhost:9292/api/boleto/multi > /tmp/boletos.pdf
-```
-Você pode então conferir os Boletos gerados no arquivo ```/tmp/boletos.pdf```
+# Rodar testes automatizados
+bundle exec rspec
 
-## Python
+# Rodar testes específicos
+bundle exec rspec spec/boleto_spec.rb
 
-```
-TODO
-```
-(Ver os exemplos nos módulos Odoo: https://github.com/OCA/l10n-brazil/tree/14.0/l10n_br_account_payment_brcobranca)
-
-## Java
-
-```
-TODO (contribuições bem vindas)
+# Rodar com coverage
+bundle exec rspec --format documentation
 ```
 
-## Testar alterações na imagem sem necessidade de commit
+## 📁 Estrutura do Projeto
 
-No arquivo Gemfile.lock é possível alterar o repositório e o commit específico que será usado na criação da imagem, o que é necessário durante uma correção, atualização ou implementação de um novo caso, um exemplo simples pode ser visto nesse PR https://github.com/akretion/boleto_cnab_api/pull/11/files , mas também é possível alterar o Dockerfile para criar uma imagem de teste onde seja possível editar os arquivos dentro do container (o que evita subir um commit desnecessário ou com erro), para isso no arquivo Dockerfile são feitas as seguintes alterações:
+```
+boleto_cnab_api/
+├── lib/
+│   └── boleto_api.rb          # Código principal da API
+├── spec/                       # Testes automatizados
+│   ├── boleto_spec.rb
+│   ├── spec_helper.rb
+│   └── fixtures/
+│       └── sample_data.json
+├── docs/                       # Documentação
+│   ├── api/
+│   │   └── troubleshooting.md
+│   ├── fields/
+│   │   ├── README.md          # Guia de campos por banco
+│   │   └── examples.md        # Exemplos práticos
+│   └── development/
+│       └── brcobranca-fork.md
+├── examples/                   # Exemplos de uso
+│   └── python/
+│       └── generate_boleto.py
+├── README.md                   # Este arquivo
+├── Dockerfile                  # Configuração Docker
+├── Gemfile                     # Dependências Ruby
+└── config.ru                   # Configuração Rack
+```
 
-Instalar algum editor de texto, por exemplo VIM ou Nano (por padrão o VI já está instalado mas caracteres UTF-8 não são mostrados corretamente) e alterar o usuário **app** para o **root** para poder editar os arquivos
+## 🐳 Deploy
+
+### Desenvolvimento Local
+
 ```bash
-            git \
-            ruby-dev \
-+           vim \
-+           nano \
-         && rm -rf /var/cache/apk/* \
-         ;
+# Opção 1: Docker Compose (Mais Fácil)
+docker-compose up
 
--USER app
-+USER root
+# Opção 2: Script Helper
+./start.sh
+
+# Opção 3: Docker Direto
+docker build -t boleto_cnab_api .
+docker run -p 9292:9292 boleto_cnab_api
+
+# Opção 4: Local (sem Docker)
+bundle install
+bundle exec rackup -p 9292
 ```
 
-Criação da imagem
-```bash
-$ docker build -t akretion/boleto_cnab_api-teste .
-```
+### Render.com (Free Tier) - RECOMENDADO
 
-Depois de iniciar a imagem podemos entrar dentro do container
-```bash
-Localizar o container ID
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 
-$ docker ps
-CONTAINER ID   IMAGE                             COMMAND                  CREATED             STATUS             PORTS                                                 NAMES
-1ea95da3a3c3   akretion/boleto_cnab_api-teste   "/bin/sh -c 'bundle …"   4 minutes ago   Up 4 minutes   0.0.0.0:9292->9292/tcp, :::9292->9292/tcp   eloquent_noether
-```
+**Ou siga o guia completo:** 📖 **[DEPLOY.md](./DEPLOY.md)**
 
-Acessando o container (No Debian usa /bin/bash no Alpine /bin/sh)
-```bash
-$ docker exec -it <container-id> /bin/sh
+**Resumo:**
+1. Fork este repositório
+2. Conecte no [Render.com](https://render.com)
+3. New → Web Service → Seu repositório
+4. Ambiente: Docker
+5. Deploy! 🚀
 
-O valor <container-id> varia, nesse exemplo o comando seria
+**Recursos do Free Tier:**
+- ✅ 512 MB RAM
+- ✅ 100 GB bandwidth/mês
+- ✅ Auto-deploy do `main`
+- ⚠️ Sleep após 15min inatividade
 
-$ docker exec -it 1ea95da3a3c3 /bin/sh
-```
+### Railway / Fly.io
 
-Dentro do container é preciso localizar a pasta onde está instalada a biblioteca, no exemplo é usado o comando **find** e a partir disso é possível realizar alterações necessárias
-```bash
-/usr/src/app # find /usr -name unicred.rb
-/usr/lib/ruby/gems/3.3.0/bundler/gems/brcobranca-cd928e87554b/lib/brcobranca/retorno/cnab400/unicred.rb
-/usr/lib/ruby/gems/3.3.0/bundler/gems/brcobranca-cd928e87554b/lib/brcobranca/remessa/cnab240/unicred.rb
-/usr/lib/ruby/gems/3.3.0/bundler/gems/brcobranca-cd928e87554b/lib/brcobranca/remessa/cnab400/unicred.rb
-```
+O projeto inclui `Dockerfile` e `render.yaml` para deploy direto em outras plataformas.
 
-A partir disso é possível realizar alterações necessárias, por exemplo verificar o valor de alguma variável "imprimindo" no LOG com o comando "puts" (algumas referencias https://www.dotnetperls.com/console-ruby https://www.rubyguides.com/2018/10/puts-vs-print/ http://ruby-for-beginners.rubymonstas.org/writing_methods/printing.html )
-```bash
-/usr/src/app # vim /usr/lib/ruby/gems/3.3.0/bundler/gems/brcobranca-cd928e87554b/lib/brcobranca/
-boleto/unicred.rb
+## 🎯 Características
 
-      def codigo_barras_segunda_parte
-        puts "TESTE puts algum valor qualquer " + "#{agencia}"
-        "#{agencia}#{conta_corrente}#{conta_corrente_dv}#{nosso_numero}#{nosso_numero_dv}"
-      end
-    end
-```
+### ✅ Recursos Implementados
 
-Nesse exemplo ao criar um Boleto do UNICRED é possível ver no LOG o resultado do "puts"
-```bash
-$ docker logs -f 28f2881e4dd7
-Puma starting in single mode...
-* Puma version: 6.4.2 (ruby 3.3.3-p89) ("The Eagle of Durango")
-*  Min threads: 0
-*  Max threads: 5
-*  Environment: development
-*          PID: 1
-* Listening on http://0.0.0.0:9292
-Use Ctrl-C to stop
-TESTE puts algum valor qualquer 1234
-```
+- 🔄 Mapeamento automático `numero_documento` ↔ `documento_numero`
+- 📊 Endpoint `/api/boleto/data` para obter dados sem gerar PDF
+- 📝 Documentação completa de campos por banco
+- ⏱️ Logs estruturados com timestamps e tempo de processamento
+- 🧪 Testes automatizados com RSpec
+- 💡 Exemplos práticos Python/Ruby
+- 🗂️ Estrutura de projeto moderna e organizada
+- 🔍 Tratamento robusto de erros com hints
 
-Se a imagem estiver sendo iniciada dentro de um **Docker Compose**, por exemplo por um projeto Odoo é possível ver o LOG usando:
-```bash
-$ docker logs -f 28f2881e4dd7
-Puma starting in single mode...
-* Puma version: 6.4.2 (ruby 3.3.3-p89) ("The Eagle of Durango")
-*  Min threads: 0
-*  Max threads: 5
-*  Environment: development
-*          PID: 1
-* Listening on http://0.0.0.0:9292
-Use Ctrl-C to stop
-- Gracefully stopping, waiting for requests to finish
-=== puma shutdown: 2024-07-05 19:50:05 +0000 ===
-- Goodbye!
-```
+## 🔧 Tecnologias
 
-**IMPORTANTE:** por algum motivo as alterações dentro do container só tem efeito na primeira vez que o arquivo é Salvo, uma segunda alteração não tem efeito, isso pode ser algo referente ao comportamento da imagem, ou do Docker ou do Docker Compose, já que nos testes realizados esse container é iniciado e usado por outro container rodando o Odoo, é preciso investigar melhor para entender se isso é algo normal e já esperado ou se teria uma forma de corrigir, porque devido a isso para testar dessa forma está sendo necessário alterar uma vez e se for preciso fazer outra alteração sair do container fazer um kill e inicia-lo novamente.
+- **Ruby** - Linguagem principal
+- **Grape** - Framework para API REST
+- **BRCobranca** - Geração de boletos ([maxwbh/brcobranca](https://github.com/Maxwbh/brcobranca))
+- **RSpec** - Framework de testes
+- **Docker** - Containerização
+- **Alpine Linux** - Imagem base otimizada
+
+## 📄 Licença
+
+MIT License - Ver [LICENSE](./LICENSE)
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas! Sinta-se livre para abrir issues ou pull requests.
+
+## 💬 Suporte
+
+- 📖 [Documentação Completa](./docs/)
+- 🐛 [Reportar Bug](https://github.com/Maxwbh/boleto_cnab_api/issues)
+- 💡 [Sugerir Melhoria](https://github.com/Maxwbh/boleto_cnab_api/issues)
+
+## 🔗 Links Úteis
+
+- [BRCobranca - Gem para geração de boletos](https://github.com/Maxwbh/brcobranca)
+- [Documentação de Campos por Banco](./docs/fields/README.md)
+- [Exemplos de Uso](./examples/python/)
+
+---
+
+**Desenvolvido por Maxwell da Silva Oliveira - M&S do Brasil Ltda**

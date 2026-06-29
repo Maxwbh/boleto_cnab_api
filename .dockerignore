@@ -1,0 +1,55 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Documentation (manter apenas essencial)
+DEPLOY.md
+docs/
+
+# Test files
+spec/
+.rspec
+test_run.py
+*.pyc
+__pycache__
+
+# Examples
+examples/
+
+# Editor files
+*~
+*.swp
+*.swo
+.vscode
+.idea
+
+# Logs
+*.log
+log/
+
+# Temporary files
+tmp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Scripts
+start.sh
+
+# CI/CD
+.github/workflows/
+
+# Render config
+render.yaml
+
+# Ruby
+.bundle/
+vendor/bundle/

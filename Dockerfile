@@ -1,5 +1,8 @@
 FROM alpine:latest
-LABEL org.opencontainers.image.authors="raphael.valyi@akretion.com"
+LABEL org.opencontainers.image.authors="maxwbh@gmail.com"
+LABEL org.opencontainers.image.maintainer="Maxwell da Silva Oliveira <maxwbh@gmail.com>"
+LABEL org.opencontainers.image.source="https://github.com/maxwbh/boleto_cnab_api"
+LABEL org.opencontainers.image.description="Micro-serviço REST para geração de Boletos, Remessas e Retornos Bancários usando BRCobranca"
 
 WORKDIR /usr/src/app
 COPY . .
@@ -19,12 +22,10 @@ RUN set -eux; \
 
 RUN set -eux; \
    gem install bundler:2.5.11 --no-document \
+   && bundle config set --local frozen 'false' \
    && bundle install \
    && rm -rf /usr/local/bundle/cache/*.gem \
    ;
-
-# throw errors if Gemfile has been modified since Gemfile.lock
-RUN bundle config --global frozen 1 && bundle install
 
 EXPOSE 9292
 USER app
