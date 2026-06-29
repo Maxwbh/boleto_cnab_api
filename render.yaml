@@ -1,41 +1,54 @@
+# Configuração para Render.com Free Tier
+# Documentação: https://render.com/docs/blueprint-spec
+
 services:
   - type: web
     name: boleto-cnab-api
     env: docker
-    region: oregon  # Ou frankfurt (Europa), singapore (Ásia), ohio (US)
+    region: oregon
     plan: free
 
-    # Dockerfile correto
+    # Dockerfile
     dockerfilePath: ./Dockerfile
+    dockerContext: .
 
-    # Deploy automático quando push para main
+    # Deploy automático
     autoDeploy: true
+
+    # Branch principal
+    branch: main
 
     # Health check
     healthCheckPath: /api/health
 
-    # Variáveis de ambiente otimizadas para FREE TIER
+    # Variáveis de ambiente otimizadas para FREE TIER (512MB RAM)
     envVars:
+      # Porta da aplicação
       - key: PORT
         value: 9292
 
+      # Ambiente de produção
       - key: RACK_ENV
         value: production
 
-      # Puma otimizado para 512MB RAM (free tier)
+      # Puma - 1 worker para economizar memória
       - key: PUMA_WORKERS
-        value: 1  # Apenas 1 worker para economizar memória
+        value: 1
 
+      # Threads - começar com 0, máximo 5
       - key: PUMA_MIN_THREADS
-        value: 0  # Começar com 0 threads
+        value: 0
 
       - key: PUMA_MAX_THREADS
-        value: 5  # Máximo 5 threads (econômico)
+        value: 5
 
-      # Ruby otimizações
+      # Otimizações de memória Ruby
       - key: MALLOC_ARENA_MAX
-        value: 2  # Reduz uso de memória
+        value: 2
 
-      # Logs
-      - key: RACK_LOGGER_LEVEL
+      - key: RUBY_GC_HEAP_GROWTH_FACTOR
+        value: 1.1
+
+      # Nível de log
+      - key: LOG_LEVEL
         value: info
